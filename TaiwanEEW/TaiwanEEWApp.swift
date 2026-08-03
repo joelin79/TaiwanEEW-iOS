@@ -31,6 +31,10 @@ struct TaiwanEEWApp: App {
     @AppStorage("subscribedCityIndex") var subscribedCityIndex: Int = 0
     @AppStorage("subscribedDistrictIndex") var subscribedDistrictIndex: Int = 0
     @AppStorage("isFirstLaunch") var isFirstLaunch: Bool = true
+    // Gates district subscription until the user has actually chosen a region. Existing
+    // installs are migrated to true on launch (see AppDelegate) so upgrades never see
+    // onboarding and never lose their subscription.
+    @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
     @AppStorage("notifyThreshold") var notifyThreshold: NotifyThreshold = .eg3
     
     init() {
@@ -46,6 +50,13 @@ struct TaiwanEEWApp: App {
                         isFirstLaunch = false
                     }
                 })
+            } else if !hasCompletedOnboarding {
+                NavigationView {
+                    OnboardingPermissionsView(onDone: {
+                        withAnimation { hasCompletedOnboarding = true }
+                    })
+                }
+                .navigationViewStyle(.stack)
             } else {
                 TabView {
                     AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)
@@ -135,7 +146,17 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // MARK: - Did Finish Launching
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         UIApplication.shared.applicationIconBadgeNumber = 0
-        
+
+        // Migration: anyone already past first launch chose their region under the old
+        // build, so mark onboarding complete. Without this the new subscription gate would
+        // strand existing users with no district subscription.
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "hasCompletedOnboarding") == nil,
+           defaults.object(forKey: "isFirstLaunch") != nil,
+           defaults.bool(forKey: "isFirstLaunch") == false {
+            defaults.set(true, forKey: "hasCompletedOnboarding")
+        }
+
         // Register BGTasks as early as possible (before returning from didFinishLaunching)
         LocationManager.registerBackgroundTasks()
 
