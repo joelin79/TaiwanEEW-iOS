@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build (iOS Simulator, unsigned)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Real secrets are gitignored. CI builds against placeholder config —
+      # enough to compile and link; it never runs against real backends.
+      - name: Create placeholder config
+        run: |
+          cp Config/Local.xcconfig.example Config/Local.xcconfig
+          cp TaiwanEEW/GoogleService-Info.plist.example TaiwanEEW/GoogleService-Info.plist
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project TaiwanEEW.xcodeproj \
+            -scheme TaiwanEEW \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

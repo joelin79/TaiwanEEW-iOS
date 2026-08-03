@@ -1,0 +1,24 @@
+.DS_Store
+Pods/.DS_Store
+TaiwanEEW/.DS_Store
+
+# Private working notes - security specifics and internal decisions.
+# Must never be committed; the public-safe summary lives in CLAUDE.md.
+NOTES.private.md
+
+# Real project secrets. Copy Local.xcconfig.example to Local.xcconfig.
+Config/Local.xcconfig
+
+# Firebase config for the real project. Copy the .example and fill in your own.
+TaiwanEEW/GoogleService-Info.plist
+
+# Xcode user state / macOS junk
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/
+
+# Local tooling / editor / scratch — not for the public repo
+.claude/
+.vscode/
+buildServer.json
+*.rtf

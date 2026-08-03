@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>RCApiKey</key>
+	<string>$(RC_API_KEY)</string>
+	<key>CognitoPoolID</key>
+	<string>$(COGNITO_POOL_ID)</string>
+	<key>AWSRegion</key>
+	<string>$(AWS_REGION)</string>
+	<key>AWSAccountID</key>
+	<string>$(AWS_ACCOUNT_ID)</string>
+	<key>SNSPlatformAppName</key>
+	<string>$(SNS_APP_NAME)</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.joedev.TaiwanEEW.refresh</string>
+		<string>com.joedev.TaiwanEEW.locationUpdate</string>
+	</array>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>JetBrainsMono-Bold-Italic.ttf</string>
+		<string>JetBrainsMono-Bold.ttf</string>
+		<string>JetBrainsMono-ExtraBold-Italic.ttf</string>
+		<string>JetBrainsMono-ExtraBold.ttf</string>
+		<string>JetBrainsMono-Italic.ttf</string>
+		<string>JetBrainsMono-Medium-Italic.ttf</string>
+		<string>JetBrainsMono-Medium.ttf</string>
+		<string>JetBrainsMono-Regular.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+		<string>remote-notification</string>
+		<string>location</string>
+	</array>
+</dict>
+</plist>

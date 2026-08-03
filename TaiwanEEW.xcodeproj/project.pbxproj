@@ -1,0 +1,864 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 70;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B421FE742C88AFEA0096A776 /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = B421FE732C88AFEA0096A776 /* XMLCoder */; };
+		B4BE165C2C63C61B00C12E80 /* AWSCognitoAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165B2C63C61B00C12E80 /* AWSCognitoAuth */; };
+		B4BE165E2C63C61B00C12E80 /* AWSCognitoIdentityProvider in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165D2C63C61B00C12E80 /* AWSCognitoIdentityProvider */; };
+		B4BE16602C63C61B00C12E80 /* AWSCognitoIdentityProviderASF in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165F2C63C61B00C12E80 /* AWSCognitoIdentityProviderASF */; };
+		B4BE16622C63C61B00C12E80 /* AWSCore in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE16612C63C61B00C12E80 /* AWSCore */; };
+		B4BE16642C63C61B00C12E80 /* AWSSNS in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE16632C63C61B00C12E80 /* AWSSNS */; };
+		C73F77A12EFFE5430008B936 /* TaiwanEEWServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C73F779A2EFFE5430008B936 /* TaiwanEEWServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C76A3F9E2AA9C24700CF371D /* FirebaseAnalyticsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C76A3F9D2AA9C24700CF371D /* FirebaseAnalyticsSwift */; };
+		C76A3FA02AA9C25100CF371D /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C76A3F9F2AA9C25100CF371D /* AdSupport.framework */; };
+		C76A3FA22AA9C26500CF371D /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = C76A3FA12AA9C26500CF371D /* FirebaseCrashlytics */; };
+		C770E6FF2A5C16B9001962E2 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = C770E6FE2A5C16B9001962E2 /* FirebaseAnalytics */; };
+		C775E0E228AE6EBE00D34920 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = C775E0E128AE6EBE00D34920 /* FirebaseFirestore */; };
+		C775E0E428AE6EBE00D34920 /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = C775E0E328AE6EBE00D34920 /* FirebaseFirestoreSwift */; };
+		C78FFE2B2F5CCD99001A1CDA /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = C78FFE2A2F5CCD99001A1CDA /* RevenueCat */; };
+		C78FFE2D2F5CCD99001A1CDA /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = C78FFE2C2F5CCD99001A1CDA /* RevenueCatUI */; };
+		C7CDE7242A31695E0032BEE0 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = C7CDE7232A31695E0032BEE0 /* FirebaseMessaging */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4367F7DC3018523F00E034CF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B40038E428743FAB0095D49F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B40038EB28743FAB0095D49F;
+			remoteInfo = TaiwanEEW;
+		};
+		C73F779F2EFFE5430008B936 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B40038E428743FAB0095D49F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C73F77992EFFE5430008B936;
+			remoteInfo = TaiwanEEWServiceExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B421FE6C2C884E6A0096A776 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C73F77A12EFFE5430008B936 /* TaiwanEEWServiceExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaiwanEEWTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B40038EC28743FAB0095D49F /* TaiwanEEW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaiwanEEW.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Local.xcconfig; sourceTree = "<group>"; };
+		C73F779A2EFFE5430008B936 /* TaiwanEEWServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TaiwanEEWServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C76A3F9F2AA9C25100CF371D /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C73F77A52EFFE5430008B936 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C73F77992EFFE5430008B936 /* TaiwanEEWServiceExtension */;
+		};
+		C73F77C22EFFE6940008B936 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				1_zh.wav,
+				2_zh.wav,
+				3_zh.wav,
+				4_bi.wav,
+				5H_bi.wav,
+				5L_bi.wav,
+				6H_bi.wav,
+				6L_bi.wav,
+				7_bi.wav,
+			);
+			target = C73F77992EFFE5430008B936 /* TaiwanEEWServiceExtension */;
+		};
+		C7F7083A2E6A70E6004D34D0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B40038EB28743FAB0095D49F /* TaiwanEEW */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		4367F7D93018523F00E034CF /* TaiwanEEWTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = TaiwanEEWTests; sourceTree = "<group>"; };
+		C0A1F163C0A1F163C0A1F163 /* Config */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Config; sourceTree = "<group>"; };
+		C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C73F77A52EFFE5430008B936 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TaiwanEEWServiceExtension; sourceTree = "<group>"; };
+		C7F707F72E6A70E5004D34D0 /* TaiwanEEW */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (C7F7083A2E6A70E6004D34D0 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, C73F77C22EFFE6940008B936 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TaiwanEEW; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4367F7D53018523F00E034CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40038E928743FAB0095D49F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4BE16642C63C61B00C12E80 /* AWSSNS in Frameworks */,
+				C76A3F9E2AA9C24700CF371D /* FirebaseAnalyticsSwift in Frameworks */,
+				C78FFE2B2F5CCD99001A1CDA /* RevenueCat in Frameworks */,
+				B421FE742C88AFEA0096A776 /* XMLCoder in Frameworks */,
+				C7CDE7242A31695E0032BEE0 /* FirebaseMessaging in Frameworks */,
+				B4BE16622C63C61B00C12E80 /* AWSCore in Frameworks */,
+				B4BE165E2C63C61B00C12E80 /* AWSCognitoIdentityProvider in Frameworks */,
+				C775E0E228AE6EBE00D34920 /* FirebaseFirestore in Frameworks */,
+				C770E6FF2A5C16B9001962E2 /* FirebaseAnalytics in Frameworks */,
+				C76A3FA22AA9C26500CF371D /* FirebaseCrashlytics in Frameworks */,
+				C775E0E428AE6EBE00D34920 /* FirebaseFirestoreSwift in Frameworks */,
+				C78FFE2D2F5CCD99001A1CDA /* RevenueCatUI in Frameworks */,
+				B4BE165C2C63C61B00C12E80 /* AWSCognitoAuth in Frameworks */,
+				C76A3FA02AA9C25100CF371D /* AdSupport.framework in Frameworks */,
+				B4BE16602C63C61B00C12E80 /* AWSCognitoIdentityProviderASF in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C73F77972EFFE5430008B936 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		43CF0452301DE1C100893C20 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		8213E50693A0DB10A5FB9C39 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C76A3F9F2AA9C25100CF371D /* AdSupport.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B40038E328743FAB0095D49F = {
+			isa = PBXGroup;
+			children = (
+				C7F707F72E6A70E5004D34D0 /* TaiwanEEW */,
+				C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */,
+				4367F7D93018523F00E034CF /* TaiwanEEWTests */,
+				C0A1F163C0A1F163C0A1F163 /* Config */,
+				B40038ED28743FAB0095D49F /* Products */,
+				8213E50693A0DB10A5FB9C39 /* Frameworks */,
+				43CF0452301DE1C100893C20 /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		B40038ED28743FAB0095D49F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B40038EC28743FAB0095D49F /* TaiwanEEW.app */,
+				C73F779A2EFFE5430008B936 /* TaiwanEEWServiceExtension.appex */,
+				4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4367F7D73018523F00E034CF /* TaiwanEEWTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4367F7E03018523F00E034CF /* Build configuration list for PBXNativeTarget "TaiwanEEWTests" */;
+			buildPhases = (
+				4367F7D43018523F00E034CF /* Sources */,
+				4367F7D53018523F00E034CF /* Frameworks */,
+				4367F7D63018523F00E034CF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4367F7DD3018523F00E034CF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4367F7D93018523F00E034CF /* TaiwanEEWTests */,
+			);
+			name = TaiwanEEWTests;
+			packageProductDependencies = (
+			);
+			productName = TaiwanEEWTests;
+			productReference = 4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B40038EB28743FAB0095D49F /* TaiwanEEW */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B40038FA28743FAF0095D49F /* Build configuration list for PBXNativeTarget "TaiwanEEW" */;
+			buildPhases = (
+				B40038E828743FAB0095D49F /* Sources */,
+				B40038E928743FAB0095D49F /* Frameworks */,
+				B40038EA28743FAB0095D49F /* Resources */,
+				B421FE6C2C884E6A0096A776 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C73F77A02EFFE5430008B936 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				C7F707F72E6A70E5004D34D0 /* TaiwanEEW */,
+			);
+			name = TaiwanEEW;
+			packageProductDependencies = (
+				C775E0E128AE6EBE00D34920 /* FirebaseFirestore */,
+				C775E0E328AE6EBE00D34920 /* FirebaseFirestoreSwift */,
+				C7CDE7232A31695E0032BEE0 /* FirebaseMessaging */,
+				C770E6FE2A5C16B9001962E2 /* FirebaseAnalytics */,
+				C76A3F9D2AA9C24700CF371D /* FirebaseAnalyticsSwift */,
+				C76A3FA12AA9C26500CF371D /* FirebaseCrashlytics */,
+				B4BE165B2C63C61B00C12E80 /* AWSCognitoAuth */,
+				B4BE165D2C63C61B00C12E80 /* AWSCognitoIdentityProvider */,
+				B4BE165F2C63C61B00C12E80 /* AWSCognitoIdentityProviderASF */,
+				B4BE16612C63C61B00C12E80 /* AWSCore */,
+				B4BE16632C63C61B00C12E80 /* AWSSNS */,
+				B421FE732C88AFEA0096A776 /* XMLCoder */,
+				C78FFE2A2F5CCD99001A1CDA /* RevenueCat */,
+				C78FFE2C2F5CCD99001A1CDA /* RevenueCatUI */,
+			);
+			productName = TaiwanEEW;
+			productReference = B40038EC28743FAB0095D49F /* TaiwanEEW.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C73F77992EFFE5430008B936 /* TaiwanEEWServiceExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C73F77A22EFFE5430008B936 /* Build configuration list for PBXNativeTarget "TaiwanEEWServiceExtension" */;
+			buildPhases = (
+				C73F77962EFFE5430008B936 /* Sources */,
+				C73F77972EFFE5430008B936 /* Frameworks */,
+				C73F77982EFFE5430008B936 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */,
+			);
+			name = TaiwanEEWServiceExtension;
+			packageProductDependencies = (
+			);
+			productName = TaiwanEEWServiceExtension;
+			productReference = C73F779A2EFFE5430008B936 /* TaiwanEEWServiceExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B40038E428743FAB0095D49F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 1340;
+				TargetAttributes = {
+					4367F7D73018523F00E034CF = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = B40038EB28743FAB0095D49F;
+					};
+					B40038EB28743FAB0095D49F = {
+						CreatedOnToolsVersion = 13.4.1;
+					};
+					C73F77992EFFE5430008B936 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+				};
+			};
+			buildConfigurationList = B40038E728743FAB0095D49F /* Build configuration list for PBXProject "TaiwanEEW" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hant",
+				ja,
+				Base,
+			);
+			mainGroup = B40038E328743FAB0095D49F;
+			packageReferences = (
+				C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */,
+				B421FE722C88AFEA0096A776 /* XCRemoteSwiftPackageReference "XMLCoder" */,
+				C78FFE292F5CCD99001A1CDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+			);
+			productRefGroup = B40038ED28743FAB0095D49F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B40038EB28743FAB0095D49F /* TaiwanEEW */,
+				C73F77992EFFE5430008B936 /* TaiwanEEWServiceExtension */,
+				4367F7D73018523F00E034CF /* TaiwanEEWTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4367F7D63018523F00E034CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40038EA28743FAB0095D49F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C73F77982EFFE5430008B936 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4367F7D43018523F00E034CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40038E828743FAB0095D49F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C73F77962EFFE5430008B936 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4367F7DD3018523F00E034CF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B40038EB28743FAB0095D49F /* TaiwanEEW */;
+			targetProxy = 4367F7DC3018523F00E034CF /* PBXContainerItemProxy */;
+		};
+		C73F77A02EFFE5430008B936 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C73F77992EFFE5430008B936 /* TaiwanEEWServiceExtension */;
+			targetProxy = C73F779F2EFFE5430008B936 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4367F7DE3018523F00E034CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEWTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TaiwanEEW.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TaiwanEEW";
+			};
+			name = Debug;
+		};
+		4367F7DF3018523F00E034CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEWTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TaiwanEEW.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TaiwanEEW";
+			};
+			name = Release;
+		};
+		B40038F828743FAF0095D49F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B40038F928743FAF0095D49F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B40038FB28743FAF0095D49F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TaiwanEEW/TaiwanEEW.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				DEVELOPMENT_ASSET_PATHS = "\"TaiwanEEW/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaiwanEEW/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "地震速報";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "地震速報需要持續存取您的位置資訊，以便在背景自動更新您的地震通知區域，確保您隨時收到最相關的地震警報。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "台灣地震速報需要您的位置資訊來自動選擇最適合的地震通知區域，為您提供更精確的地震警報服務。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UIStatusBarHidden = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEW;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B40038FC28743FAF0095D49F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TaiwanEEW/TaiwanEEW.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				DEVELOPMENT_ASSET_PATHS = "\"TaiwanEEW/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaiwanEEW/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "地震速報";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.weather";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "地震速報需要持續存取您的位置資訊，以便在背景自動更新您的地震通知區域，確保您隨時收到最相關的地震警報。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "台灣地震速報需要您的位置資訊來自動選擇最適合的地震通知區域，為您提供更精確的地震警報服務。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
+				INFOPLIST_KEY_UIStatusBarHidden = NO;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEW;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C73F77A32EFFE5430008B936 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaiwanEEWServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TaiwanEEWServiceExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEW.TaiwanEEWServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C73F77A42EFFE5430008B936 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TaiwanEEWServiceExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TaiwanEEWServiceExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.joedev.TaiwanEEW.TaiwanEEWServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4367F7E03018523F00E034CF /* Build configuration list for PBXNativeTarget "TaiwanEEWTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4367F7DE3018523F00E034CF /* Debug */,
+				4367F7DF3018523F00E034CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B40038E728743FAB0095D49F /* Build configuration list for PBXProject "TaiwanEEW" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B40038F828743FAF0095D49F /* Debug */,
+				B40038F928743FAF0095D49F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B40038FA28743FAF0095D49F /* Build configuration list for PBXNativeTarget "TaiwanEEW" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B40038FB28743FAF0095D49F /* Debug */,
+				B40038FC28743FAF0095D49F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C73F77A22EFFE5430008B936 /* Build configuration list for PBXNativeTarget "TaiwanEEWServiceExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C73F77A32EFFE5430008B936 /* Debug */,
+				C73F77A42EFFE5430008B936 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B421FE722C88AFEA0096A776 /* XCRemoteSwiftPackageReference "XMLCoder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CoreOffice/XMLCoder.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.17.1;
+			};
+		};
+		B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/aws-sdk-ios-spm";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 2.36.7;
+			};
+		};
+		C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = versionRange;
+				maximumVersion = 11.0.0;
+				minimumVersion = 10.0.0;
+			};
+		};
+		C78FFE292F5CCD99001A1CDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.61.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B421FE732C88AFEA0096A776 /* XMLCoder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B421FE722C88AFEA0096A776 /* XCRemoteSwiftPackageReference "XMLCoder" */;
+			productName = XMLCoder;
+		};
+		B4BE165B2C63C61B00C12E80 /* AWSCognitoAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSCognitoAuth;
+		};
+		B4BE165D2C63C61B00C12E80 /* AWSCognitoIdentityProvider */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSCognitoIdentityProvider;
+		};
+		B4BE165F2C63C61B00C12E80 /* AWSCognitoIdentityProviderASF */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSCognitoIdentityProviderASF;
+		};
+		B4BE16612C63C61B00C12E80 /* AWSCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSCore;
+		};
+		B4BE16632C63C61B00C12E80 /* AWSSNS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4BE165A2C63C61B00C12E80 /* XCRemoteSwiftPackageReference "aws-sdk-ios-spm" */;
+			productName = AWSSNS;
+		};
+		C76A3F9D2AA9C24700CF371D /* FirebaseAnalyticsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsSwift;
+		};
+		C76A3FA12AA9C26500CF371D /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		C770E6FE2A5C16B9001962E2 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		C775E0E128AE6EBE00D34920 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		C775E0E328AE6EBE00D34920 /* FirebaseFirestoreSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestoreSwift;
+		};
+		C78FFE2A2F5CCD99001A1CDA /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C78FFE292F5CCD99001A1CDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
+		C78FFE2C2F5CCD99001A1CDA /* RevenueCatUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C78FFE292F5CCD99001A1CDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCatUI;
+		};
+		C7CDE7232A31695E0032BEE0 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C775E0E028AE6EBE00D34920 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B40038E428743FAB0095D49F /* Project object */;
+}

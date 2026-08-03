@@ -1,0 +1,16 @@
+// Copy this file to Local.xcconfig and fill in your own values.
+//   cp Config/Local.xcconfig.example Config/Local.xcconfig
+// Local.xcconfig is gitignored so real values never get committed.
+//
+// You need your own Apple Developer team, a Firebase project
+// (GoogleService-Info.plist), an AWS account with an SNS platform
+// application + a Cognito identity pool, and a RevenueCat project.
+// See README for setup.
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
+
+RC_API_KEY = appl_your_revenuecat_public_sdk_key
+COGNITO_POOL_ID = your-region:your-identity-pool-uuid
+AWS_REGION = your-aws-region
+AWS_ACCOUNT_ID = your-aws-account-id
+SNS_APP_NAME = YourSNSPlatformAppName

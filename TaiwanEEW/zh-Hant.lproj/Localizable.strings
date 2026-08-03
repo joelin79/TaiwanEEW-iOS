@@ -1,0 +1,114 @@
+// Terms of Use
+"term-title-string" = "免責聲明";
+"term1-string" = "【地震無法預測】，任何資訊均以中央氣象署(CWA)發布之內容為準。";
+"term2-string" = "強震即時警報是利用少數幾個地震測站快速演算之結果，與最終地震報告可能存有若干差異，請理解並謹慎使用。";
+"term3-string" = "測報可能誤報，請勿散播資訊，保持公共秩序，避免觸法。";
+"term4-string" = "若您開始使用本軟體，表示您已同意所有服務條款。";
+"term-read-string" = "我已閱讀並同意";
+"terms-string" = "服務條約";
+"scroll-string" = "（請向下滑閱讀完整～）";
+"dismiss-string" = "開始使用";
+
+// About
+"mechanics-title-string" = "強震即時警報原理";
+"mechanics-string" = "強震即時警報(又稱地震速報)乃是當地震發生後，中央氣象局利用靠近震央附近少數幾個地震測站所偵測到的震波，快速地推算出震央位置、深度、規模等地震資訊之技術。\n\n若當地震的 『預估規模達4.5以上且最大預估震度達3級以上』時，則會立即發佈警報。（國家級警報則需超過規模5.0且當地震度4）\n\n以目前的技術而言，在台灣島內發生的地震平均可在地震發生後20秒內對外發佈警報，盲區約為70公里，代表距離震 央70公里內的民眾都會在感覺到地震搖晃之後才收到警報，盲區外的民眾則會有數秒至十數秒的預警時間。";
+"sources-title-string" = "特別感謝／資料來源";
+"sources-string" = "【中央氣象署簽約合作對象】\n地震速報資訊來源：中央氣象署(CWA)";
+
+
+// Alert Page
+"alert-title-string" = "地震速報";
+"%@ publish-string" = "%@ 發表";
+"est-arrival-time-string" = "預計抵達時間";
+
+// History Rage
+"history-title-string" = "測報歷史紀錄";
+
+// Settings Page
+"alerts-pref-string" = "警報設定";
+"location-pref-string" = "縣市地區";
+"district-pref-string" = "鄉鎮市區";
+"history-pref-string" = " 歷史設定";
+"history-time-range-string" = "歷史記錄顯示";
+"notify-pref-string" = "通知設定";
+"notify-threshold-string" = "預警震度";
+"notify-force-string" = "3級或以上強震預警一律使用有聲強制警報推播。\n若欲關閉強制警報，可至「強制警報設定」中關閉「重要提示」選項。";
+
+"about-title-string" = "關於本程式";
+"version-string" = "版本";
+"view-official-history-string" = "查看完整速報歷史";
+"information-title-string" = "了解地震速報";
+"reminder-title-string" = "請切記：";
+"reminder-string" = "地震預警一定有誤差／誤報，任何資訊均以中央氣象署(CWA)發布之最終地震報告內容為準。";
+
+// notices
+"notice1-string" = "通知與監測將顯示選取地點的預估震度與抵達時間。";
+
+// AlertStatus
+"loading-string" = "載入中...";
+"alert-status-1-string" = "目前無發布地震資訊";
+"alert-status-2-string" = "地 震 通 報 發 表 中";
+"alert-status-3-string" = "緊 急 地 震 速 報";
+
+// Intensity Block
+"intensity-string" = "預估震度";
+"intensity-sub-string" = "級";
+
+// Time Block
+"arrival-string" = "抵達";
+"seconds-string" = "秒";
+
+// Event Info Block
+"est-intensity-string" = "預測級數";
+"time-string" = "發生時間";
+"est-countdown-string" = "預測倒數";
+
+// Active Status Indicator
+"active-string" = "新警報";
+
+// Locations
+"keelung-string" = "基隆市";
+"taipei-string" = "台北市";
+"taoyuan-string" = "桃園市";
+"hsinchu-string" = "新竹市";
+"miaoli-string" = "苗栗縣";
+"taichung-string" = "台中市";
+"changhua-string" = "彰化縣";
+"yunlin-string" = "雲林縣";
+"nantou-string" = "南投縣";
+"chiayi-string" = "嘉義市";
+"tainan-string" = "台南市";
+"kaohsiung-string" = "高雄市";
+"pingtung-city-string" = "屏東縣（屏東市）";
+"pingtung-hengchun-string" = "屏東縣（恆春鎮）";
+"yilan-string" = "宜蘭縣";
+"hualien-city-string" = "花蓮縣（花蓮市）";
+"hualien-yuli-string" = "花蓮縣（玉里鎮）";
+"taitung-string" = "台東縣";
+"penghu-string" = "澎湖縣";
+
+// TimeRange
+"week-string" = "一週";
+"twoweek-string" = "兩週";
+"month-string" = "一個月";
+"sixmonth-string" = "六個月";
+"year-string" = "一年";
+"all-string" = "全部";
+
+// NotifyThreshold
+"off-string" = "關閉";
+"eg0-string" = "震度0(含)以上";
+"eg1-string" = "震度1(含)以上";
+"eg2-string" = "震度2(含)以上";
+"eg3-string" = "震度3(含)以上";
+"eg4-string" = "震度4(含)以上";
+
+"today-string" = "今天";
+"connected-string" = "已連線";
+"server-err-string" = "伺服器維護中";
+"internet-err-string" = "無網路連線";
+
+"nav-alert-string" = "即時警報";
+"nav-history-string" = "歷史";
+"nav-donate-string" = "贊助";
+"nav-settings-string" = "設定";
