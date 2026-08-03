@@ -18,10 +18,11 @@ Companion backend (separate private repo): `TaiwanEEW-Server-Java`, production r
 
 ## Current Status
 
-Last updated: 2026-07-28
+Last updated: 2026-08-03
 
-- **Released:** 2.1.0 (build 12), tagged `v2.1.0`, merged to `main` via PR #39, submitted to App Store.
-- **Branching:** trunk-based. `main` is the only long-lived branch; releases are pinned by tags (`v2.0.4` … `v2.1.0`). Feature work branches off `main` and merges back quickly.
+- **This is the public, source-available repo** (`joelin79/TaiwanEEW-iOS`). Development happens here. The old `joelin79/TaiwanEEW` is an archived private record of the pre-open-source history. See LICENSE.md — everything committed here is public; never commit secrets or exploit detail.
+- **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed. Next: 2.1.1.
+- **Branching:** trunk-based — see the Branching & Naming section below.
 - **Installed base is long-tailed** — users remain on 2.0.4 through 2.0.8. Never assume only the newest client is live; see Compatibility Rules below.
 
 2.1.0 was a large release: it merged ~16 months of unshipped trunk work (auto-location, notification service extension, NotificationManager rewrite) with the 2.0.6–2.0.8 hot-release line that shipped RevenueCat IAP.
@@ -29,27 +30,24 @@ Last updated: 2026-07-28
 ## Build Commands
 
 ### Development Setup
-1. Open the workspace (not the xcodeproj):
+1. Provide config (see Project Configuration for what to fill in):
    ```bash
-   open TaiwanEEW.xcworkspace
+   cp Config/Local.xcconfig.example Config/Local.xcconfig
+   cp TaiwanEEW/GoogleService-Info.plist.example TaiwanEEW/GoogleService-Info.plist
    ```
-
-2. Build:
+2. Open the project (there is no workspace; dependencies are SPM):
    ```bash
-   xcodebuild -workspace TaiwanEEW.xcworkspace -scheme TaiwanEEW -configuration Debug
+   open TaiwanEEW.xcodeproj
    ```
-
-3. Test (⌘U in Xcode, or):
+3. Build:
    ```bash
-   xcodebuild test -workspace TaiwanEEW.xcworkspace -scheme TaiwanEEW \
+   xcodebuild -project TaiwanEEW.xcodeproj -scheme TaiwanEEW -configuration Debug
+   ```
+4. Test (⌘U in Xcode, or):
+   ```bash
+   xcodebuild test -project TaiwanEEW.xcodeproj -scheme TaiwanEEW \
      -destination 'platform=iOS Simulator,name=iPhone 16'
    ```
-
-> **Do not run `pod install`.** CocoaPods is integrated but resolves to **zero** pods —
-> `Podfile.lock` has no `PODS:` section and `Pods/` contains no dependencies. All
-> dependencies come from SPM. The `Podfile` still lists three Firebase pods that were
-> never installed; running `pod install` would install them _on top of_ the SPM copies
-> and cause duplicate symbols. Removing CocoaPods entirely is a queued task.
 
 ### Project Configuration
 
@@ -201,17 +199,12 @@ The app supports multiple languages (en, zh-Hant, ja) with localized strings for
 
 ## Dependencies
 
-All dependencies come from **Swift Package Manager**. CocoaPods is still integrated into the
-project but installs nothing — see the warning under Build Commands.
+All dependencies come from **Swift Package Manager**; there is no CocoaPods and no workspace.
 
 - Firebase iOS SDK — Firestore, Messaging, Analytics, Crashlytics
 - AWS SDK iOS SPM — SNS for notifications, Cognito for unauthenticated credentials
-- RevenueCat (`purchases-ios-spm`) — in-app donations
+- RevenueCat (`purchases-ios-spm`, pinned to exactly 5.61.0) — in-app donations
 - XMLCoder — XML parsing for CWA data
-
-> Known issue: the RevenueCat pin differs between `TaiwanEEW.xcworkspace/…/Package.resolved`
-> (5.61.0, what the build actually uses) and `TaiwanEEW.xcodeproj/…/Package.resolved` (5.81.2).
-> Unifying these is a queued task.
 
 ## Compatibility Rules
 
@@ -224,6 +217,35 @@ are still live.
 - **Version topics are not owned by the notification threshold.** `isThresholdManagedTopic()` decides what a threshold change may unsubscribe; only district topics and `off` qualify. Broadening it would drop users off version announcements.
 - **Backend payload changes must be additive.** Old clients ignore unknown fields; they must never depend on a field being present. The `ins` field degrades gracefully — clients without the extension just use the payload's sound.
 - **UserDefaults keys are a migration surface.** Renaming `subscribedCityIndex`, `notifyThreshold`, `AWSsubscribedTopics`, `subscriptionsARN` or `endpointArnForSNS` would silently reset users. Migrations should be state-based and idempotent, never "assume the previous version ran".
+
+## Branching & Naming
+
+Trunk-based. `main` is the only long-lived branch and is always buildable. Each App Store
+release is pinned by a tag `vX.Y.Z` on the exact archived commit.
+
+**Branch name:** `<type>/v<version>/<short-description>` — `<version>` is the target release,
+`<short-description>` is kebab-case.
+
+| Type | Use | Example |
+|---|---|---|
+| `feature/` | new functionality | `feature/v2.1.1/app-check` |
+| `fix/` | bug fix | `fix/v2.1.1/donation-currency` |
+| `chore/` | tooling, cleanup, docs | `chore/v2.1.1/ci-cleanup` |
+| `hotfix/` | urgent fix branched from the release **tag**, not `main` | `hotfix/v2.1.2/critical-alert-sound` |
+| `release/` | optional stabilization branch when a release needs one | `release/v2.1.1` |
+
+**Workflow:**
+
+1. Branch off `main` (hotfixes off the release tag).
+2. Keep branches small and short-lived; open a PR back to `main`; delete after merge.
+3. Tag `vX.Y.Z` at archive time, on the exact submitted commit.
+4. Create the `verX_Y_Z` SNS topic before releasing (see Compatibility Rules).
+
+**Commit messages:** conventional prefixes — `feat:` `fix:` `chore:` `docs:` `test:` `build:`
+`refactor:`.
+
+If a feature slips to a later release, either rename the branch or just let the (now-stale)
+name merge — the name is disposable once merged.
 
 ## Testing
 
@@ -254,14 +276,8 @@ Next release (2.1.1) and ongoing cleanup, roughly in priority order.
 ### Hardening
 
 - Firebase App Check — integrate unenforced, monitor verified traffic, enforce only after adoption (enforcing early breaks every client in the field)
-- Tighten Firebase security rules and add billing alerts
-- Review the Cognito unauthenticated role's permissions
-
-### Cleanup
-
-- Remove CocoaPods entirely: `Podfile`, `Pods/`, the empty `Pods_TaiwanEEW.framework`, the `[CP]` build phase, the xcconfig base configurations, and the workspace; switch CI and this file to the `.xcodeproj`
-- Unify the RevenueCat SPM version
-- Prepare for open source: externalize `GoogleService-Info.plist` and other configuration, gitignore and untrack `.DS_Store`/`xcuserdata`, add LICENSE / README / SECURITY.md
+- Add a billing budget alert; tighten the SNS topic subscribe policy (currently allows subscribe from any principal)
+- (Done) Firebase read/write rules locked, Cognito unauthenticated role scoped to the minimum SNS actions
 
 ### Features
 
@@ -274,6 +290,4 @@ Next release (2.1.1) and ongoing cleanup, roughly in priority order.
 
 ### Known issues
 
-- Purchase analytics: the resubscribe guard calls `getCustomerInfo` and discards its error, so a network failure causes the event to log anyway. Dedupe on transaction ID instead
-- Donation fallback prices are hardcoded in TWD, so a non-TW user sees the wrong currency if RevenueCat offerings fail to load
-- TestFlight/sandbox builds display IAP prices in USD while charging correctly in TWD; production is unaffected
+- TestFlight/sandbox builds display IAP prices in USD while charging correctly in TWD; production is unaffected. The Debug section shows the App Store storefront country to diagnose this.
