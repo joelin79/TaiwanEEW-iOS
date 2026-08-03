@@ -135,8 +135,10 @@ struct DonationOptionsSheet: View {
     private var paymentInfoText: some View {
         if let selected = selectedOption, !selected.isExternal {
             if selected.duration == "/ 月" {
-                let price = purchaseManager.packages.first(where: { $0.identifier == selected.id })?.localizedPriceString ?? selected.fallbackPrice
-                Text("將自動每月扣款 \(price) 直到取消")
+                // Omit the amount rather than assert a possibly-wrong TWD fallback when the
+                // localized price has not loaded.
+                let localized = purchaseManager.packages.first(where: { $0.identifier == selected.id })?.localizedPriceString
+                Text(localized.map { "將自動每月扣款 \($0) 直到取消" } ?? "將自動每月扣款，直到取消")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
@@ -304,7 +306,11 @@ struct DonationOptionRow: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(localizedPrice ?? option.fallbackPrice)
+                    // For the external ECPay option, fallbackPrice is a label ("自訂"), so keep
+                    // it. For StoreKit products, never fall back to a hardcoded TWD amount - a
+                    // non-TW storefront is charged in its own currency, so showing "NT$60" there
+                    // is wrong. Show a neutral placeholder until RevenueCat's localized price loads.
+                    Text(localizedPrice ?? (option.isExternal ? option.fallbackPrice : "—"))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.primary)
 

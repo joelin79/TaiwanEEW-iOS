@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UserNotifications
+import StoreKit
 
 struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -20,6 +21,7 @@ struct SettingsView: View {
     @State private var copiedItem: String? = nil
     @State private var subscribedTopics: [String] = []
     @State private var notificationSettings: UNNotificationSettings? = nil
+    @State private var storefrontCountry: String = "…"
     @StateObject private var locationManager = LocationManager.shared
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
     let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
@@ -631,8 +633,20 @@ struct SettingsView: View {
         Section{
             copyableRow(title: "APNs", value: UserDefaults.standard.string(forKey: "deviceTokenForSNS") ?? "nil")
             copyableRow(title: "ARN", value: UserDefaults.standard.string(forKey: "endpointArnSuffixForSNS") ?? "nil")
+            // App Store storefront the device is on. Explains IAP currency: a device on the
+            // US storefront (or signed into a US sandbox account) shows USD even in Taiwan.
+            copyableRow(title: "Storefront", value: storefrontCountry)
         } header: {
             Text("可點擊拷貝")
+        }
+        .task { await loadStorefront() }
+    }
+
+    private func loadStorefront() async {
+        if let sf = await Storefront.current {
+            storefrontCountry = sf.countryCode
+        } else {
+            storefrontCountry = "unavailable"
         }
     }
 
