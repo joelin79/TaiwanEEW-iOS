@@ -10,6 +10,7 @@
 import SwiftUI
 import AWSSNS
 import Firebase
+import FirebaseAppCheck
 import RevenueCat
 import UserNotifications
 import BackgroundTasks
@@ -137,6 +138,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Register BGTasks as early as possible (before returning from didFinishLaunching)
         LocationManager.registerBackgroundTasks()
+
+        // Install App Check before configuring Firebase so every Firebase request carries an
+        // attestation token. Registered but unenforced in the console for now — see
+        // AppCheckProviderFactory for the enforcement rollout plan.
+        AppCheck.setAppCheckProviderFactory(TaiwanEEWAppCheckProviderFactory())
 
         // Configure Firebase and FCM (to disable FCM notification (fuck FCM lmao
         FirebaseApp.configure()
