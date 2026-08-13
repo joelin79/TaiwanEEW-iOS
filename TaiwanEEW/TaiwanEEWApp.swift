@@ -51,12 +51,9 @@ struct TaiwanEEWApp: App {
                     }
                 })
             } else if !hasCompletedOnboarding {
-                NavigationView {
-                    OnboardingPermissionsView(onDone: {
-                        withAnimation { hasCompletedOnboarding = true }
-                    })
-                }
-                .navigationViewStyle(.stack)
+                OnboardingPermissionsView(onDone: {
+                    withAnimation { hasCompletedOnboarding = true }
+                })
             } else {
                 TabView {
                     AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)

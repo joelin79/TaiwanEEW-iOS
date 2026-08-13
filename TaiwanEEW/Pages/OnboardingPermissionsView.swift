@@ -33,24 +33,39 @@ struct OnboardingPermissionsView: View {
     /// Location is unusable, so fall back to letting the user pick a region by hand.
     private var needsManualRegion: Bool { permission.isBlocked }
 
+    // Layout mirrors FirstLaunchView so the two onboarding screens feel like one flow:
+    // same max width, same icon/title sizes and position, same full-width button at the
+    // bottom with the same vertical padding.
     var body: some View {
-        VStack(spacing: 0) {
-            Form {
-                notificationSection
+        GeometryReader { geometry in
+            let maxWidth = min(geometry.size.width, 650)
 
-                if needsManualRegion {
-                    manualRegionSection
-                } else {
-                    autoLocationSection
+            VStack {
+                icon
+                title
+
+                ScrollView {
+                    VStack(spacing: 20) {
+                        notificationCard
+                        if needsManualRegion {
+                            manualRegionCard
+                        } else {
+                            autoLocationCard
+                        }
+                    }
+                    .padding(.top, 24)
                 }
-            }
 
-            continueButton
-                .padding(.horizontal)
-                .padding(.bottom, 8)
+                continueButton
+            }
+            .frame(maxWidth: maxWidth, maxHeight: .infinity)
+            .frame(maxWidth: .infinity)     // center the content
+            .padding(.horizontal, 20)
+            .padding(.vertical, 50)
         }
-        .navigationTitle("開始設定")
-        .navigationBarTitleDisplayMode(.large)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.background))
+        .transition(.move(edge: .bottom))
         .animation(.default, value: needsManualRegion)
         .onAppear { refreshNotificationStatus() }
         // Permission can change in iOS Settings while the app is backgrounded.
@@ -59,16 +74,37 @@ struct OnboardingPermissionsView: View {
         }
     }
 
+    // MARK: - Header (matches FirstLaunchView)
+
+    private var icon: some View {
+        Image(systemName: "bell.badge.circle.fill")
+            .font(.system(size: 50))
+            .foregroundColor(Color.blue)
+    }
+
+    private var title: some View {
+        Text("開始設定")
+            .font(.system(size: 45, weight: .bold, design: .rounded))
+            .padding(.top, 25)
+            .foregroundStyle(.primary)
+    }
+
+    /// Card chrome shared by both blocks, so they read as one system.
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12, content: content)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+    }
+
     // MARK: - Notifications (top)
 
-    private var notificationSection: some View {
-        Section(
-            header: Label("地震通知", systemImage: "bell.badge.fill"),
-            footer: Text(notificationsGranted
-                         ? "已允許通知，地震發生時會立即提醒您。"
-                         : "地震速報透過推播在第一時間提醒您。未允許通知將無法收到地震預警。")
-        ) {
-            Toggle("接收地震預警", isOn: Binding(
+    private var notificationCard: some View {
+        card {
+            Toggle(isOn: Binding(
                 get: { notificationsGranted },
                 set: { wants in
                     // Only the first tap can prompt; iOS ignores later requests, so send
@@ -79,42 +115,61 @@ struct OnboardingPermissionsView: View {
                         openAppSettings()
                     }
                 }
-            ))
+            )) {
+                Label("地震通知", systemImage: "bell.badge.fill")
+                    .font(.headline)
+            }
             .disabled(notificationsGranted)
 
+            Text(notificationsGranted
+                 ? "已允許通知，地震發生時會立即提醒您。"
+                 : "地震速報透過推播在第一時間提醒您。未允許通知將無法收到地震預警。")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             if notificationsAsked && !notificationsGranted {
+                Divider()
                 Label {
                     Text("通知權限已關閉，可稍後至「設定」重新開啟。")
                         .font(.caption)
                         .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
                 Button("前往設定") { openAppSettings() }
+                    .font(.subheadline)
             }
         }
     }
 
     // MARK: - Auto-location (bottom, the encouraged default)
 
-    private var autoLocationSection: some View {
-        Section(
-            header: Label("自動定位", systemImage: "location.fill"),
-            footer: Text("自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。")
-        ) {
-            Toggle("啟用自動定位", isOn: $locationManager.isAutoLocationEnabled)
-                .onChange(of: locationManager.isAutoLocationEnabled) { isEnabled in
-                    if isEnabled { locationManager.updateLocationManually() }
-                }
+    private var autoLocationCard: some View {
+        card {
+            Toggle(isOn: $locationManager.isAutoLocationEnabled) {
+                Label("自動定位", systemImage: "location.fill")
+                    .font(.headline)
+            }
+            .onChange(of: locationManager.isAutoLocationEnabled) { isEnabled in
+                if isEnabled { locationManager.updateLocationManually() }
+            }
+
+            Text("自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             if locationManager.isAutoLocationEnabled {
-                HStack {
+                Divider()
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: permission.icon)
                         .foregroundStyle(permission.color)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(permission.headline)
-                            .font(.headline)
+                            .font(.subheadline.weight(.semibold))
                         if let location = locationManager.currentLocation {
                             let (cityIndex, districtIndex, _) = locationManager.findClosestDistrict(to: location.coordinate)
                             Text("通知區域：\(Location.cities[cityIndex].district[districtIndex].districtName)")
@@ -128,26 +183,28 @@ struct OnboardingPermissionsView: View {
                     }
                     Spacer()
                 }
-                .padding(.vertical, 4)
             }
         }
     }
 
     // MARK: - Manual region (only when location is denied)
 
-    private var manualRegionSection: some View {
-        Section(
-            header: Label("選擇通知區域", systemImage: "mappin.and.ellipse"),
-            footer: Text("可稍後至「設定」重新開啟位置權限，改用自動定位。")
-        ) {
+    private var manualRegionCard: some View {
+        card {
+            Label("選擇通知區域", systemImage: "mappin.and.ellipse")
+                .font(.headline)
+
             Label {
-                Text("無法取得位置權限，請手動選擇您所在的區域。")
-                    .font(.caption)
+                Text("無法取得位置權限，請手動選擇您所在的區域。可稍後至「設定」重新開啟位置權限，改用自動定位。")
+                    .font(.subheadline)
                     .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundStyle(.red)
             }
+
+            Divider()
 
             Picker("縣市", selection: $subscribedCityIndex) {
                 ForEach(0..<Location.cities.count, id: \.self) { i in
@@ -163,29 +220,34 @@ struct OnboardingPermissionsView: View {
             }
 
             Button("前往設定開啟位置權限") { openAppSettings() }
+                .font(.subheadline)
         }
     }
 
     // MARK: - Continue
 
+    /// Same shape, weight and position as FirstLaunchView's dismiss button, with Liquid
+    /// Glass on iOS 26+ and the identical solid fill below it.
     private var continueButton: some View {
         Button(action: finish) {
             Text("開始使用")
-                .font(.headline)
-                .foregroundStyle(.white)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.white)
+                .padding()
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .background(continueBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .padding(.top, 20)
         }
-        .background(continueBackground)
     }
 
     @ViewBuilder
     private var continueBackground: some View {
         if #available(iOS 26.0, *) {
-            Color.accentColor
-                .glassEffect(.regular.tint(.accentColor).interactive(), in: .rect(cornerRadius: 14))
+            Color.blue.glassEffect(.regular.tint(.blue).interactive(),
+                                   in: .rect(cornerRadius: 16))
         } else {
-            RoundedRectangle(cornerRadius: 14).fill(Color.accentColor)
+            Color.blue
         }
     }
 
