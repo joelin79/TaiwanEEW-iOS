@@ -80,6 +80,8 @@ struct OnboardingPermissionsView: View {
         Image(systemName: "bell.badge.circle.fill")
             .font(.system(size: 50))
             .foregroundColor(Color.blue)
+            // Must match FirstLaunchView's icon frame so both titles sit at the same y.
+            .frame(height: 60)
     }
 
     private var title: some View {
@@ -128,18 +130,21 @@ struct OnboardingPermissionsView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            // iOS only shows the system prompt once. Once it has been answered, the only
+            // way to change it is Settings, so offer that route rather than a toggle that
+            // silently does nothing.
             if notificationsAsked && !notificationsGranted {
                 Divider()
                 Label {
-                    Text("通知權限已關閉，可稍後至「設定」重新開啟。")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                    Text("通知權限已關閉，將無法收到地震預警。")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
                         .fixedSize(horizontal: false, vertical: true)
                 } icon: {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.red)
                 }
-                Button("前往設定") { openAppSettings() }
+                Button("前往設定開啟通知") { openAppSettings() }
                     .font(.subheadline)
             }
         }
@@ -182,6 +187,19 @@ struct OnboardingPermissionsView: View {
                         }
                     }
                     Spacer()
+                }
+
+                // Same recovery affordance as Settings: when permission is the blocker,
+                // point at where it is actually fixable.
+                switch locationManager.authorizationStatus {
+                case .authorizedWhenInUse:
+                    Button("前往設定選擇「一律允許」") { openAppSettings() }
+                        .font(.subheadline)
+                case .notDetermined:
+                    Button("允許位置權限") { locationManager.updateLocationManually() }
+                        .font(.subheadline)
+                default:
+                    EmptyView()
                 }
             }
         }

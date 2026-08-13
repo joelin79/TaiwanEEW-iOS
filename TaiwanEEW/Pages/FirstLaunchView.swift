@@ -97,6 +97,10 @@ private extension FirstLaunchView {
         Image(systemName: "rectangle.inset.filled.and.person.filled")
             .font(.system(size: 50))
             .foregroundColor(Color.blue)
+            // Fixed height so this and the onboarding page's icon occupy identical space
+            // and both titles land at the same y position — SF Symbols render at
+            // different heights for the same point size.
+            .frame(height: 60)
     }
     
     var title: some View {

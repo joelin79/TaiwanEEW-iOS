@@ -176,11 +176,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // For iOS 10 display notification (sent via APNS)
         UNUserNotificationCenter.current().delegate = self
-        // Notification Authorization
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound, .criticalAlert]
-        UNUserNotificationCenter.current().requestAuthorization(
-        options: authOptions,
-        completionHandler: {_, _ in })
+        // Notification Authorization.
+        // Onboarding owns the first ask so the prompt appears in context, next to the
+        // explanation, instead of firing before any UI is on screen. Requesting here too
+        // would consume the one-time prompt and leave the onboarding toggle unable to ask.
+        if defaults.bool(forKey: "hasCompletedOnboarding") {
+            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound, .criticalAlert]
+            UNUserNotificationCenter.current().requestAuthorization(
+                options: authOptions,
+                completionHandler: {_, _ in })
+        }
         
         // Setup AWS Cognito credentials
         let credentialsProvider = AWSCognitoCredentialsProvider(
