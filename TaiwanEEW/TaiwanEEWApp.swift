@@ -44,81 +44,101 @@ struct TaiwanEEWApp: App {
     var body: some Scene {
         WindowGroup {
             let _ = logger.info("[Init] isFirstLaunch is currently \(isFirstLaunch)")
-            if isFirstLaunch {
-                FirstLaunchView(onDismiss: {
-                    withAnimation {
-                        isFirstLaunch = false
-                    }
-                })
-            } else if !hasCompletedOnboarding {
-                OnboardingPermissionsView(onDone: {
-                    withAnimation { hasCompletedOnboarding = true }
-                })
-            } else {
-                TabView {
-                    AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)
-                        .tabItem {
-                            Label(LocalizedStringKey("nav-alert-string"), systemImage: "exclamationmark.triangle")    // TODO: localization
+            // ZStack so the outgoing and incoming pages overlap for the length of the
+            // transition. Swapped straight in an if/else there is nothing for SwiftUI to
+            // animate between, which is why the screen changed abruptly.
+            ZStack {
+                if isFirstLaunch {
+                    FirstLaunchView(onDismiss: {
+                        withAnimation(Self.pageTransition) {
+                            isFirstLaunch = false
                         }
-                    
-                    if TaiwanEEWApp.DEBUG {
-                        HistoryView(viewModel: EarthquakeViewModel())
-                            .tabItem {
-                                Label(LocalizedStringKey("nav-history-string"), systemImage: "chart.bar.doc.horizontal")
-                            }
-                    }
-                    
-                    // Second entry point to donations; the Settings screen still presents
-                    // this same view modally, which is why it takes the dismiss controls
-                    // away here rather than showing a close button with nothing to close.
-                    DonateView(showsDismissControls: false)
-                        .tabItem {
-                            Label(LocalizedStringKey("nav-donate-string"), systemImage: "heart")
-                        }
-
-                    SettingsView(
-                        onHistoryRangeChanged: { newValue in
-                            historyRange = newValue
-                        }, onSubscribedLocChanged: { newValue in
-                            subscribedCityIndex = newValue[0]
-                            subscribedDistrictIndex = newValue[1]
-                            NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
-                        }, onNotifyThresholdChanged: { newValue in
-                            notifyThreshold = newValue
-                            NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
-                        })
-                    .tabItem {
-                        Label(LocalizedStringKey("nav-settings-string"), systemImage: "gear")
-                    }
+                    })
+                    // Leaves to the left as the permissions page arrives from the right,
+                    // so the two read as consecutive pages of one flow.
+                    .transition(.asymmetric(insertion: .identity,
+                                            removal: .move(edge: .leading)))
+                } else if !hasCompletedOnboarding {
+                    OnboardingPermissionsView(onDone: {
+                        withAnimation(Self.pageTransition) { hasCompletedOnboarding = true }
+                    })
+                    .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                            removal: .move(edge: .leading)))
+                } else {
+                    // The app fades up rather than sliding in: it is the destination, not
+                    // another page in the sequence.
+                    mainTabView
+                        .transition(.opacity)
                 }
-                .onAppear {
-                    // correct the transparency bug for Tab bars
-                    let tabBarAppearance = UITabBarAppearance()
-                    tabBarAppearance.configureWithDefaultBackground()
-                    UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-                    // correct the transparency bug for Navigation bars
-//                    let navigationBarAppearance = UINavigationBarAppearance()
-//                    navigationBarAppearance.configureWithOpaqueBackground()
-//                    UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
-                    
-                    // Validate and recover subscription state
-                    NotificationManager.AWSManager.validateSubscriptionState()
-                    
-                    // Initialize location manager and set up auto-location callback
-                    let locationManager = LocationManager.shared
-                    locationManager.onLocationChanged = { cityIndex, districtIndex in
-                        // Handle auto-location changes through the coordinated path
-                        // This ensures @AppStorage is updated and prevents double subscriptions
-                        DispatchQueue.main.async {
-                            subscribedCityIndex = cityIndex
-                            subscribedDistrictIndex = districtIndex
-                            NotificationManager.setNotifyMode(
-                                cityIndex: cityIndex, 
-                                districtIndex: districtIndex, 
-                                threshold: notifyThreshold
-                            )
-                        }
+            }
+        }
+    }
+
+    private static let pageTransition: Animation = .easeInOut(duration: 0.35)
+
+    private var mainTabView: some View {
+        TabView {
+            AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)
+                .tabItem {
+                    Label(LocalizedStringKey("nav-alert-string"), systemImage: "exclamationmark.triangle")    // TODO: localization
+                }
+
+            if TaiwanEEWApp.DEBUG {
+                HistoryView(viewModel: EarthquakeViewModel())
+                    .tabItem {
+                        Label(LocalizedStringKey("nav-history-string"), systemImage: "chart.bar.doc.horizontal")
                     }
+            }
+
+            // Second entry point to donations; the Settings screen still presents
+            // this same view modally, which is why it takes the dismiss controls
+            // away here rather than showing a close button with nothing to close.
+            DonateView(showsDismissControls: false)
+                .tabItem {
+                    Label(LocalizedStringKey("nav-donate-string"), systemImage: "heart")
+                }
+
+            SettingsView(
+                onHistoryRangeChanged: { newValue in
+                    historyRange = newValue
+                }, onSubscribedLocChanged: { newValue in
+                    subscribedCityIndex = newValue[0]
+                    subscribedDistrictIndex = newValue[1]
+                    NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
+                }, onNotifyThresholdChanged: { newValue in
+                    notifyThreshold = newValue
+                    NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
+                })
+            .tabItem {
+                Label(LocalizedStringKey("nav-settings-string"), systemImage: "gear")
+            }
+        }
+        .onAppear {
+            // correct the transparency bug for Tab bars
+            let tabBarAppearance = UITabBarAppearance()
+            tabBarAppearance.configureWithDefaultBackground()
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+            // correct the transparency bug for Navigation bars
+//            let navigationBarAppearance = UINavigationBarAppearance()
+//            navigationBarAppearance.configureWithOpaqueBackground()
+//            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+
+            // Validate and recover subscription state
+            NotificationManager.AWSManager.validateSubscriptionState()
+
+            // Initialize location manager and set up auto-location callback
+            let locationManager = LocationManager.shared
+            locationManager.onLocationChanged = { cityIndex, districtIndex in
+                // Handle auto-location changes through the coordinated path
+                // This ensures @AppStorage is updated and prevents double subscriptions
+                DispatchQueue.main.async {
+                    subscribedCityIndex = cityIndex
+                    subscribedDistrictIndex = districtIndex
+                    NotificationManager.setNotifyMode(
+                        cityIndex: cityIndex,
+                        districtIndex: districtIndex,
+                        threshold: notifyThreshold
+                    )
                 }
             }
         }

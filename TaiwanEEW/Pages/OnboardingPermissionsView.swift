@@ -49,17 +49,22 @@ struct OnboardingPermissionsView: View {
                 icon
                 title
 
-                ScrollView {
-                    VStack(spacing: 20) {
-                        notificationCard
-                        if needsManualRegion {
-                            manualRegionCard
-                        } else {
-                            autoLocationCard
-                        }
+                // Laid out to fit rather than scroll. Both permissions have to be visible
+                // at once for the page to read as a single decision; behind a scroll view
+                // the second one sits below the fold and looks optional.
+                VStack(spacing: 20) {
+                    notificationCard
+                    if needsManualRegion {
+                        manualRegionCard
+                    } else {
+                        autoLocationCard
                     }
-                    .padding(.top, 24)
                 }
+                .padding(.top, 24)
+
+                // Absorbs the slack so the button lands at the same height as the terms
+                // screen's, and collapses first if a small display needs the room.
+                Spacer(minLength: 20)
 
                 continueButton
             }
@@ -70,7 +75,8 @@ struct OnboardingPermissionsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.background))
-        .transition(.move(edge: .bottom))
+        // How this page enters and leaves is choreographed with the terms screen at the
+        // call site in TaiwanEEWApp, so the two stay in step.
         .animation(.default, value: needsManualRegion)
         .onAppear { refreshNotificationSettings() }
         // Re-read on return from iOS Settings, where these toggles actually live.
