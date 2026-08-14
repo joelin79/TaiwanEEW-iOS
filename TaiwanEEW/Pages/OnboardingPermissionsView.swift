@@ -247,9 +247,25 @@ struct OnboardingPermissionsView: View {
     private func finish() {
         // Commit the chosen region. Subscription is gated until this runs, so a user who
         // never reaches here is not silently subscribed to the default district.
+        //
+        // Auto-location has to be resolved here rather than read from storage: the
+        // onLocationChanged callback that normally writes these indices is registered on
+        // the TabView, which does not exist yet during onboarding. Without this the card
+        // would show the user's real district while the stored indices were still 0/0 —
+        // the first district in the list — and that is what would get subscribed.
+        var cityIndex = subscribedCityIndex
+        var districtIndex = subscribedDistrictIndex
+        if locationManager.isAutoLocationEnabled,
+           let location = locationManager.currentLocation {
+            // Same call the card displays from, so what is committed is what was shown.
+            (cityIndex, districtIndex, _) = locationManager.findClosestDistrict(to: location.coordinate)
+            subscribedCityIndex = cityIndex
+            subscribedDistrictIndex = districtIndex
+        }
+
         NotificationManager.setNotifyMode(
-            cityIndex: subscribedCityIndex,
-            districtIndex: subscribedDistrictIndex,
+            cityIndex: cityIndex,
+            districtIndex: districtIndex,
             threshold: NotifyThreshold(rawValue: UserDefaults.standard.string(forKey: "notifyThreshold") ?? "eg3") ?? .eg3
         )
         onDone()
