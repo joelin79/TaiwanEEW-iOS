@@ -79,8 +79,9 @@ struct NotificationSettingsLink: View {
 }
 
 /// Everything currently degrading notification delivery, or a single line confirming all
-/// is well. Issues stay orange even when the headline icon is red, matching how Settings
-/// has always drawn them.
+/// is well. Issues take the status colour rather than a fixed orange, so a refused
+/// permission reads red and a merely disabled sub-permission reads orange — they are not
+/// the same severity, and the icon already made that distinction.
 struct NotificationStatusRow: View {
     let status: NotificationPermissionStatus
 
@@ -89,7 +90,7 @@ struct NotificationStatusRow: View {
                             color: status.color,
                             headline: status.headline) {
             ForEach(status.issues, id: \.self) { issue in
-                PermissionDetailText(text: issue, color: .orange)
+                PermissionDetailText(text: issue, color: status.color)
             }
         }
     }

@@ -31,11 +31,14 @@ struct OnboardingPermissionsView: View {
         NotificationPermissionStatus(settings: notificationSettings)
     }
 
-    /// The prompt has been answered and the answer was no. Nothing is shown while the
-    /// choice is still pending, so the page never warns about a refusal that has not
-    /// happened yet.
-    private var notificationsBlocked: Bool {
-        notificationStatus.isDetermined && !notificationStatus.isAllowed
+    /// Something is wrong with notification delivery and the user has already answered the
+    /// prompt: either they refused outright, or they allowed notifications while critical
+    /// or time-sensitive alerts are off, which quietly downgrades warnings to something an
+    /// earthquake could sleep through. The isDetermined guard keeps the page from warning
+    /// about a refusal that has not happened yet, since an unanswered prompt is not
+    /// "allowed" either.
+    private var notificationsNeedFixing: Bool {
+        notificationStatus.isDetermined && notificationStatus.needsAttention
     }
 
     private var permission: LocationPermissionStatus {
@@ -65,7 +68,7 @@ struct OnboardingPermissionsView: View {
                 }
                 .padding(.top, 24)
 
-                if notificationsBlocked {
+                if notificationsNeedFixing {
                     notificationWarning
                         .padding(.top, 16)
                 }
@@ -86,7 +89,7 @@ struct OnboardingPermissionsView: View {
         // How this page enters and leaves is choreographed with the terms screen at the
         // call site in TaiwanEEWApp, so the two stay in step.
         .animation(.default, value: needsManualRegion)
-        .animation(.default, value: notificationsBlocked)
+        .animation(.default, value: notificationsNeedFixing)
         .onAppear { requestNotifications() }
         // Re-read on return from iOS Settings, which is where the warning sends them.
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
@@ -94,25 +97,32 @@ struct OnboardingPermissionsView: View {
         }
     }
 
-    /// Shown only once notifications have actually been refused. There is no toggle to
-    /// undo it with — iOS will not prompt twice — so the only honest thing to offer is the
-    /// route to Settings.
+    /// Reports whatever is currently degrading delivery, using the same status row as
+    /// Settings. Tinted by severity rather than always red — a refused permission and a
+    /// disabled critical alert are not the same problem — and shaped like the region card
+    /// so it reads as part of the page rather than an error pasted onto it.
+    ///
+    /// No toggle accompanies it: iOS will not prompt twice, so Settings is the only route
+    /// that actually changes anything.
     private var notificationWarning: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label {
-                Text("通知權限已關閉，將無法收到地震預警。")
-                    .font(.subheadline)
-                    .foregroundStyle(.red)
-                    .fixedSize(horizontal: false, vertical: true)
-            } icon: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.red)
-            }
+            NotificationStatusRow(status: notificationStatus)
+
+            Divider()
 
             NotificationSettingsLink(needsAttention: true)
                 .font(.subheadline)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(notificationStatus.color.opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(notificationStatus.color.opacity(0.35), lineWidth: 1)
+        )
     }
 
     // MARK: - Header (matches FirstLaunchView)
