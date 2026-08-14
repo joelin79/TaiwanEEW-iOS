@@ -23,8 +23,13 @@ struct OnboardingPermissionsView: View {
     @AppStorage("subscribedDistrictIndex") private var subscribedDistrictIndex: Int = 0
     @StateObject private var locationManager = LocationManager.shared
 
-    @State private var notificationsGranted = false
-    @State private var notificationsAsked = false
+    // The full settings object rather than a granted/denied flag: the status row reports on
+    // the critical and time-sensitive sub-permissions too, exactly as Settings does.
+    @State private var notificationSettings: UNNotificationSettings? = nil
+
+    private var notificationStatus: NotificationPermissionStatus {
+        NotificationPermissionStatus(settings: notificationSettings)
+    }
 
     private var permission: LocationPermissionStatus {
         LocationPermissionStatus(status: locationManager.authorizationStatus)
@@ -67,10 +72,10 @@ struct OnboardingPermissionsView: View {
         .background(Color(.background))
         .transition(.move(edge: .bottom))
         .animation(.default, value: needsManualRegion)
-        .onAppear { refreshNotificationStatus() }
-        // Permission can change in iOS Settings while the app is backgrounded.
+        .onAppear { refreshNotificationSettings() }
+        // Re-read on return from iOS Settings, where these toggles actually live.
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-            refreshNotificationStatus()
+            refreshNotificationSettings()
         }
     }
 
@@ -107,11 +112,12 @@ struct OnboardingPermissionsView: View {
     private var notificationCard: some View {
         card {
             Toggle(isOn: Binding(
-                get: { notificationsGranted },
+                get: { notificationStatus.isAllowed },
                 set: { wants in
-                    // Only the first tap can prompt; iOS ignores later requests, so send
-                    // the user to Settings once the choice has been made.
-                    if wants && !notificationsAsked {
+                    // iOS shows the system prompt once. Once it has been answered, the
+                    // only way to change it is Settings, so send the user there rather
+                    // than leaving a toggle that silently does nothing.
+                    if wants && !notificationStatus.isDetermined {
                         requestNotifications()
                     } else if wants {
                         openAppSettings()
@@ -121,31 +127,21 @@ struct OnboardingPermissionsView: View {
                 Label("地震通知", systemImage: "bell.badge.fill")
                     .font(.headline)
             }
-            .disabled(notificationsGranted)
+            .disabled(notificationStatus.isAllowed)
 
-            Text(notificationsGranted
-                 ? "已允許通知，地震發生時會立即提醒您。"
-                 : "地震速報透過推播在第一時間提醒您。未允許通知將無法收到地震預警。")
+            Text("地震速報透過推播在第一時間提醒您。未允許通知將無法收到地震預警。")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // iOS only shows the system prompt once. Once it has been answered, the only
-            // way to change it is Settings, so offer that route rather than a toggle that
-            // silently does nothing.
-            if notificationsAsked && !notificationsGranted {
+            // Same status block and recovery link as Settings, so the two screens describe
+            // an identical permission state identically.
+            if notificationSettings != nil {
                 Divider()
-                Label {
-                    Text("通知權限已關閉，將無法收到地震預警。")
-                        .font(.subheadline)
-                        .foregroundStyle(.red)
-                        .fixedSize(horizontal: false, vertical: true)
-                } icon: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.red)
+                NotificationStatusRow(status: notificationStatus)
+                if notificationStatus.needsAttention {
+                    NotificationSettingsLink(needsAttention: true)
                 }
-                Button("前往設定開啟通知") { openAppSettings() }
-                    .font(.subheadline)
             }
         }
     }
@@ -169,38 +165,16 @@ struct OnboardingPermissionsView: View {
 
             if locationManager.isAutoLocationEnabled {
                 Divider()
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: permission.icon)
-                        .foregroundStyle(permission.color)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(permission.headline)
-                            .font(.subheadline.weight(.semibold))
-                        if let location = locationManager.currentLocation {
-                            let (cityIndex, districtIndex, _) = locationManager.findClosestDistrict(to: location.coordinate)
-                            Text("通知區域：\(Location.cities[cityIndex].district[districtIndex].districtName)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        } else if permission.canFetchLocation {
-                            Text("正在取得位置...")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
+                AutoLocationStatusRow(permission: permission,
+                                      locationManager: locationManager)
 
                 // Same recovery affordance as Settings: when permission is the blocker,
                 // point at where it is actually fixable.
-                switch locationManager.authorizationStatus {
-                case .authorizedWhenInUse:
-                    Button("前往設定選擇「一律允許」") { openAppSettings() }
-                        .font(.subheadline)
-                case .notDetermined:
-                    Button("允許位置權限") { locationManager.updateLocationManually() }
-                        .font(.subheadline)
-                default:
-                    EmptyView()
-                }
+                LocationFixButton(
+                    status: permission,
+                    requestPermission: { locationManager.updateLocationManually() },
+                    openSettings: { openAppSettings() }
+                )
             }
         }
     }
@@ -237,8 +211,7 @@ struct OnboardingPermissionsView: View {
                 }
             }
 
-            Button("前往設定開啟位置權限") { openAppSettings() }
-                .font(.subheadline)
+            PermissionFixButton(title: "前往設定開啟位置權限") { openAppSettings() }
         }
     }
 
@@ -283,24 +256,22 @@ struct OnboardingPermissionsView: View {
     }
 
     private func requestNotifications() {
-        notificationsAsked = true
         UNUserNotificationCenter.current().requestAuthorization(
             options: [.alert, .badge, .sound, .criticalAlert]
         ) { granted, _ in
             DispatchQueue.main.async {
-                notificationsGranted = granted
                 if granted { UIApplication.shared.registerForRemoteNotifications() }
+                // Re-read rather than trusting `granted`: it says nothing about the
+                // critical and time-sensitive sub-permissions the status row reports.
+                refreshNotificationSettings()
             }
         }
     }
 
-    private func refreshNotificationStatus() {
+    private func refreshNotificationSettings() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
-                notificationsGranted = settings.authorizationStatus == .authorized
-                    || settings.authorizationStatus == .provisional
-                    || settings.authorizationStatus == .ephemeral
-                if settings.authorizationStatus != .notDetermined { notificationsAsked = true }
+                notificationSettings = settings
             }
         }
     }

@@ -61,13 +61,18 @@ struct SettingsView: View {
         UIApplication.shared.open(url)
     }
 
-    // MARK: - Notification permission presentation
+    // MARK: - Permission presentation
+    //
+    // Both permissions are described by shared models so this screen and onboarding cannot
+    // drift apart in wording, icon or colour. See NotificationPermissionStatus and
+    // LocationPermissionStatus.
 
-    /// True when notifications are denied or a sub-permission is off - i.e. the settings
-    /// link is a fix rather than a shortcut. False until the async read completes.
-    private var notificationNeedsAttention: Bool {
-        guard let settings = notificationSettings else { return false }
-        return !notificationIssues(settings).isEmpty
+    private var notificationStatus: NotificationPermissionStatus {
+        NotificationPermissionStatus(settings: notificationSettings)
+    }
+
+    private var locationPermission: LocationPermissionStatus {
+        LocationPermissionStatus(status: locationManager.authorizationStatus)
     }
 
     private func refreshNotificationSettings() {
@@ -78,112 +83,12 @@ struct SettingsView: View {
         }
     }
 
-    private func isNotificationAllowed(_ s: UNNotificationSettings) -> Bool {
-        s.authorizationStatus == .authorized
-            || s.authorizationStatus == .provisional
-            || s.authorizationStatus == .ephemeral
-    }
-
-    /// Sub-permissions that are off while notifications are otherwise allowed. Each one
-    /// degrades delivery in a way the user would not otherwise see until an earthquake.
-    private func notificationIssues(_ s: UNNotificationSettings) -> [String] {
-        guard isNotificationAllowed(s) else {
-            return ["通知權限已關閉，將無法接收地震預警"]
-        }
-        var issues: [String] = []
-        if s.criticalAlertSetting == .disabled {
-            issues.append("「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響")
-        }
-        if s.timeSensitiveSetting == .disabled {
-            issues.append("「時效性通知」已關閉：通知可能不會即時顯示")
-        }
-        return issues
-    }
-
-    /// Describes the iOS permission, not whether alerts are actually being delivered -
-    /// the user may separately have set the intensity threshold to off, and calling that
-    /// "啟用" would read as a contradiction.
-    private func notificationHeadline(_ s: UNNotificationSettings) -> String {
-        switch s.authorizationStatus {
-        case .denied:        return "通知權限已關閉"
-        case .notDetermined: return "尚未取得通知權限"
-        default:             return notificationIssues(s).isEmpty ? "已取得通知權限" : "通知權限不完整"
-        }
-    }
-
-    private func notificationStatusIcon(_ s: UNNotificationSettings) -> String {
-        switch s.authorizationStatus {
-        case .denied:        return "xmark.circle.fill"
-        case .notDetermined: return "questionmark.circle.fill"
-        default:             return notificationIssues(s).isEmpty ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-        }
-    }
-
-    private func notificationStatusColor(_ s: UNNotificationSettings) -> Color {
-        switch s.authorizationStatus {
-        case .denied:        return .red
-        case .notDetermined: return .orange
-        default:             return notificationIssues(s).isEmpty ? .green : .orange
-        }
-    }
-
-    // MARK: - Auto-location status presentation
-    // Each authorization state fails differently, so each one says what is actually true:
-    // "While Using" cannot update in the background, and denied/notDetermined cannot read
-    // location at all - none of which is "enabled".
-
-    private var canFetchLocation: Bool {
-        locationManager.authorizationStatus == .authorizedAlways
-            || locationManager.authorizationStatus == .authorizedWhenInUse
-    }
-
     /// Auto-location is only actually driving the subscribed district when the toggle is on
     /// *and* permission allows reading location. Manual selection is locked on this rather
     /// than on the toggle alone, so a user whose permission is denied is never left with
     /// neither automatic nor manual district selection.
     private var isAutoLocationActive: Bool {
-        locationManager.isAutoLocationEnabled && canFetchLocation
-    }
-
-    private var autoLocationHeadline: String {
-        switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return "自動定位運作中"
-        case .authorizedWhenInUse: return "自動定位僅前景可用"
-        case .denied, .restricted: return "自動定位無法運作"
-        case .notDetermined:       return "尚未取得位置權限"
-        @unknown default:          return "自動定位狀態不明"
-        }
-    }
-
-    private var autoLocationStatusDetail: String {
-        switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return "背景更新已啟用"
-        case .authorizedWhenInUse: return "僅在開啟App時更新，需要「一律允許」才能在背景自動切換區域"
-        case .denied:              return "位置權限已關閉，無法取得您的位置"
-        case .restricted:          return "位置權限受到限制，無法取得您的位置"
-        case .notDetermined:       return "尚未授予位置權限，無法取得您的位置"
-        @unknown default:          return "無法判斷位置權限狀態"
-        }
-    }
-
-    private var autoLocationStatusIcon: String {
-        switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return "checkmark.circle.fill"
-        case .authorizedWhenInUse: return "exclamationmark.triangle.fill"
-        case .denied, .restricted: return "xmark.circle.fill"
-        case .notDetermined:       return "questionmark.circle.fill"
-        @unknown default:          return "questionmark.circle.fill"
-        }
-    }
-
-    private var autoLocationStatusColor: Color {
-        switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return .green
-        case .authorizedWhenInUse: return .orange
-        case .denied, .restricted: return .red
-        case .notDetermined:       return .orange
-        @unknown default:          return .orange
-        }
+        locationManager.isAutoLocationEnabled && locationPermission.canFetchLocation
     }
 
     /// Debug/TestFlight only - never rendered for App Store users.
@@ -320,69 +225,16 @@ struct SettingsView: View {
                 }
             
             if locationManager.isAutoLocationEnabled {
-                HStack {
-                    Image(systemName: autoLocationStatusIcon)
-                        .foregroundColor(autoLocationStatusColor)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(autoLocationHeadline)
-                            .font(.headline)
-                        if let location = locationManager.currentLocation {
-                            let (cityIndex, districtIndex, distance) = locationManager.findClosestDistrict(to: location.coordinate)
-                            let districtName = Location.cities[cityIndex].district[districtIndex].districtName
-                            let distanceKm = String(format: "%.1f", distance / 1000)
-                            HStack {
-                                Text("最近震度參考點：\(districtName)")
-                                    .font(.caption)
-                                Text("(\(distanceKm) 公里)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } else if canFetchLocation {
-                            // Only claim we are working on it when permission actually allows it;
-                            // otherwise the status line below explains what is blocking.
-                            Text("正在取得位置...")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                AutoLocationStatusRow(permission: locationPermission,
+                                      locationManager: locationManager)
 
-                        Text(autoLocationStatusDetail)
-                            .font(.caption)
-                            .foregroundColor(locationManager.authorizationStatus == .authorizedAlways ? .secondary : autoLocationStatusColor)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 8)
-                
                 // When permission is the blocker, a manual refresh cannot help - send the
                 // user where the problem is actually fixable instead.
-                switch locationManager.authorizationStatus {
-                case .denied, .restricted:
-                    Button("前往設定開啟位置權限") {
-                        openAppSettings()
-                    }
-                    .foregroundColor(.blue)
-                case .authorizedWhenInUse:
-                    Button("前往設定選擇「一律允許」") {
-                        openAppSettings()
-                    }
-                    .foregroundColor(.blue)
-                case .notDetermined:
-                    // updateLocationManually() requests permission in this state rather
-                    // than refreshing, so label it for what it actually does.
-                    Button("允許位置權限") {
-                        locationManager.updateLocationManually()
-                    }
-                    .foregroundColor(.blue)
-                default:
-                    // Manual refresh hidden: with permission granted, location already
-                    // updates on its own, so the button only invited confusion.
-//                    Button("手動更新位置") {
-//                        locationManager.updateLocationManually()
-//                    }
-//                    .foregroundColor(.blue)
-                    EmptyView()
-                }
+                LocationFixButton(
+                    status: locationPermission,
+                    requestPermission: { locationManager.updateLocationManually() },
+                    openSettings: { openAppSettings() }
+                )
             }
         }
     }
@@ -476,23 +328,8 @@ struct SettingsView: View {
             // Critical and time-sensitive alerts are separate iOS toggles that silently
             // downgrade delivery when off, so surface them here rather than leaving the
             // user to discover it during an earthquake.
-            if let settings = notificationSettings {
-                HStack {
-                    Image(systemName: notificationStatusIcon(settings))
-                        .foregroundColor(notificationStatusColor(settings))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(notificationHeadline(settings))
-                            .font(.headline)
-                        ForEach(notificationIssues(settings), id: \.self) { issue in
-                            Text(issue)
-                                .font(.caption)
-                                .foregroundColor(.orange)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer()
-                }
-                .padding(.vertical, 8)
+            if notificationSettings != nil {
+                NotificationStatusRow(status: notificationStatus)
             }
 
             List {
@@ -502,16 +339,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            Link(destination: UIApplication.appNotificationSettingsURL!) {
-                HStack{
-                    Image(systemName: "iphone.radiowaves.left.and.right")
-                        .foregroundStyle(.red)
-                    // Reads as a fix-this action while something is wrong, and as a plain
-                    // settings shortcut once everything is in order.
-                    Text(notificationNeedsAttention ? "修正強制警報設定" : "強制警報設定")
-                        .foregroundStyle(.blue)
-                }
-            }
+            NotificationSettingsLink(needsAttention: notificationStatus.needsAttention)
         }.onChange(of: notifySelection) { value in
             onNotifyThresholdChanged?(value)
         }
