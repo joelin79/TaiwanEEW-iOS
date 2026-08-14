@@ -144,14 +144,17 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         UIApplication.shared.applicationIconBadgeNumber = 0
 
-        // Migration: anyone already past first launch chose their region under the old
-        // build, so mark onboarding complete. Without this the new subscription gate would
-        // strand existing users with no district subscription.
+        // Onboarding targets anyone whose alert region is not already tracking them: brand
+        // new installs, and upgraders still on a hand-picked district who would otherwise
+        // have to discover auto-location in Settings on their own. Users already running
+        // auto-location have nothing to gain from it and are marked done.
+        //
+        // Writing the flag on the very first run also means a user who quits partway
+        // through onboarding finds it already present (as false) on relaunch, so they
+        // resume onboarding instead of being mistaken for someone who finished.
         let defaults = UserDefaults.standard
-        if defaults.object(forKey: "hasCompletedOnboarding") == nil,
-           defaults.object(forKey: "isFirstLaunch") != nil,
-           defaults.bool(forKey: "isFirstLaunch") == false {
-            defaults.set(true, forKey: "hasCompletedOnboarding")
+        if defaults.object(forKey: "hasCompletedOnboarding") == nil {
+            defaults.set(defaults.bool(forKey: "autoLocationEnabled"), forKey: "hasCompletedOnboarding")
         }
 
         // Register BGTasks as early as possible (before returning from didFinishLaunching)
