@@ -2,9 +2,11 @@
 //  OnboardingPermissionsView.swift
 //  TaiwanEEW
 //
-//  Second onboarding page. Both asks live here because both are permissions:
-//  notifications on top (without them the app cannot warn you at all), auto-location
-//  below (it decides *which* region's warnings you get).
+//  Second onboarding page, and the only decision it asks the user to make is the alert
+//  region. Notification permission is requested on appear without a row of its own: it is
+//  not really a choice — the app has no purpose without it — and a toggle for something
+//  iOS will only ever prompt once just adds a control that stops working after the first
+//  answer. Settings is where notification state is reported and repaired.
 //
 //  Auto-location is the encouraged default — it keeps the alert region correct as the
 //  user moves. Manual district selection is deliberately NOT offered up front; it only
@@ -22,14 +24,6 @@ struct OnboardingPermissionsView: View {
     @AppStorage("subscribedCityIndex") private var subscribedCityIndex: Int = 0
     @AppStorage("subscribedDistrictIndex") private var subscribedDistrictIndex: Int = 0
     @StateObject private var locationManager = LocationManager.shared
-
-    // The full settings object rather than a granted/denied flag: the status row reports on
-    // the critical and time-sensitive sub-permissions too, exactly as Settings does.
-    @State private var notificationSettings: UNNotificationSettings? = nil
-
-    private var notificationStatus: NotificationPermissionStatus {
-        NotificationPermissionStatus(settings: notificationSettings)
-    }
 
     private var permission: LocationPermissionStatus {
         LocationPermissionStatus(status: locationManager.authorizationStatus)
@@ -49,11 +43,7 @@ struct OnboardingPermissionsView: View {
                 icon
                 title
 
-                // Laid out to fit rather than scroll. Both permissions have to be visible
-                // at once for the page to read as a single decision; behind a scroll view
-                // the second one sits below the fold and looks optional.
-                VStack(spacing: 20) {
-                    notificationCard
+                Group {
                     if needsManualRegion {
                         manualRegionCard
                     } else {
@@ -78,17 +68,14 @@ struct OnboardingPermissionsView: View {
         // How this page enters and leaves is choreographed with the terms screen at the
         // call site in TaiwanEEWApp, so the two stay in step.
         .animation(.default, value: needsManualRegion)
-        .onAppear { refreshNotificationSettings() }
-        // Re-read on return from iOS Settings, where these toggles actually live.
-        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-            refreshNotificationSettings()
-        }
+        .onAppear { requestNotifications() }
     }
 
     // MARK: - Header (matches FirstLaunchView)
 
     private var icon: some View {
-        Image(systemName: "bell.badge.circle.fill")
+        // Location, not a bell: the region is the only thing this page puts on screen.
+        Image(systemName: "location.circle.fill")
             .font(.system(size: 50))
             .foregroundColor(Color.blue)
             // Must match FirstLaunchView's icon frame so both titles sit at the same y.
@@ -113,46 +100,7 @@ struct OnboardingPermissionsView: View {
             )
     }
 
-    // MARK: - Notifications (top)
-
-    private var notificationCard: some View {
-        card {
-            Toggle(isOn: Binding(
-                get: { notificationStatus.isAllowed },
-                set: { wants in
-                    // iOS shows the system prompt once. Once it has been answered, the
-                    // only way to change it is Settings, so send the user there rather
-                    // than leaving a toggle that silently does nothing.
-                    if wants && !notificationStatus.isDetermined {
-                        requestNotifications()
-                    } else if wants {
-                        openAppSettings()
-                    }
-                }
-            )) {
-                Label("地震通知", systemImage: "bell.badge.fill")
-                    .font(.headline)
-            }
-            .disabled(notificationStatus.isAllowed)
-
-            Text("地震速報透過推播在第一時間提醒您。未允許通知將無法收到地震預警。")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            // Same status block and recovery link as Settings, so the two screens describe
-            // an identical permission state identically.
-            if notificationSettings != nil {
-                Divider()
-                NotificationStatusRow(status: notificationStatus)
-                if notificationStatus.needsAttention {
-                    NotificationSettingsLink(needsAttention: true)
-                }
-            }
-        }
-    }
-
-    // MARK: - Auto-location (bottom, the encouraged default)
+    // MARK: - Auto-location (the only thing on this page)
 
     private var autoLocationCard: some View {
         card {
@@ -277,23 +225,19 @@ struct OnboardingPermissionsView: View {
         onDone()
     }
 
+    /// Fires the system notification prompt with no UI of its own — the page asks for the
+    /// permission without spending a row on it.
+    ///
+    /// Safe to call on every appearance: iOS presents the prompt only while the choice is
+    /// still .notDetermined and otherwise just replays the existing answer. Notification
+    /// state is not surfaced here; Settings is where it is reported and repaired.
     private func requestNotifications() {
         UNUserNotificationCenter.current().requestAuthorization(
             options: [.alert, .badge, .sound, .criticalAlert]
         ) { granted, _ in
+            guard granted else { return }
             DispatchQueue.main.async {
-                if granted { UIApplication.shared.registerForRemoteNotifications() }
-                // Re-read rather than trusting `granted`: it says nothing about the
-                // critical and time-sensitive sub-permissions the status row reports.
-                refreshNotificationSettings()
-            }
-        }
-    }
-
-    private func refreshNotificationSettings() {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                notificationSettings = settings
+                UIApplication.shared.registerForRemoteNotifications()
             }
         }
     }
