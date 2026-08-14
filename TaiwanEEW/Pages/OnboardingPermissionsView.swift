@@ -25,6 +25,19 @@ struct OnboardingPermissionsView: View {
     @AppStorage("subscribedDistrictIndex") private var subscribedDistrictIndex: Int = 0
     @StateObject private var locationManager = LocationManager.shared
 
+    @State private var notificationSettings: UNNotificationSettings? = nil
+
+    private var notificationStatus: NotificationPermissionStatus {
+        NotificationPermissionStatus(settings: notificationSettings)
+    }
+
+    /// The prompt has been answered and the answer was no. Nothing is shown while the
+    /// choice is still pending, so the page never warns about a refusal that has not
+    /// happened yet.
+    private var notificationsBlocked: Bool {
+        notificationStatus.isDetermined && !notificationStatus.isAllowed
+    }
+
     private var permission: LocationPermissionStatus {
         LocationPermissionStatus(status: locationManager.authorizationStatus)
     }
@@ -52,6 +65,11 @@ struct OnboardingPermissionsView: View {
                 }
                 .padding(.top, 24)
 
+                if notificationsBlocked {
+                    notificationWarning
+                        .padding(.top, 16)
+                }
+
                 // Absorbs the slack so the button lands at the same height as the terms
                 // screen's, and collapses first if a small display needs the room.
                 Spacer(minLength: 20)
@@ -68,7 +86,33 @@ struct OnboardingPermissionsView: View {
         // How this page enters and leaves is choreographed with the terms screen at the
         // call site in TaiwanEEWApp, so the two stay in step.
         .animation(.default, value: needsManualRegion)
+        .animation(.default, value: notificationsBlocked)
         .onAppear { requestNotifications() }
+        // Re-read on return from iOS Settings, which is where the warning sends them.
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            refreshNotificationSettings()
+        }
+    }
+
+    /// Shown only once notifications have actually been refused. There is no toggle to
+    /// undo it with — iOS will not prompt twice — so the only honest thing to offer is the
+    /// route to Settings.
+    private var notificationWarning: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text("通知權限已關閉，將無法收到地震預警。")
+                    .font(.subheadline)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.red)
+            }
+
+            NotificationSettingsLink(needsAttention: true)
+                .font(.subheadline)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Header (matches FirstLaunchView)
@@ -235,9 +279,19 @@ struct OnboardingPermissionsView: View {
         UNUserNotificationCenter.current().requestAuthorization(
             options: [.alert, .badge, .sound, .criticalAlert]
         ) { granted, _ in
-            guard granted else { return }
             DispatchQueue.main.async {
-                UIApplication.shared.registerForRemoteNotifications()
+                if granted { UIApplication.shared.registerForRemoteNotifications() }
+                // Read the result back so a refusal surfaces the warning immediately,
+                // rather than waiting for the next time the app becomes active.
+                refreshNotificationSettings()
+            }
+        }
+    }
+
+    private func refreshNotificationSettings() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                notificationSettings = settings
             }
         }
     }
