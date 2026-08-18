@@ -17,6 +17,7 @@
 
 import SwiftUI
 import UserNotifications
+import MapKit
 
 struct OnboardingPermissionsView: View {
     var onDone: () -> Void
@@ -48,6 +49,20 @@ struct OnboardingPermissionsView: View {
     /// Location is unusable, so fall back to letting the user pick a region by hand.
     private var needsManualRegion: Bool { permission.isBlocked }
 
+    /// Shown only once there is a fix to show. An empty map, or one framed on the whole
+    /// island, would say less than nothing while the location is still being acquired.
+    private var showsLocationMap: Bool {
+        !needsManualRegion
+            && locationManager.isAutoLocationEnabled
+            && locationManager.currentLocation != nil
+    }
+
+    /// Continuing without having set up any region at all. Manual selection does not
+    /// count as declining — that user has chosen one, just not automatically.
+    private var isDecliningAutoLocation: Bool {
+        !needsManualRegion && !locationManager.isAutoLocationEnabled
+    }
+
     // Layout mirrors FirstLaunchView so the two onboarding screens feel like one flow:
     // same max width, same icon/title sizes and position, same full-width button at the
     // bottom with the same vertical padding.
@@ -73,6 +88,14 @@ struct OnboardingPermissionsView: View {
                         .padding(.top, 16)
                 }
 
+                if showsLocationMap {
+                    // Height is taken from the viewport rather than fixed, so the map
+                    // gives up room on a short display instead of pushing the button off
+                    // the bottom of it.
+                    locationMap(height: min(180, geometry.size.height * 0.20))
+                        .padding(.top, 16)
+                }
+
                 // Absorbs the slack so the button lands at the same height as the terms
                 // screen's, and collapses first if a small display needs the room.
                 Spacer(minLength: 20)
@@ -90,6 +113,7 @@ struct OnboardingPermissionsView: View {
         // call site in TaiwanEEWApp, so the two stay in step.
         .animation(.default, value: needsManualRegion)
         .animation(.default, value: notificationsNeedFixing)
+        .animation(.default, value: showsLocationMap)
         .onAppear { requestNotifications() }
         // Re-read on return from iOS Settings, which is where the warning sends them.
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
@@ -227,9 +251,36 @@ struct OnboardingPermissionsView: View {
 
     /// Same shape, weight and position as FirstLaunchView's dismiss button, with Liquid
     /// Glass on iOS 26+ and the identical solid fill below it.
+    /// Confirms where the app thinks the user is, which is the one thing the district name
+    /// alone cannot show. Deliberately not interactive: it re-centres on every location
+    /// update, so panning would only fight it.
+    private func locationMap(height: CGFloat) -> some View {
+        Map(coordinateRegion: .constant(mapRegion), showsUserLocation: true)
+            .frame(height: height)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color(.separator), lineWidth: 1)
+            )
+            .allowsHitTesting(false)
+    }
+
+    private var mapRegion: MKCoordinateRegion {
+        MKCoordinateRegion(
+            // Only rendered when a fix exists, so the fallback centre is never seen.
+            center: locationManager.currentLocation?.coordinate
+                ?? CLLocationCoordinate2D(latitude: 23.9738, longitude: 120.9820),
+            span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)
+        )
+    }
+
+    // MARK: - Continue
+
+    /// Carries the consequence of the choice rather than a fixed label: with no region set
+    /// up, "開始使用" would promise warnings the app is not going to be able to send.
     private var continueButton: some View {
         Button(action: finish) {
-            Text("開始使用")
+            Text(isDecliningAutoLocation ? "不使用自動定位" : "開始使用")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .padding()
@@ -242,11 +293,12 @@ struct OnboardingPermissionsView: View {
 
     @ViewBuilder
     private var continueBackground: some View {
+        let tint: Color = isDecliningAutoLocation ? .gray : .blue
         if #available(iOS 26.0, *) {
-            Color.blue.glassEffect(.regular.tint(.blue).interactive(),
-                                   in: .rect(cornerRadius: 16))
+            tint.glassEffect(.regular.tint(tint).interactive(),
+                             in: .rect(cornerRadius: 16))
         } else {
-            Color.blue
+            tint
         }
     }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43CF0A8D30334AD600893C20 /* U District, Seattle.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */; };
 		B421FE742C88AFEA0096A776 /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = B421FE732C88AFEA0096A776 /* XMLCoder */; };
 		B4BE165C2C63C61B00C12E80 /* AWSCognitoAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165B2C63C61B00C12E80 /* AWSCognitoAuth */; };
 		B4BE165E2C63C61B00C12E80 /* AWSCognitoIdentityProvider in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165D2C63C61B00C12E80 /* AWSCognitoIdentityProvider */; };
@@ -59,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaiwanEEWTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "U District, Seattle.gpx"; sourceTree = "<group>"; };
 		B40038EC28743FAB0095D49F /* TaiwanEEW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaiwanEEW.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Local.xcconfig; sourceTree = "<group>"; };
 		C73F779A2EFFE5430008B936 /* TaiwanEEWServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TaiwanEEWServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -164,6 +166,7 @@
 		B40038E328743FAB0095D49F = {
 			isa = PBXGroup;
 			children = (
+				43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */,
 				C7F707F72E6A70E5004D34D0 /* TaiwanEEW */,
 				C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */,
 				4367F7D93018523F00E034CF /* TaiwanEEWTests */,
@@ -333,6 +336,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43CF0A8D30334AD600893C20 /* U District, Seattle.gpx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -58,17 +58,22 @@ struct TaiwanEEWApp: App {
                     // so the two read as consecutive pages of one flow.
                     .transition(.asymmetric(insertion: .identity,
                                             removal: .move(edge: .leading)))
+                    .zIndex(2)
                 } else if !hasCompletedOnboarding {
                     OnboardingPermissionsView(onDone: {
                         withAnimation(Self.pageTransition) { hasCompletedOnboarding = true }
                     })
+                    // Arrives from the right as the next page in the flow, but leaves
+                    // downwards: onboarding is finished with rather than navigated past,
+                    // and sliding it off the bottom uncovers the app underneath.
                     .transition(.asymmetric(insertion: .move(edge: .trailing),
-                                            removal: .move(edge: .leading)))
+                                            removal: .move(edge: .bottom)))
+                    .zIndex(1)
                 } else {
-                    // The app fades up rather than sliding in: it is the destination, not
-                    // another page in the sequence.
+                    // No transition of its own — it is revealed by the page sliding off it,
+                    // so it has to be sitting there already rather than arriving.
                     mainTabView
-                        .transition(.opacity)
+                        .zIndex(0)
                 }
             }
         }
