@@ -566,12 +566,15 @@ private struct CustomMapView: UIViewRepresentable {
 
         /// Keeps MapKit's dot on top of the cone.
         ///
-        /// zPriority alone does not decide it: the dot's view is added first and the cone
-        /// lands in front of it in the view hierarchy regardless, so the dot is lifted
-        /// again whenever any annotation view appears.
+        /// zPriority alone does not decide it, and lifting the dot is unreliable: its view
+        /// may not exist yet when this fires, and MapKit rebuilds it as the location
+        /// updates, which undoes any lift and is why the cone intermittently ended up on
+        /// top. The cone is ours and is always there when it matters, so it gets pushed
+        /// down instead — which also puts it behind the epicenter, where it belongs.
         func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
-            guard let dot = mapView.view(for: mapView.userLocation) else { return }
-            dot.superview?.bringSubviewToFront(dot)
+            if let cone = headingView {
+                cone.superview?.sendSubviewToBack(cone)
+            }
         }
 
         func removeHeadingAnnotation(from mapView: MKMapView) {

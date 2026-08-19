@@ -100,7 +100,11 @@ final class UserHeadingAnnotationView: MKAnnotationView {
 
     /// Width of the square the cone is drawn in; the wedge reaches half of this from the
     /// centre, so the cone is `size / 2` long.
-    private static let size: CGFloat = 64
+    ///
+    /// Sized against the dot rather than the map: the map is usually framed on the whole
+    /// island, where a cone measured in map distance would be invisible, so it is drawn at
+    /// a fixed size on screen and reads as a marker rather than a radius.
+    private static let size: CGFloat = 100
 
     /// Bounds on the half-angle, in degrees. A phone straight out of a pocket reports
     /// tens of degrees of error, so the lower bound keeps a well-calibrated compass from
