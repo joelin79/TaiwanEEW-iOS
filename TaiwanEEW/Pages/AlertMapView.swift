@@ -274,8 +274,19 @@ private struct CustomMapView: UIViewRepresentable {
                             polygon.title = "county_" + countyID
                             overlays.append(polygon)
                         } else if let multiPolygon = geometry as? MKMultiPolygon {
-                            multiPolygon.title = "county_" + countyID
-                            overlays.append(multiPolygon)
+                            // Split into its parts rather than added whole. MapKit culls
+                            // by overlay, and never within one: kept together, 澎湖縣 is a
+                            // single path of 43,000 vertices spanning two thirds of a
+                            // degree, so every tile that box touches walks all of them to
+                            // draw one speck of island. Apart, each island carries its own
+                            // tight bounds and is skipped like a district is — which is
+                            // why 368 districts were never the problem and 22 counties
+                            // were. Holes travel with their polygon, so this changes only
+                            // how the work is grouped.
+                            for polygon in multiPolygon.polygons {
+                                polygon.title = "county_" + countyID
+                                overlays.append(polygon)
+                            }
                         }
                     }
                 }
