@@ -103,11 +103,25 @@ class EventDispatcher: ObservableObject{
         }
     }
     
+    /// Which collection the alert feed reads from.
+    ///
+    /// Debug and TestFlight builds can point it at a separate collection so a drill can be
+    /// staged without writing anything into the live one. The diagnostics check is not
+    /// only about hiding the toggle: UserDefaults survives replacing a TestFlight install
+    /// with an App Store one, so without it a tester who left the switch on could end up
+    /// with a release build quietly watching test data and showing no real earthquakes.
+    static var eewCollectionName: String {
+        guard LocationManager.isDiagnosticsAvailable else { return "EEW" }
+        return UserDefaults.standard.bool(forKey: "useTestEEWData") ? "EEW-test" : "EEW"
+    }
+
     func getEvents(){
-        
+
         // listening the collection of the selected location
         // TODO: limit data read numbers
-        db.collection("EEW").order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { querySnapshot, error in
+        let collectionName = Self.eewCollectionName
+        logger.info("Listening to EEW collection: \(collectionName)")
+        db.collection(collectionName).order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { querySnapshot, error in
             
             // fetch documents into the "documents" array
             guard let documents = querySnapshot?.documents else {

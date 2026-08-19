@@ -16,6 +16,8 @@ struct SettingsView: View {
     @AppStorage("HRSelection") var HRSelection: TimeRange = .year
     @AppStorage("notifySelection") var notifySelection: NotifyThreshold = .eg3
     @AppStorage("locationNarrationEnabled") var locationNarrationEnabled: Bool = false
+    @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
+    @State private var confirmingTestEEWData = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
     @State private var copiedItem: String? = nil
@@ -103,6 +105,26 @@ struct SettingsView: View {
                     },
                 footer: Text("此區塊僅在開發與 TestFlight 版本顯示。"))
             {
+                // Turning this on is the risky direction, so only that way round asks;
+                // switching back to live data needs no confirmation.
+                Toggle("顯示測試地震資料", isOn: Binding(
+                    get: { useTestEEWData },
+                    set: { wants in
+                        if wants {
+                            confirmingTestEEWData = true
+                        } else {
+                            useTestEEWData = false
+                        }
+                    }
+                ))
+
+                if useTestEEWData {
+                    Label("目前顯示 EEW-test 測試資料，不會顯示真實地震", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 DisclosureGroup("已訂閱主題 (\(subscribedTopics.count))") {
                     if subscribedTopics.isEmpty {
                         Text("目前沒有訂閱任何主題")
@@ -140,6 +162,12 @@ struct SettingsView: View {
                     .receive(on: RunLoop.main)
             ) { _ in
                 refreshSubscribedTopics()
+            }
+            .alert("顯示測試地震資料？", isPresented: $confirmingTestEEWData) {
+                Button("取消", role: .cancel) { }
+                Button("啟用測試資料", role: .destructive) { useTestEEWData = true }
+            } message: {
+                Text("即時警報將改為讀取 EEW-test 測試資料，期間不會顯示真實地震。推播通知不受影響，仍會照常送達。測試結束後請記得關閉。")
             }
         }
     }

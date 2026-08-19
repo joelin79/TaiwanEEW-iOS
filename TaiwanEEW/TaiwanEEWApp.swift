@@ -36,6 +36,11 @@ struct TaiwanEEWApp: App {
     // onboarding and never lose their subscription.
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
     @AppStorage("notifyThreshold") var notifyThreshold: NotifyThreshold = .eg3
+    // Declared here, though only Settings writes it, so flipping the switch re-evaluates
+    // this body and builds an EventDispatcher pointed at the other collection. The
+    // Firestore listener is attached in that object's initialiser and cannot be moved
+    // afterwards, so a fresh dispatcher is how the feed changes over.
+    @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
     @State private var didRunMainAppStartup = false
     
     init() {
