@@ -101,10 +101,8 @@ struct SettingsView: View {
                         Image(systemName: "ladybug.fill")
                         Text("除錯 Debug")
                     },
-                footer: Text("開啟後，自動定位每次切換通知區域時會發送提示通知，方便測試背景更新是否運作。此區塊僅在開發與 TestFlight 版本顯示。"))
+                footer: Text("此區塊僅在開發與 TestFlight 版本顯示。"))
             {
-                Toggle("自動定位切換通知", isOn: $locationNarrationEnabled)
-
                 DisclosureGroup("已訂閱主題 (\(subscribedTopics.count))") {
                     if subscribedTopics.isEmpty {
                         Text("目前沒有訂閱任何主題")
