@@ -52,6 +52,23 @@ final class WaveFrontOverlay: NSObject, MKOverlay {
         self.part = part
         self.boundingMapRect = MKCircle(center: center, radius: Self.maxDrawnRadius).boundingMapRect
     }
+
+    /// The area the front currently occupies, for invalidating just that much.
+    ///
+    /// Redrawing the whole boundingMapRect instead means asking MapKit to re-render a
+    /// two-thousand-kilometre square ten times a second; it renders overlays into tiles
+    /// asynchronously and falls behind, which shows up as the circles blinking. The front
+    /// only ever grows, so the new area covers wherever the old one was drawn.
+    var invalidationRect: MKMapRect {
+        // Padded because the outline straddles the path rather than sitting inside it, and
+        // an unpadded rect can clip the outer half of the stroke.
+        let padded = (radius + 2_000) * MKMapPointsPerMeterAtLatitude(coordinate.latitude)
+        let centre = MKMapPoint(coordinate)
+        return MKMapRect(x: centre.x - padded,
+                         y: centre.y - padded,
+                         width: padded * 2,
+                         height: padded * 2)
+    }
 }
 
 final class WaveFrontRenderer: MKOverlayRenderer {

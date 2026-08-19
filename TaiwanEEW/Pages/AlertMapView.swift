@@ -422,7 +422,9 @@ private struct CustomMapView: UIViewRepresentable {
 
             for front in waveFronts {
                 front.radius = front.wave == .pWave ? yellowRadius : redRadius
-                mapView.renderer(for: front)?.setNeedsDisplay()
+                // Only the area the front now covers, not the whole bounding rect it was
+                // given room to grow into.
+                mapView.renderer(for: front)?.setNeedsDisplay(front.invalidationRect)
             }
         }
         
