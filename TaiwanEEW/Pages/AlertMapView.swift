@@ -420,11 +420,18 @@ private struct CustomMapView: UIViewRepresentable {
             // The epicenter only moves when a new message arrives, which rebuilds these.
             _ = epicenterCoordinate
 
-            for front in waveFronts {
-                front.radius = front.wave == .pWave ? yellowRadius : redRadius
-                // Only the area the front now covers, not the whole bounding rect it was
-                // given room to grow into.
-                mapView.renderer(for: front)?.setNeedsDisplay(front.invalidationRect)
+            guard let fill = fillOverlay else { return }
+            fill.pRadius = yellowRadius
+            fill.sRadius = redRadius
+
+            // Outlines every tick: repainting two shape layers is a composite, not a redraw.
+            redrawWaveOutlines(on: mapView)
+
+            // The fill only when its edge has actually moved on screen, because this one
+            // does go through the tile renderer.
+            if fill.hasMovedEnoughToRedraw() {
+                fill.markDrawn()
+                mapView.renderer(for: fill)?.setNeedsDisplay(fill.invalidationRect)
             }
         }
         
@@ -434,8 +441,8 @@ private struct CustomMapView: UIViewRepresentable {
         }
         
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if overlay is WaveFrontOverlay {
-                return WaveFrontRenderer(overlay: overlay)
+            if overlay is WaveFillOverlay {
+                return WaveFillRenderer(overlay: overlay)
             } else if let polygon = overlay as? MKPolygon {
                 return polygonRenderer(for: polygon)
             } else if let multiPolygon = overlay as? MKMultiPolygon {
@@ -455,36 +462,67 @@ private struct CustomMapView: UIViewRepresentable {
 
         // MARK: - Wave fronts
 
-        private(set) var waveFronts: [WaveFrontOverlay] = []
+        private var fillOverlay: WaveFillOverlay?
+        private weak var outlineView: WaveFrontLayerView?
 
-        /// Builds the four overlays for a new epicenter: a fill and an outline for each
-        /// wave. They live until the next message or the timer stopping, and only their
-        /// radius changes in between.
+        /// Builds the drawing for a new epicenter: one overlay for the fills, beneath the
+        /// districts, and a shape-layer view over the map for the outlines.
         func rebuildWaveFronts(on mapView: MKMapView, epicenter: CLLocationCoordinate2D) {
             removeWaveFronts(from: mapView)
 
-            let fronts = [
-                WaveFrontOverlay(center: epicenter, wave: .pWave, part: .fill),
-                WaveFrontOverlay(center: epicenter, wave: .sWave, part: .fill),
-                WaveFrontOverlay(center: epicenter, wave: .pWave, part: .outline),
-                WaveFrontOverlay(center: epicenter, wave: .sWave, part: .outline)
-            ]
-            waveFronts = fronts
+            let fill = WaveFillOverlay(center: epicenter)
+            fillOverlay = fill
+            mapView.addOverlay(fill, level: .aboveRoads)
 
-            // Fills below the districts so they never tint the intensity colours; outlines
-            // above them so each front stays traceable across whatever it is crossing.
-            for front in fronts where front.part == .fill {
-                mapView.addOverlay(front, level: .aboveRoads)
-            }
-            for front in fronts where front.part == .outline {
-                mapView.addOverlay(front, level: .aboveLabels)
-            }
+            let outlines = WaveFrontLayerView(frame: mapView.bounds)
+            outlines.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            mapView.addSubview(outlines)
+            outlineView = outlines
         }
 
         func removeWaveFronts(from mapView: MKMapView) {
-            guard !waveFronts.isEmpty else { return }
-            mapView.removeOverlays(waveFronts)
-            waveFronts = []
+            if let fillOverlay {
+                mapView.removeOverlay(fillOverlay)
+                self.fillOverlay = nil
+            }
+            outlineView?.removeFromSuperview()
+            outlineView = nil
+        }
+
+        /// Redraws the outlines from the current radii. Cheap enough to call on every tick
+        /// and on every frame of a pan or zoom, because it only rewrites two paths.
+        func redrawWaveOutlines(on mapView: MKMapView) {
+            guard let outlines = outlineView, let fill = fillOverlay else { return }
+            guard fill.pRadius > 0 || fill.sRadius > 0 else {
+                outlines.clear()
+                return
+            }
+
+            let centre = mapView.convert(fill.coordinate, toPointTo: outlines)
+            outlines.update(centre: centre,
+                            pRadius: screenRadius(for: fill.pRadius, at: fill.coordinate, on: mapView, in: outlines),
+                            sRadius: screenRadius(for: fill.sRadius, at: fill.coordinate, on: mapView, in: outlines))
+        }
+
+        /// Metres to points on screen, measured rather than derived, so it stays correct at
+        /// any zoom without duplicating MapKit's projection maths.
+        private func screenRadius(for metres: CLLocationDistance,
+                                  at centre: CLLocationCoordinate2D,
+                                  on mapView: MKMapView,
+                                  in view: UIView) -> CGFloat {
+            guard metres > 0 else { return 0 }
+            let origin = MKMapPoint(centre)
+            let offset = metres * MKMapPointsPerMeterAtLatitude(centre.latitude)
+            let edge = MKMapPoint(x: origin.x + offset, y: origin.y).coordinate
+            let centrePoint = mapView.convert(centre, toPointTo: view)
+            let edgePoint = mapView.convert(edge, toPointTo: view)
+            return hypot(edgePoint.x - centrePoint.x, edgePoint.y - centrePoint.y)
+        }
+
+        /// The outlines are positioned in screen space, so a pan or zoom moves them out of
+        /// place until they are recomputed.
+        func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+            redrawWaveOutlines(on: mapView)
         }
 
         private var hasReorderedSubviews = false
