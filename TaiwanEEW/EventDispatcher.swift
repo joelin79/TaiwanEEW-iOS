@@ -88,6 +88,9 @@ class EventDispatcher: ObservableObject{
         latA = coordinates.lat
         si = coordinates.si
         logger.info("District changed - recomputing against the new reference point")
+        // The event on screen was computed for the old district, so redo it now rather
+        // than waiting for a document that may not arrive for weeks.
+        applyLatestEvent()
     }
 
     /// Reattaches the earthquake listener, for when the collection underneath it changes.
@@ -162,6 +165,34 @@ class EventDispatcher: ObservableObject{
         return UserDefaults.standard.bool(forKey: "useTestEEWData") ? "EEW-test" : "EEW"
     }
 
+    /// Recomputes everything derived from the newest event against the current district.
+    ///
+    /// Called both when a document arrives and when the district changes. Arrival time and
+    /// local intensity are measured from the subscribed district's reference point, so
+    /// moving that point invalidates them just as surely as a new document does — without
+    /// this, a district change would show the previous district's numbers until the next
+    /// document happened to arrive.
+    private func applyLatestEvent() {
+        guard let e = event.last,
+              let arrival = Calendar.current.date(
+                byAdding: .second,
+                value: Int(EEWService.sTime(focalDepth: e.depth, dist: EEWService.dist(latA: latA, lonA: lonA, latB: e.epicenterLat, lonB: e.epicenterLon))),
+                to: e.originTime)
+        else { return }
+
+        arrivalTime = arrival
+        publishedTime = e.sent
+        intensity = EEWService.pgaToIntensity(pga: EEWService.pga(ML: e.magnitudeValue, depth: e.depth, dist: EEWService.dist(latA: latA, lonA: lonA, latB: e.epicenterLat, lonB: e.epicenterLon), Si: si, Padj: e.pgaAdj))
+        eqSeq = e.msgNo
+        magnitude = e.magnitudeValue
+        depth = e.depth
+        originTime = e.originTime
+        lonB = e.epicenterLon
+        latB = e.epicenterLat
+        pgaAdj = e.pgaAdj
+        (maxIntensity, maxIntensityValue) = findMaxIntensity(e: e)
+    }
+
     func getEvents(){
 
         // listening the collection of the selected location
@@ -192,26 +223,8 @@ class EventDispatcher: ObservableObject{
             
             // sort Event by `sent` (sent time)
             self.event.sort { $0.sent < $1.sent }
-            
-            // set variables
-            if let e = self.event.last,
-                let arrivalTime = Calendar.current.date(
-                    byAdding: .second,
-                    value: Int(EEWService.sTime(focalDepth: e.depth, dist: EEWService.dist(latA: self.latA, lonA: self.lonA, latB: e.epicenterLat, lonB: e.epicenterLon))),
-                    to: e.originTime)
-            {
-                self.arrivalTime = arrivalTime
-                self.publishedTime = e.sent
-                self.intensity = EEWService.pgaToIntensity(pga: EEWService.pga(ML: e.magnitudeValue, depth: e.depth, dist: EEWService.dist(latA: self.latA, lonA: self.lonA, latB: e.epicenterLat, lonB: e.epicenterLon), Si: self.si, Padj: e.pgaAdj))
-                self.eqSeq = e.msgNo
-                self.magnitude = e.magnitudeValue
-                self.depth = e.depth
-                self.originTime = e.originTime
-                self.lonB = e.epicenterLon
-                self.latB = e.epicenterLat
-                self.pgaAdj = e.pgaAdj
-                (self.maxIntensity, self.maxIntensityValue) = self.findMaxIntensity(e: e)
-            }
+
+            self.applyLatestEvent()
         }
         
         getPings()
