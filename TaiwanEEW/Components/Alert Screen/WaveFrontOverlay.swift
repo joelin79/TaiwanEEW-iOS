@@ -61,9 +61,8 @@ final class WaveFrontOverlay: NSObject, MKOverlay {
     /// only ever grows, so the new area covers wherever the old one was drawn.
     var invalidationRect: MKMapRect {
         // Padded because the outline straddles the path rather than sitting inside it, and
-        // an unpadded rect clips the outer half of the stroke. Generous enough to cover
-        // the black casing as well, which widens the stroke on both sides.
-        let padded = (radius + 5_000) * MKMapPointsPerMeterAtLatitude(coordinate.latitude)
+        // an unpadded rect can clip the outer half of the stroke.
+        let padded = (radius + 2_000) * MKMapPointsPerMeterAtLatitude(coordinate.latitude)
         let centre = MKMapPoint(coordinate)
         return MKMapRect(x: centre.x - padded,
                          y: centre.y - padded,
@@ -97,23 +96,10 @@ final class WaveFrontRenderer: MKOverlayRenderer {
             context.fillEllipse(in: drawRect)
         case .outline:
             let colour: UIColor = front.wave == .pWave ? .orange : .red
-            // Divided by the zoom scale so these stay a fixed width on screen rather than
-            // thickening as the map zooms out.
-            let lineWidth = 2 / zoomScale
-            let casingWidth = 1 / zoomScale
-
-            // Stroked the way a taxiway line is edged: one wide black pass, then the
-            // colour laid over the middle of it, which leaves black down both sides. The
-            // front crosses every intensity colour on the map — including oranges and reds
-            // close to its own — and black is the one edge that separates it from all of
-            // them. Two separate strokes either side would have to be drawn at different
-            // radii and would part company at high zoom.
-            context.setStrokeColor(UIColor.black.cgColor)
-            context.setLineWidth(lineWidth + casingWidth * 2)
-            context.strokeEllipse(in: drawRect)
-
             context.setStrokeColor(colour.cgColor)
-            context.setLineWidth(lineWidth)
+            // Divided by the zoom scale so the line stays two points wide on screen
+            // rather than thickening as the map zooms out.
+            context.setLineWidth(2 / zoomScale)
             context.strokeEllipse(in: drawRect)
         }
     }
