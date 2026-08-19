@@ -18,13 +18,22 @@ import os.log
 
 // MARK: - Heading source
 
+/// A compass reading together with how far off CoreLocation thinks it might be.
+struct HeadingReading: Equatable {
+    /// Degrees clockwise from north.
+    let direction: CLLocationDirection
+    /// Maximum deviation in degrees. Drives how wide the cone is drawn, so an uncertain
+    /// reading looks uncertain rather than claiming a precision it does not have.
+    let accuracy: CLLocationDirection
+}
+
 /// Compass heading for the map.
 ///
 /// Deliberately separate from LocationManager: that one runs in the background to switch
 /// districts, whereas the magnetometer only earns its power while the map is actually on
 /// screen. Started and stopped with the view.
 final class HeadingProvider: NSObject, ObservableObject {
-    @Published private(set) var heading: CLLocationDirection?
+    @Published private(set) var reading: HeadingReading?
 
     private let manager = CLLocationManager()
     private var isRunning = false
@@ -50,7 +59,7 @@ final class HeadingProvider: NSObject, ObservableObject {
         manager.stopUpdatingHeading()
         // Cleared so the cone disappears rather than freezing at the last known angle,
         // which would keep pointing somewhere the user is no longer facing.
-        heading = nil
+        reading = nil
     }
 }
 
@@ -59,12 +68,13 @@ extension HeadingProvider: CLLocationManagerDelegate {
         // Negative accuracy means the reading is invalid — usually interference, or a
         // device that has not been calibrated yet.
         guard newHeading.headingAccuracy >= 0 else {
-            heading = nil
+            reading = nil
             return
         }
         // True north needs location services to know the local declination; magnetic north
         // is the fallback and is close enough for "which way am I facing".
-        heading = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
+        let direction = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
+        reading = HeadingReading(direction: direction, accuracy: newHeading.headingAccuracy)
     }
 }
 
@@ -83,52 +93,51 @@ final class UserHeadingAnnotation: NSObject, MKAnnotation {
 
 // MARK: - Annotation view
 
-/// A wedge fading outwards from the dot, rotated to the compass heading.
+/// A wedge fading outwards from the dot, rotated to the compass heading and widened to
+/// match how uncertain that heading is.
 final class UserHeadingAnnotationView: MKAnnotationView {
     static let identifier = "UserHeading"
 
     /// Width of the square the cone is drawn in; the wedge reaches half of this from the
     /// centre, so the cone is `size / 2` long.
     private static let size: CGFloat = 64
-    /// Half-angle of the wedge. 30° gives a 60° spread, close to what Maps draws.
-    private static let halfAngle = CGFloat.pi / 6
+
+    /// Bounds on the half-angle, in degrees. A phone straight out of a pocket reports
+    /// tens of degrees of error, so the lower bound keeps a well-calibrated compass from
+    /// drawing a sliver, and the upper bound stops a badly disturbed one from fanning out
+    /// into a semicircle that obscures the districts underneath.
+    private static let minHalfAngle: CGFloat = 12
+    private static let maxHalfAngle: CGFloat = 55
 
     private let gradient = CAGradientLayer()
+    private let wedgeMask = CAShapeLayer()
+    /// Last drawn half-angle in radians, so the path is only rebuilt when the width
+    /// actually changes rather than on every heading update.
+    private var currentHalfAngle: CGFloat = .nan
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
 
-        let size = Self.size
-        frame = CGRect(x: 0, y: 0, width: size, height: size)
+        frame = CGRect(x: 0, y: 0, width: Self.size, height: Self.size)
         // The cone is decoration: taps belong to the map underneath it.
         isUserInteractionEnabled = false
         // Hidden until a heading actually arrives, otherwise the wedge shows pointing due
         // north for the moment between the dot appearing and the first compass reading.
         isHidden = true
-        // Below MapKit's own dot, so the dot stays crisp on top of the wedge.
+        // Below MapKit's own dot. The coordinator lifts the dot as well, because this
+        // alone does not settle the order.
         zPriority = .min
 
-        let centre = CGPoint(x: size / 2, y: size / 2)
-        let wedge = UIBezierPath()
-        wedge.move(to: centre)
-        // -.pi/2 is straight up, which is north on a north-up map.
-        wedge.addArc(withCenter: centre,
-                     radius: size / 2,
-                     startAngle: -.pi / 2 - Self.halfAngle,
-                     endAngle: -.pi / 2 + Self.halfAngle,
-                     clockwise: true)
-        wedge.close()
-
-        let mask = CAShapeLayer()
-        mask.path = wedge.cgPath
-
+        // The app's accent colour rather than a fixed blue, so the cone belongs to this
+        // app rather than looking borrowed from Maps.
+        let tint = UIColor(named: "AccentColor") ?? .systemBlue
         gradient.frame = bounds
-        gradient.colors = [UIColor.systemBlue.withAlphaComponent(0.5).cgColor,
-                           UIColor.systemBlue.withAlphaComponent(0.0).cgColor]
+        gradient.colors = [tint.withAlphaComponent(0.5).cgColor,
+                           tint.withAlphaComponent(0.0).cgColor]
         // Radiates from the dot outwards along the wedge.
         gradient.startPoint = CGPoint(x: 0.5, y: 0.5)
         gradient.endPoint = CGPoint(x: 0.5, y: 0.0)
-        gradient.mask = mask
+        gradient.mask = wedgeMask
         layer.addSublayer(gradient)
     }
 
@@ -137,17 +146,46 @@ final class UserHeadingAnnotationView: MKAnnotationView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// Points the cone at `heading`, in degrees clockwise from north.
+    /// Points the cone along the reading and sizes it to the reading's accuracy.
     ///
     /// Assumes a north-up map, which holds because rotation is disabled on this one. If
-    /// rotation is ever enabled, this has to become `heading - camera.heading` and update
-    /// on region change too.
-    func apply(heading: CLLocationDirection) {
+    /// rotation is ever enabled, the angle has to become `direction - camera.heading` and
+    /// update on region change too.
+    func apply(_ reading: HeadingReading) {
         // Heading arrives several times a second; the implicit layer animation would lag
         // behind the device and look like drift rather than rotation.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        layer.transform = CATransform3DMakeRotation(CGFloat(heading) * .pi / 180, 0, 0, 1)
+
+        let halfAngle = Self.halfAngle(forAccuracy: reading.accuracy)
+        // Redraw only on a real change — a degree of jitter is not worth a new path.
+        if !currentHalfAngle.isFinite || abs(halfAngle - currentHalfAngle) > .pi / 180 {
+            currentHalfAngle = halfAngle
+            wedgeMask.path = Self.wedgePath(halfAngle: halfAngle).cgPath
+        }
+
+        layer.transform = CATransform3DMakeRotation(CGFloat(reading.direction) * .pi / 180, 0, 0, 1)
         CATransaction.commit()
+    }
+
+    /// CoreLocation reports accuracy as a maximum deviation in degrees, which is exactly
+    /// the half-angle the cone wants — clamped so it stays readable at both extremes.
+    private static func halfAngle(forAccuracy accuracy: CLLocationDirection) -> CGFloat {
+        let degrees = min(max(CGFloat(accuracy), minHalfAngle), maxHalfAngle)
+        return degrees * .pi / 180
+    }
+
+    private static func wedgePath(halfAngle: CGFloat) -> UIBezierPath {
+        let centre = CGPoint(x: size / 2, y: size / 2)
+        let path = UIBezierPath()
+        path.move(to: centre)
+        // -.pi/2 is straight up, which is north on a north-up map.
+        path.addArc(withCenter: centre,
+                    radius: size / 2,
+                    startAngle: -.pi / 2 - halfAngle,
+                    endAngle: -.pi / 2 + halfAngle,
+                    clockwise: true)
+        path.close()
+        return path
     }
 }

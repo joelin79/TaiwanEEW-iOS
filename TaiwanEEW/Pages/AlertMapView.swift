@@ -104,7 +104,7 @@ private struct CustomMapView: UIViewRepresentable {
             }
         }
 
-        context.coordinator.apply(heading: canShowUserLocation ? headingProvider.heading : nil)
+        context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
 
         // Check if the event identifier has changed
         if context.coordinator.lastEventIdentifier != eventManager.event.last?.identifier {
@@ -466,13 +466,23 @@ private struct CustomMapView: UIViewRepresentable {
         /// Hidden rather than removed when there is no reading: the compass drops out
         /// briefly near interference, and removing the annotation would make the cone
         /// flicker in and out.
-        func apply(heading: CLLocationDirection?) {
-            guard let heading else {
+        func apply(reading: HeadingReading?) {
+            guard let reading else {
                 headingView?.isHidden = true
                 return
             }
             headingView?.isHidden = false
-            headingView?.apply(heading: heading)
+            headingView?.apply(reading)
+        }
+
+        /// Keeps MapKit's dot on top of the cone.
+        ///
+        /// zPriority alone does not decide it: the dot's view is added first and the cone
+        /// lands in front of it in the view hierarchy regardless, so the dot is lifted
+        /// again whenever any annotation view appears.
+        func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+            guard let dot = mapView.view(for: mapView.userLocation) else { return }
+            dot.superview?.bringSubviewToFront(dot)
         }
 
         func removeHeadingAnnotation(from mapView: MKMapView) {
