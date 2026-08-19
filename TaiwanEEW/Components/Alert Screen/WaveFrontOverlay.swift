@@ -72,6 +72,21 @@ final class WaveFrontOverlay: NSObject, MKOverlay {
 }
 
 final class WaveFrontRenderer: MKOverlayRenderer {
+    /// Outline colours picked to sit in the gaps the intensity ramp leaves in hue space.
+    ///
+    /// That ramp occupies 0-46° (red through orange to yellow), 115° (green), 218-222°
+    /// (the two blues) and 268° (purple). The fronts used to be drawn orange and red,
+    /// which put them inside its most crowded stretch, right beside intensities 4 through
+    /// 6+ — so the front was hardest to pick out over precisely the districts that matter.
+    ///
+    /// Two wide gaps are left: 130-210° and 280-360°. Teal takes the first and is kept
+    /// dark enough to hold against the pale blue MapKit fills the sea with, which is the
+    /// nearest thing to it on screen. Magenta takes the second, far from both the purple
+    /// of intensity 7 below it and the reds above. The two are 134° apart, so neither
+    /// front can be mistaken for the other.
+    private static let pWaveOutline = UIColor(red: 0.00, green: 0.62, blue: 0.65, alpha: 1)
+    private static let sWaveOutline = UIColor(red: 0.90, green: 0.00, blue: 0.62, alpha: 1)
+
     private var front: WaveFrontOverlay? { overlay as? WaveFrontOverlay }
 
     override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
@@ -95,7 +110,7 @@ final class WaveFrontRenderer: MKOverlayRenderer {
             context.setFillColor(colour.withAlphaComponent(alpha).cgColor)
             context.fillEllipse(in: drawRect)
         case .outline:
-            let colour: UIColor = front.wave == .pWave ? .orange : .red
+            let colour = front.wave == .pWave ? Self.pWaveOutline : Self.sWaveOutline
             context.setStrokeColor(colour.cgColor)
             // Divided by the zoom scale so the line stays two points wide on screen
             // rather than thickening as the map zooms out.
