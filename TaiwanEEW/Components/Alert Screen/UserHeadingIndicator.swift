@@ -128,9 +128,10 @@ final class UserHeadingAnnotationView: MKAnnotationView {
         // alone does not settle the order.
         zPriority = .min
 
-        // The app's accent colour rather than a fixed blue, so the cone belongs to this
-        // app rather than looking borrowed from Maps.
-        let tint = UIColor(named: "AccentColor") ?? .systemBlue
+        // Maps' blue, deliberately not the app's accent: "where I am and which way I am
+        // facing" is a convention users already read at a glance, and the accent here is a
+        // red that would compete with the intensity colours the map exists to show.
+        let tint = UIColor.systemBlue
         gradient.frame = bounds
         gradient.colors = [tint.withAlphaComponent(0.5).cgColor,
                            tint.withAlphaComponent(0.0).cgColor]

@@ -77,6 +77,11 @@ private struct CustomMapView: UIViewRepresentable {
 
         // The standard blue dot. MapKit draws it because the delegate returns nil for any
         // annotation that is not the epicenter, MKUserLocation included.
+        //
+        // The tint is pinned rather than inherited: the dot picks up the app's accent
+        // otherwise, which is a red that both breaks the convention users read at a glance
+        // and competes with the intensity colours underneath it.
+        mapView.tintColor = .systemBlue
         mapView.showsUserLocation = canShowUserLocation
 
         // Set the delegate
