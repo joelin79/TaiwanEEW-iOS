@@ -28,6 +28,50 @@ struct AlertMapView: View {
     }
 }
 
+/// Each wave front is drawn as two overlays rather than one.
+///
+/// A single circle cannot sit both above and below the district polygons, and it needs
+/// to do both: the translucent fill has to stay underneath so it never tints the intensity
+/// colours the map exists to communicate, while the outline has to stay on top so the wave
+/// front is still traceable across the districts it is crossing.
+private enum WaveCircle {
+    static let pFill = "PWaveFill"
+    static let pStroke = "PWaveStroke"
+    static let sFill = "SWaveFill"
+    static let sStroke = "SWaveStroke"
+
+    static let all: Set<String> = [pFill, pStroke, sFill, sStroke]
+
+    static func isFill(_ title: String) -> Bool { title == pFill || title == sFill }
+    static func isPWave(_ title: String) -> Bool { title == pFill || title == pStroke }
+}
+
+/// `title` on an overlay is a doubly-optional protocol requirement, so unwrap it once here
+/// rather than at each of the three call sites that remove these.
+private func isWaveCircle(_ overlay: MKOverlay) -> Bool {
+    guard let title = overlay.title, let name = title else { return false }
+    return WaveCircle.all.contains(name)
+}
+
+/// Adds both wave fronts, each as a fill below the districts and an outline above them.
+private func addWaveCircles(to mapView: MKMapView,
+                            epicenter: CLLocationCoordinate2D,
+                            pRadius: CLLocationDistance,
+                            sRadius: CLLocationDistance) {
+    func add(radius: CLLocationDistance, fillTitle: String, strokeTitle: String) {
+        let fill = MKCircle(center: epicenter, radius: radius)
+        fill.title = fillTitle
+        mapView.addOverlay(fill, level: .aboveRoads)
+
+        let stroke = MKCircle(center: epicenter, radius: radius)
+        stroke.title = strokeTitle
+        mapView.addOverlay(stroke, level: .aboveLabels)
+    }
+
+    add(radius: pRadius, fillTitle: WaveCircle.pFill, strokeTitle: WaveCircle.pStroke)
+    add(radius: sRadius, fillTitle: WaveCircle.sFill, strokeTitle: WaveCircle.sStroke)
+}
+
 private struct CustomMapView: UIViewRepresentable {
     typealias UIViewType = MKMapView
     @ObservedObject var eventManager: EventDispatcher
@@ -132,7 +176,7 @@ private struct CustomMapView: UIViewRepresentable {
             
             // Remove and re-add epicenter annotation and circles
             uiView.removeAnnotations(uiView.annotations.filter { $0.title == "Epicenter" })
-            uiView.removeOverlays(uiView.overlays.filter { $0.title == "YellowCircle" || $0.title == "RedCircle" })
+            uiView.removeOverlays(uiView.overlays.filter(isWaveCircle))
             addEpicenterAnnotationAndCircles(to: uiView)
             
             // Update the last event identifier
@@ -206,7 +250,9 @@ private struct CustomMapView: UIViewRepresentable {
         
         // Add dynamic overlays from the first GeoJSON
         self.parseDynamicGeoJSON { dynamicOverlays in
-            mapView.addOverlays(dynamicOverlays)
+            // Stated rather than left to the default: the wave fills are added below this
+            // level and the outlines at it, so the layering depends on this being explicit.
+            mapView.addOverlays(dynamicOverlays, level: .aboveLabels)
             
             // Add static overlays from the second GeoJSON
             //                parseStaticTaiwanGeoJSON { staticTaiwanOverlays in
@@ -228,15 +274,10 @@ private struct CustomMapView: UIViewRepresentable {
         mapView.addAnnotation(annotation)
         
         if (Date().timeIntervalSince(self.eventManager.originTime) < 120) {
-            // Add yellow circle (p wave)
-            let yellowCircle = MKCircle(center: epicenterCoordinate, radius: EEWService.getPDistance(e: eventManager))
-            yellowCircle.title = "YellowCircle"
-            mapView.addOverlay(yellowCircle, level: .aboveLabels)
-            
-            // Add red circle (s wave)
-            let redCircle = MKCircle(center: epicenterCoordinate, radius: EEWService.getSDistance(e: eventManager))
-            redCircle.title = "RedCircle"
-            mapView.addOverlay(redCircle, level: .aboveLabels)
+            addWaveCircles(to: mapView,
+                           epicenter: epicenterCoordinate,
+                           pRadius: EEWService.getPDistance(e: eventManager),
+                           sRadius: EEWService.getSDistance(e: eventManager))
         }
     }
     
@@ -423,20 +464,17 @@ private struct CustomMapView: UIViewRepresentable {
 
             let epicenterCoordinate = CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
 
-            mapView.removeOverlays(mapView.overlays.filter { $0.title == "YellowCircle" || $0.title == "RedCircle" })
+            mapView.removeOverlays(mapView.overlays.filter(isWaveCircle))
 
-            let yellowCircle = MKCircle(center: epicenterCoordinate, radius: yellowRadius)
-            yellowCircle.title = "YellowCircle"
-            mapView.addOverlay(yellowCircle, level: .aboveLabels)
-
-            let redCircle = MKCircle(center: epicenterCoordinate, radius: redRadius)
-            redCircle.title = "RedCircle"
-            mapView.addOverlay(redCircle, level: .aboveLabels)
+            addWaveCircles(to: mapView,
+                           epicenter: epicenterCoordinate,
+                           pRadius: yellowRadius,
+                           sRadius: redRadius)
         }
         
         func endUpdateCircleRadii() {
             guard let mapView = self.mapView else { return }
-            mapView.removeOverlays(mapView.overlays.filter { $0.title == "YellowCircle" || $0.title == "RedCircle" })
+            mapView.removeOverlays(mapView.overlays.filter(isWaveCircle))
         }
         
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
@@ -619,14 +657,22 @@ private struct CustomMapView: UIViewRepresentable {
         
         private func circleRenderer(for circle: MKCircle) -> MKCircleRenderer {
             let renderer = MKCircleRenderer(circle: circle)
-            if circle.title == "YellowCircle" {
-                renderer.fillColor = UIColor.yellow.withAlphaComponent(0.05)
-                renderer.strokeColor = .orange
-            } else if circle.title == "RedCircle" {
-                renderer.fillColor = UIColor.red.withAlphaComponent(0.1)
-                renderer.strokeColor = UIColor.red
+            let title = (circle.title ?? "") ?? ""
+            let isPWave = WaveCircle.isPWave(title)
+
+            if WaveCircle.isFill(title) {
+                // Drawn below the districts, so it shades the sea and the land beyond
+                // Taiwan without ever washing over an intensity colour.
+                renderer.fillColor = (isPWave ? UIColor.yellow : UIColor.red)
+                    .withAlphaComponent(isPWave ? 0.05 : 0.1)
+                renderer.strokeColor = .clear
+                renderer.lineWidth = 0
+            } else {
+                // Drawn above them, so the wave front stays traceable across the districts.
+                renderer.fillColor = .clear
+                renderer.strokeColor = isPWave ? .orange : .red
+                renderer.lineWidth = 2
             }
-            renderer.lineWidth = 2
             return renderer
         }
         
