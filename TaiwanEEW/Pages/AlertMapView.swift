@@ -28,50 +28,6 @@ struct AlertMapView: View {
     }
 }
 
-/// Each wave front is drawn as two overlays rather than one.
-///
-/// A single circle cannot sit both above and below the district polygons, and it needs
-/// to do both: the translucent fill has to stay underneath so it never tints the intensity
-/// colours the map exists to communicate, while the outline has to stay on top so the wave
-/// front is still traceable across the districts it is crossing.
-private enum WaveCircle {
-    static let pFill = "PWaveFill"
-    static let pStroke = "PWaveStroke"
-    static let sFill = "SWaveFill"
-    static let sStroke = "SWaveStroke"
-
-    static let all: Set<String> = [pFill, pStroke, sFill, sStroke]
-
-    static func isFill(_ title: String) -> Bool { title == pFill || title == sFill }
-    static func isPWave(_ title: String) -> Bool { title == pFill || title == pStroke }
-}
-
-/// `title` on an overlay is a doubly-optional protocol requirement, so unwrap it once here
-/// rather than at each of the three call sites that remove these.
-private func isWaveCircle(_ overlay: MKOverlay) -> Bool {
-    guard let title = overlay.title, let name = title else { return false }
-    return WaveCircle.all.contains(name)
-}
-
-/// Adds both wave fronts, each as a fill below the districts and an outline above them.
-private func addWaveCircles(to mapView: MKMapView,
-                            epicenter: CLLocationCoordinate2D,
-                            pRadius: CLLocationDistance,
-                            sRadius: CLLocationDistance) {
-    func add(radius: CLLocationDistance, fillTitle: String, strokeTitle: String) {
-        let fill = MKCircle(center: epicenter, radius: radius)
-        fill.title = fillTitle
-        mapView.addOverlay(fill, level: .aboveRoads)
-
-        let stroke = MKCircle(center: epicenter, radius: radius)
-        stroke.title = strokeTitle
-        mapView.addOverlay(stroke, level: .aboveLabels)
-    }
-
-    add(radius: pRadius, fillTitle: WaveCircle.pFill, strokeTitle: WaveCircle.pStroke)
-    add(radius: sRadius, fillTitle: WaveCircle.sFill, strokeTitle: WaveCircle.sStroke)
-}
-
 private struct CustomMapView: UIViewRepresentable {
     typealias UIViewType = MKMapView
     @ObservedObject var eventManager: EventDispatcher
@@ -132,7 +88,7 @@ private struct CustomMapView: UIViewRepresentable {
         mapView.delegate = context.coordinator
         
         // Add overlays in the correct order
-        addOverlaysInOrder(to: mapView)
+        addOverlaysInOrder(to: mapView, coordinator: context.coordinator)
         
         // Start the timer to update circle radii
         context.coordinator.mapView = mapView
@@ -176,8 +132,8 @@ private struct CustomMapView: UIViewRepresentable {
             
             // Remove and re-add epicenter annotation and circles
             uiView.removeAnnotations(uiView.annotations.filter { $0.title == "Epicenter" })
-            uiView.removeOverlays(uiView.overlays.filter(isWaveCircle))
-            addEpicenterAnnotationAndCircles(to: uiView)
+            context.coordinator.removeWaveFronts(from: uiView)
+            addEpicenterAnnotationAndCircles(to: uiView, coordinator: context.coordinator)
             
             // Update the last event identifier
             context.coordinator.lastEventIdentifier = eventManager.event.last?.identifier
@@ -238,7 +194,7 @@ private struct CustomMapView: UIViewRepresentable {
     //        mapView.cameraZoomRange = zoomRange
     //    }
     
-    private func addOverlaysInOrder(to mapView: MKMapView) {
+    private func addOverlaysInOrder(to mapView: MKMapView, coordinator: MapCoordinator) {
         
         // Add map patch if device is under iOS 18 (experiencing map hole bug)
         if #unavailable(iOS 18) {
@@ -259,12 +215,12 @@ private struct CustomMapView: UIViewRepresentable {
             //                    mapView.addOverlays(staticTaiwanOverlays)
             
             // Add epicenter annotation and circular overlays last
-            self.addEpicenterAnnotationAndCircles(to: mapView)
+            self.addEpicenterAnnotationAndCircles(to: mapView, coordinator: coordinator)
         }
 //    }}
     }
     
-    private func addEpicenterAnnotationAndCircles(to mapView: MKMapView) {
+    private func addEpicenterAnnotationAndCircles(to mapView: MKMapView, coordinator: MapCoordinator) {
         let epicenterCoordinate = CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
         
         // Add epicenter annotation
@@ -274,10 +230,7 @@ private struct CustomMapView: UIViewRepresentable {
         mapView.addAnnotation(annotation)
         
         if (Date().timeIntervalSince(self.eventManager.originTime) < 120) {
-            addWaveCircles(to: mapView,
-                           epicenter: epicenterCoordinate,
-                           pRadius: EEWService.getPDistance(e: eventManager),
-                           sRadius: EEWService.getSDistance(e: eventManager))
+            coordinator.rebuildWaveFronts(on: mapView, epicenter: epicenterCoordinate)
         }
     }
     
@@ -464,26 +417,27 @@ private struct CustomMapView: UIViewRepresentable {
 
             let epicenterCoordinate = CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
 
-            mapView.removeOverlays(mapView.overlays.filter(isWaveCircle))
+            // The epicenter only moves when a new message arrives, which rebuilds these.
+            _ = epicenterCoordinate
 
-            addWaveCircles(to: mapView,
-                           epicenter: epicenterCoordinate,
-                           pRadius: yellowRadius,
-                           sRadius: redRadius)
+            for front in waveFronts {
+                front.radius = front.wave == .pWave ? yellowRadius : redRadius
+                mapView.renderer(for: front)?.setNeedsDisplay()
+            }
         }
         
         func endUpdateCircleRadii() {
             guard let mapView = self.mapView else { return }
-            mapView.removeOverlays(mapView.overlays.filter(isWaveCircle))
+            removeWaveFronts(from: mapView)
         }
         
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            if let polygon = overlay as? MKPolygon {
+            if overlay is WaveFrontOverlay {
+                return WaveFrontRenderer(overlay: overlay)
+            } else if let polygon = overlay as? MKPolygon {
                 return polygonRenderer(for: polygon)
             } else if let multiPolygon = overlay as? MKMultiPolygon {
                 return multiPolygonRenderer(for: multiPolygon)
-            } else if let circle = overlay as? MKCircle {
-                return circleRenderer(for: circle)
             }
             return MKOverlayRenderer(overlay: overlay)
         }
@@ -496,6 +450,40 @@ private struct CustomMapView: UIViewRepresentable {
         }
 
         // MARK: - Epicenter blink
+
+        // MARK: - Wave fronts
+
+        private(set) var waveFronts: [WaveFrontOverlay] = []
+
+        /// Builds the four overlays for a new epicenter: a fill and an outline for each
+        /// wave. They live until the next message or the timer stopping, and only their
+        /// radius changes in between.
+        func rebuildWaveFronts(on mapView: MKMapView, epicenter: CLLocationCoordinate2D) {
+            removeWaveFronts(from: mapView)
+
+            let fronts = [
+                WaveFrontOverlay(center: epicenter, wave: .pWave, part: .fill),
+                WaveFrontOverlay(center: epicenter, wave: .sWave, part: .fill),
+                WaveFrontOverlay(center: epicenter, wave: .pWave, part: .outline),
+                WaveFrontOverlay(center: epicenter, wave: .sWave, part: .outline)
+            ]
+            waveFronts = fronts
+
+            // Fills below the districts so they never tint the intensity colours; outlines
+            // above them so each front stays traceable across whatever it is crossing.
+            for front in fronts where front.part == .fill {
+                mapView.addOverlay(front, level: .aboveRoads)
+            }
+            for front in fronts where front.part == .outline {
+                mapView.addOverlay(front, level: .aboveLabels)
+            }
+        }
+
+        func removeWaveFronts(from mapView: MKMapView) {
+            guard !waveFronts.isEmpty else { return }
+            mapView.removeOverlays(waveFronts)
+            waveFronts = []
+        }
 
         private var hasReorderedSubviews = false
         private static let blinkKey = "epicenterBlink"
@@ -654,27 +642,6 @@ private struct CustomMapView: UIViewRepresentable {
                 renderer.lineWidth = 0.25
                 return renderer
             }
-        }
-        
-        private func circleRenderer(for circle: MKCircle) -> MKCircleRenderer {
-            let renderer = MKCircleRenderer(circle: circle)
-            let title = (circle.title ?? "") ?? ""
-            let isPWave = WaveCircle.isPWave(title)
-
-            if WaveCircle.isFill(title) {
-                // Drawn below the districts, so it shades the sea and the land beyond
-                // Taiwan without ever washing over an intensity colour.
-                renderer.fillColor = (isPWave ? UIColor.yellow : UIColor.red)
-                    .withAlphaComponent(isPWave ? 0.05 : 0.1)
-                renderer.strokeColor = .clear
-                renderer.lineWidth = 0
-            } else {
-                // Drawn above them, so the wave front stays traceable across the districts.
-                renderer.fillColor = .clear
-                renderer.strokeColor = isPWave ? .orange : .red
-                renderer.lineWidth = 2
-            }
-            return renderer
         }
         
         func fillColor(for identifier: String) -> UIColor {
