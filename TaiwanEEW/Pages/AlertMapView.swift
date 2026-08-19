@@ -497,6 +497,7 @@ private struct CustomMapView: UIViewRepresentable {
 
         // MARK: - Epicenter blink
 
+        private var hasReorderedSubviews = false
         private static let blinkKey = "epicenterBlink"
         private weak var epicenterView: MKAnnotationView?
         /// Re-checks whether the quake is still live. Runs only while one is, and stops
@@ -697,7 +698,18 @@ private struct CustomMapView: UIViewRepresentable {
             }
         }
         
+        /// Undocumented subview reordering inherited from before this was open sourced.
+        ///
+        /// It runs once now rather than on every batch of renderers. Left unguarded it
+        /// swapped the same two views back and forth ten times a second, because
+        /// updateCircleRadii re-adds every wave circle on each tick — which is what made
+        /// the wave outlines flicker above and below the districts. Swapping an even number
+        /// of times returns the order to where it started, so the flicker was the swap
+        /// itself, not a race.
         func mapView(_ mapView: MKMapView, didAdd renderers: [MKOverlayRenderer]) {
+            guard !hasReorderedSubviews else { return }
+            guard mapView.subviews.count >= 3 else { return }
+            hasReorderedSubviews = true
             mapView.exchangeSubview(at: mapView.subviews.count - 1, withSubviewAt: mapView.subviews.count - 3)
         }
     }
