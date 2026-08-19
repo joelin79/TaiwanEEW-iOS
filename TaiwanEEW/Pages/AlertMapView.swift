@@ -209,6 +209,11 @@ private struct CustomMapView: UIViewRepresentable {
             // Stated rather than left to the default: the wave fills are added below this
             // level and the outlines at it, so the layering depends on this being explicit.
             mapView.addOverlays(dynamicOverlays, level: .aboveLabels)
+
+            // Added after the districts, and so drawn over them.
+            self.parseCountyGeoJSON { countyOverlays in
+                mapView.addOverlays(countyOverlays, level: .aboveLabels)
+            }
             
             // Add static overlays from the second GeoJSON
             //                parseStaticTaiwanGeoJSON { staticTaiwanOverlays in
@@ -234,6 +239,55 @@ private struct CustomMapView: UIViewRepresentable {
         }
     }
     
+    /// The county outlines drawn over the district layer.
+    ///
+    /// Districts are stroked hairline-thin so ~370 of them do not turn the island into a
+    /// mesh, which leaves no way to tell which county you are looking at. These carry the
+    /// heavier line, and no fill, so the intensity colours below still read.
+    private func parseCountyGeoJSON(completion: @escaping ([MKOverlay]) -> Void) {
+        DispatchQueue.global().async {
+            guard let url = Bundle.main.url(forResource: "county_map", withExtension: "json") else {
+                logger.warning("County GeoJSON file not found")
+                completion([])
+                return
+            }
+
+            do {
+                let data = try Data(contentsOf: url)
+                let geoJson = try MKGeoJSONDecoder().decode(data)
+
+                var overlays = [MKOverlay]()
+                for case let feature as MKGeoJSONFeature in geoJson {
+                    let countyID: String
+                    if let propertiesData = feature.properties,
+                       let properties = try JSONSerialization.jsonObject(with: propertiesData, options: []) as? [String: Any],
+                       let id = properties["COUNTY_ID"] as? String {
+                        countyID = id
+                    } else {
+                        // Title only decides how it is drawn, so an unidentified county is
+                        // still worth outlining.
+                        countyID = "unknown"
+                    }
+
+                    for geometry in feature.geometry {
+                        if let polygon = geometry as? MKPolygon {
+                            polygon.title = "county_" + countyID
+                            overlays.append(polygon)
+                        } else if let multiPolygon = geometry as? MKMultiPolygon {
+                            multiPolygon.title = "county_" + countyID
+                            overlays.append(multiPolygon)
+                        }
+                    }
+                }
+
+                DispatchQueue.main.async { completion(overlays) }
+            } catch {
+                logger.error("Error parsing county GeoJSON: \(error.localizedDescription)")
+                DispatchQueue.main.async { completion([]) }
+            }
+        }
+    }
+
     private func parseDynamicGeoJSON(completion: @escaping ([MKOverlay]) -> Void) {
         DispatchQueue.global().async {
             guard let url = Bundle.main.url(forResource: "district_map", withExtension: "json") else {
@@ -478,6 +532,42 @@ private struct CustomMapView: UIViewRepresentable {
             outlines.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             mapView.addSubview(outlines)
             outlineView = outlines
+            lowerOutlinesBelowAnnotations(on: mapView)
+        }
+
+        /// Slips the outline view underneath MapKit's annotation views.
+        ///
+        /// Added to the map directly it sits above everything, so the fronts drew over the
+        /// user's dot and its cone. Below the annotations it still covers the district
+        /// polygons, which is where it has to be, and passes under the dot, which is where
+        /// it was asked to be. The epicenter shares that container, so the fronts pass
+        /// under it too — they radiate away from it, so they barely meet.
+        ///
+        /// Idempotent, so it is safe to call whenever annotation views appear.
+        func lowerOutlinesBelowAnnotations(on mapView: MKMapView) {
+            guard let outlines = outlineView, let parent = outlines.superview else { return }
+
+            let anchors = mapView.annotations
+                .compactMap { mapView.view(for: $0) }
+                .compactMap { sibling(of: $0, under: parent) }
+
+            guard let anchor = anchors.first,
+                  let outlineIndex = parent.subviews.firstIndex(of: outlines),
+                  let anchorIndex = parent.subviews.firstIndex(of: anchor),
+                  outlineIndex > anchorIndex else { return }
+
+            parent.insertSubview(outlines, belowSubview: anchor)
+        }
+
+        /// Walks up from an annotation view to whichever ancestor is a direct child of
+        /// `parent`, since only siblings can be ordered against each other.
+        private func sibling(of view: UIView, under parent: UIView) -> UIView? {
+            var current: UIView? = view
+            while let candidate = current {
+                if candidate.superview === parent { return candidate }
+                current = candidate.superview
+            }
+            return nil
         }
 
         func removeWaveFronts(from mapView: MKMapView) {
@@ -613,6 +703,9 @@ private struct CustomMapView: UIViewRepresentable {
             if let cone = headingView {
                 cone.superview?.sendSubviewToBack(cone)
             }
+            // The annotation container may not have existed when the outline view was
+            // created, and MapKit rebuilds these views as the map moves, so re-seat it.
+            lowerOutlinesBelowAnnotations(on: mapView)
         }
 
         func removeHeadingAnnotation(from mapView: MKMapView) {
@@ -656,7 +749,9 @@ private struct CustomMapView: UIViewRepresentable {
         }
         
         private func polygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
-            if polygon.title!.starts(with: "static_") {
+            if polygon.title?.starts(with: "county_") == true {
+                return Self.countyStyled(MKPolygonRenderer(polygon: polygon))
+            } else if polygon.title!.starts(with: "static_") {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 renderer.fillColor = UIColor.clear
                 renderer.strokeColor = UIColor.black
@@ -672,7 +767,9 @@ private struct CustomMapView: UIViewRepresentable {
         }
         
         private func multiPolygonRenderer(for multiPolygon: MKMultiPolygon) -> MKMultiPolygonRenderer {
-            if multiPolygon.title!.starts(with: "static_") {
+            if multiPolygon.title?.starts(with: "county_") == true {
+                return Self.countyStyled(MKMultiPolygonRenderer(multiPolygon: multiPolygon))
+            } else if multiPolygon.title!.starts(with: "static_") {
                 let renderer = MKMultiPolygonRenderer(multiPolygon: multiPolygon)
                 renderer.fillColor = UIColor.clear
                 renderer.strokeColor = UIColor.black
@@ -687,6 +784,15 @@ private struct CustomMapView: UIViewRepresentable {
             }
         }
         
+        /// No fill, so the district colours underneath stay visible, and a line heavy
+        /// enough to separate counties from the hairline district borders below.
+        private static func countyStyled<Renderer: MKOverlayPathRenderer>(_ renderer: Renderer) -> Renderer {
+            renderer.fillColor = .clear
+            renderer.strokeColor = UIColor.black.withAlphaComponent(0.75)
+            renderer.lineWidth = 1.5
+            return renderer
+        }
+
         func fillColor(for identifier: String) -> UIColor {
             if identifier.starts(with: "dynamic_") {
                 let townID = String(identifier.dropFirst(8))  // Remove "dynamic_" prefix
