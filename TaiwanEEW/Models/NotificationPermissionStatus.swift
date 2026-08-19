@@ -36,13 +36,15 @@ struct NotificationPermissionStatus {
     /// Everything currently degrading delivery, worst first.
     var issues: [String] {
         guard let settings else { return [] }
-        guard isAllowed else { return ["通知權限已關閉，將無法接收地震預警"] }
+        guard isAllowed else {
+            return [NSLocalizedString("notif-denied-issue-string", comment: "Notifications refused outright")]
+        }
         var issues: [String] = []
         if settings.criticalAlertSetting == .disabled {
-            issues.append("「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響")
+            issues.append(NSLocalizedString("notif-critical-off-string", comment: "Critical alerts off: warnings obey Silent and Focus"))
         }
         if settings.timeSensitiveSetting == .disabled {
-            issues.append("「時效性通知」已關閉：通知可能不會即時顯示")
+            issues.append(NSLocalizedString("notif-timesensitive-off-string", comment: "Time-sensitive off: warnings may be delayed"))
         }
         return issues
     }
@@ -55,11 +57,15 @@ struct NotificationPermissionStatus {
     /// user may separately have set the intensity threshold to off, and calling that
     /// "啟用" would read as a contradiction.
     var headline: String {
-        guard let settings else { return "正在檢查通知權限..." }
+        guard let settings else {
+            return NSLocalizedString("notif-checking-string", comment: "The async read has not returned yet")
+        }
         switch settings.authorizationStatus {
-        case .denied:        return "通知權限已關閉"
-        case .notDetermined: return "尚未取得通知權限"
-        default:             return issues.isEmpty ? "已取得通知權限" : "通知權限不完整"
+        case .denied:        return NSLocalizedString("notif-denied-string", comment: "")
+        case .notDetermined: return NSLocalizedString("notif-notdetermined-string", comment: "")
+        default:             return issues.isEmpty
+            ? NSLocalizedString("notif-allowed-string", comment: "Allowed with every sub-permission on")
+            : NSLocalizedString("notif-incomplete-string", comment: "Allowed but a sub-permission is off")
         }
     }
 

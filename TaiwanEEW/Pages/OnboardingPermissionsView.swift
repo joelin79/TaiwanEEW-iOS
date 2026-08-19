@@ -172,7 +172,7 @@ struct OnboardingPermissionsView: View {
     }
 
     private var title: some View {
-        Text("開始設定")
+        Text("onboarding-title-string")
             .font(.system(size: titleFontSize, weight: .bold, design: .rounded))
             .padding(.top, 8)
             .foregroundStyle(.primary)
@@ -194,14 +194,14 @@ struct OnboardingPermissionsView: View {
     private var autoLocationCard: some View {
         card {
             Toggle(isOn: $locationManager.isAutoLocationEnabled) {
-                Label("自動定位", systemImage: "location.fill")
+                Label("auto-location-string", systemImage: "location.fill")
                     .font(.headline)
             }
             .onChange(of: locationManager.isAutoLocationEnabled) { isEnabled in
                 if isEnabled { locationManager.updateLocationManually() }
             }
 
-            Text("自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。")
+            Text("auto-location-desc-string")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -226,11 +226,11 @@ struct OnboardingPermissionsView: View {
 
     private var manualRegionCard: some View {
         card {
-            Label("選擇通知區域", systemImage: "mappin.and.ellipse")
+            Label("manual-region-title-string", systemImage: "mappin.and.ellipse")
                 .font(.headline)
 
             Label {
-                Text("無法取得位置權限，請手動選擇您所在的區域。可稍後至「設定」重新開啟位置權限，改用自動定位。")
+                Text("manual-region-desc-string")
                     .font(.subheadline)
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
@@ -241,20 +241,20 @@ struct OnboardingPermissionsView: View {
 
             Divider()
 
-            Picker("縣市", selection: $subscribedCityIndex) {
+            Picker("city-string", selection: $subscribedCityIndex) {
                 ForEach(0..<Location.cities.count, id: \.self) { i in
                     Text(Location.cities[i].getDisplayName()).tag(i)
                 }
             }
             .onChange(of: subscribedCityIndex) { _ in subscribedDistrictIndex = 0 }
 
-            Picker("地區", selection: $subscribedDistrictIndex) {
+            Picker("district-string", selection: $subscribedDistrictIndex) {
                 ForEach(0..<Location.cities[subscribedCityIndex].district.count, id: \.self) { i in
                     Text(String(Location.cities[subscribedCityIndex].district[i].districtName.dropFirst(3))).tag(i)
                 }
             }
 
-            PermissionFixButton(title: "前往設定開啟位置權限") { openAppSettings() }
+            PermissionFixButton(title: "open-location-settings-string") { openAppSettings() }
         }
     }
 
@@ -291,7 +291,7 @@ struct OnboardingPermissionsView: View {
     /// up, "開始使用" would promise warnings the app is not going to be able to send.
     private var continueButton: some View {
         Button(action: finish) {
-            Text(isDecliningAutoLocation ? "不使用自動定位" : "開始使用")
+            Text(isDecliningAutoLocation ? "onboarding-decline-string" : "onboarding-continue-string")
                 .font(.system(size: buttonFontSize, weight: .bold))
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
@@ -374,6 +374,38 @@ struct OnboardingPermissionsView: View {
         UIApplication.shared.open(url)
     }
 }
-#Preview {
+// MARK: - Previews
+
+/// Every language the app ships, side by side in one canvas. Layout problems here are
+/// almost always length problems: zh-Hant is the most compact, en runs noticeably longer,
+/// and ja longer still, so a card that fits in Chinese can wrap to an extra line or two in
+/// the others and push the map or the button around. Seeing them together makes that
+/// obvious in a way flicking between separate previews does not.
+private let previewLocales = ["zh-Hant", "en", "ja"]
+
+#Preview("All languages") {
+    HStack(spacing: 1) {
+        ForEach(previewLocales, id: \.self) { code in
+            OnboardingPermissionsView(onDone: {})
+                .environment(\.locale, .init(identifier: code))
+        }
+    }
+    .background(Color(.separator))
+}
+
+// Individually too, because the combined preview squeezes each one narrower than a real
+// phone and wrapping depends on width.
+#Preview("繁體中文") {
     OnboardingPermissionsView(onDone: {})
+        .environment(\.locale, .init(identifier: "zh-Hant"))
+}
+
+#Preview("English") {
+    OnboardingPermissionsView(onDone: {})
+        .environment(\.locale, .init(identifier: "en"))
+}
+
+#Preview("日本語") {
+    OnboardingPermissionsView(onDone: {})
+        .environment(\.locale, .init(identifier: "ja"))
 }

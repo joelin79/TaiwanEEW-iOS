@@ -51,7 +51,9 @@ struct PermissionDetailText: View {
 /// Sends the user where a permission is actually fixable. Identical weight and colour on
 /// both screens so the affordance never reads as two different things.
 struct PermissionFixButton: View {
-    let title: String
+    /// A key, not a String: `Button(_ title: String)` renders verbatim and would ship the
+    /// key itself to the user untranslated.
+    let title: LocalizedStringKey
     let action: () -> Void
 
     var body: some View {
@@ -71,7 +73,7 @@ struct NotificationSettingsLink: View {
             HStack {
                 Image(systemName: "iphone.radiowaves.left.and.right")
                     .foregroundStyle(.red)
-                Text(needsAttention ? "修正強制警報設定" : "強制警報設定")
+                Text(needsAttention ? "fix-critical-alert-settings-string" : "critical-alert-settings-string")
                     .foregroundStyle(.blue)
             }
         }
@@ -116,11 +118,11 @@ struct AutoLocationStatusRow: View {
                 let (cityIndex, districtIndex, distance) = locationManager.findClosestDistrict(to: location.coordinate)
                 let districtName = Location.cities[cityIndex].district[districtIndex].districtName
                 let distanceKm = String(format: "%.1f", distance / 1000)
-                PermissionDetailText(text: "最近震度參考點：\(districtName) (\(distanceKm) 公里)")
+                PermissionDetailText(text: String(format: NSLocalizedString("nearest-reference-point-string", comment: "District name, then distance in km"), districtName, distanceKm))
             } else if permission.canFetchLocation {
                 // Only claim we are working on it when permission actually allows it;
                 // otherwise the detail line below explains what is blocking.
-                PermissionDetailText(text: "正在取得位置...")
+                PermissionDetailText(text: NSLocalizedString("locating-string", comment: ""))
             }
 
             // "Background updates enabled" is reassurance, so it stays secondary; every
@@ -146,13 +148,13 @@ struct LocationFixButton: View {
     var body: some View {
         switch status.status {
         case .denied, .restricted:
-            PermissionFixButton(title: "前往設定開啟位置權限", action: openSettings)
+            PermissionFixButton(title: "open-location-settings-string", action: openSettings)
         case .authorizedWhenInUse:
-            PermissionFixButton(title: "前往設定選擇「一律允許」", action: openSettings)
+            PermissionFixButton(title: "choose-always-allow-string", action: openSettings)
         case .notDetermined:
             // updateLocationManually() requests permission in this state rather than
             // refreshing, so label it for what it actually does.
-            PermissionFixButton(title: "允許位置權限", action: requestPermission)
+            PermissionFixButton(title: "allow-location-string", action: requestPermission)
         default:
             // Manual refresh hidden: with permission granted, location already updates on
             // its own, so the button only invited confusion.
