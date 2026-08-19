@@ -25,11 +25,22 @@ struct AlertMapView: View {
 private struct CustomMapView: UIViewRepresentable {
     typealias UIViewType = MKMapView
     @ObservedObject var eventManager: EventDispatcher
+    /// Observed so a permission change redraws the view and updateUIView can turn the
+    /// user's dot on without the app being relaunched.
+    @ObservedObject private var locationManager = LocationManager.shared
     @State private var userTrackingMode: MKUserTrackingMode = .none
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "CustomMapView")
-    
+
     let mapView = MKMapView()
-    
+
+    /// Only ask MapKit for the user's dot once permission is already granted. Setting
+    /// showsUserLocation while the status is still .notDetermined can make MapKit raise
+    /// the location prompt itself, which would appear unannounced on the alert screen
+    /// rather than where the app actually explains why it wants location.
+    private var canShowUserLocation: Bool {
+        LocationPermissionStatus(status: locationManager.authorizationStatus).canFetchLocation
+    }
+
     // MARK: - Make Map View
     func makeUIView(context: Context) -> MKMapView {
         setupRegionForMap(mapView)
@@ -56,7 +67,11 @@ private struct CustomMapView: UIViewRepresentable {
         
         // Set map type to muted standard to remove satellite imagery
         mapView.mapType = .standard
-        
+
+        // The standard blue dot. MapKit draws it because the delegate returns nil for any
+        // annotation that is not the epicenter, MKUserLocation included.
+        mapView.showsUserLocation = canShowUserLocation
+
         // Set the delegate
         mapView.delegate = context.coordinator
         
@@ -71,7 +86,14 @@ private struct CustomMapView: UIViewRepresentable {
     
     // MARK: - Update Map View
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        
+
+        // Outside the event check below on purpose: that branch only runs when an
+        // earthquake arrives, so leaving this inside it would mean a user who grants
+        // location permission sees no dot until the next quake.
+        if uiView.showsUserLocation != canShowUserLocation {
+            uiView.showsUserLocation = canShowUserLocation
+        }
+
         // Check if the event identifier has changed
         if context.coordinator.lastEventIdentifier != eventManager.event.last?.identifier {
             if (Date().timeIntervalSince(self.eventManager.originTime) < 120) {
