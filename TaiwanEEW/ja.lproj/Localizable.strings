@@ -125,8 +125,8 @@
 "district-string" = "地区";
 
 // MARK: - Permission status (shared by Settings and onboarding)
-"fix-critical-alert-settings-string" = "緊急通知の設定を修正";
-"critical-alert-settings-string" = "緊急通知の設定";
+"fix-critical-alert-settings-string" = "重大な通知の設定を修正";
+"critical-alert-settings-string" = "重大な通知の設定";
 "nearest-reference-point-string" = "最寄りの震度参照地点：%@（%@ km）";
 "locating-string" = "位置情報を取得中...";
 "open-location-settings-string" = "設定で位置情報を許可";
@@ -140,8 +140,8 @@
 "notif-allowed-string" = "通知は許可されています";
 "notif-incomplete-string" = "通知の設定が不完全です";
 "notif-denied-issue-string" = "通知がオフのため、地震速報を受け取れません";
-"notif-critical-off-string" = "「緊急通知」がオフです：強い地震の通知がマナーモードや集中モードの影響を受け、音が鳴らないことがあります";
-"notif-timesensitive-off-string" = "「時間指定通知」がオフです：通知がすぐに表示されないことがあります";
+"notif-critical-off-string" = "「重大な通知」がオフです：強い地震の通知がマナーモードや集中モードの影響を受け、音が鳴らないことがあります";
+"notif-timesensitive-off-string" = "「即時通知」がオフです：通知がすぐに表示されないことがあります";
 
 // MARK: - Location permission
 "loc-always-string" = "自動位置情報は動作中";
