@@ -16,9 +16,15 @@ import os.log
 struct AlertMapView: View {
     let taiwan = CLLocationCoordinate2D(latitude: 23.69484955415681, longitude: 120.96082538424629)
     @ObservedObject var eventManager: EventDispatcher
-    	
+    @StateObject private var headingProvider = HeadingProvider()
+
     var body: some View {
-        CustomMapView(eventManager: eventManager)
+        CustomMapView(eventManager: eventManager, headingProvider: headingProvider)
+            // The magnetometer runs only while the map is on screen — switching tabs or
+            // backgrounding stops it rather than leaving it spinning for a cone nobody
+            // is looking at.
+            .onAppear { headingProvider.start() }
+            .onDisappear { headingProvider.stop() }
     }
 }
 
@@ -28,6 +34,7 @@ private struct CustomMapView: UIViewRepresentable {
     /// Observed so a permission change redraws the view and updateUIView can turn the
     /// user's dot on without the app being relaunched.
     @ObservedObject private var locationManager = LocationManager.shared
+    @ObservedObject var headingProvider: HeadingProvider
     @State private var userTrackingMode: MKUserTrackingMode = .none
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "CustomMapView")
 
@@ -92,7 +99,12 @@ private struct CustomMapView: UIViewRepresentable {
         // location permission sees no dot until the next quake.
         if uiView.showsUserLocation != canShowUserLocation {
             uiView.showsUserLocation = canShowUserLocation
+            if !canShowUserLocation {
+                context.coordinator.removeHeadingAnnotation(from: uiView)
+            }
         }
+
+        context.coordinator.apply(heading: canShowUserLocation ? headingProvider.heading : nil)
 
         // Check if the event identifier has changed
         if context.coordinator.lastEventIdentifier != eventManager.event.last?.identifier {
@@ -432,7 +444,53 @@ private struct CustomMapView: UIViewRepresentable {
             return MKOverlayRenderer(overlay: overlay)
         }
         
+        // MARK: - User heading cone
+
+        private var headingAnnotation: UserHeadingAnnotation?
+        private weak var headingView: UserHeadingAnnotationView?
+
+        /// Keeps the cone under the dot. MapKit reports the user's position here rather
+        /// than through the app's own LocationManager, so the two can never disagree about
+        /// where the dot is.
+        func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
+            guard let coordinate = userLocation.location?.coordinate else { return }
+            if let headingAnnotation {
+                headingAnnotation.coordinate = coordinate
+            } else {
+                let annotation = UserHeadingAnnotation(coordinate: coordinate)
+                headingAnnotation = annotation
+                mapView.addAnnotation(annotation)
+            }
+        }
+
+        /// Hidden rather than removed when there is no reading: the compass drops out
+        /// briefly near interference, and removing the annotation would make the cone
+        /// flicker in and out.
+        func apply(heading: CLLocationDirection?) {
+            guard let heading else {
+                headingView?.isHidden = true
+                return
+            }
+            headingView?.isHidden = false
+            headingView?.apply(heading: heading)
+        }
+
+        func removeHeadingAnnotation(from mapView: MKMapView) {
+            guard let headingAnnotation else { return }
+            mapView.removeAnnotation(headingAnnotation)
+            self.headingAnnotation = nil
+            headingView = nil
+        }
+
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if let heading = annotation as? UserHeadingAnnotation {
+                let view = mapView.dequeueReusableAnnotationView(withIdentifier: UserHeadingAnnotationView.identifier) as? UserHeadingAnnotationView
+                    ?? UserHeadingAnnotationView(annotation: heading, reuseIdentifier: UserHeadingAnnotationView.identifier)
+                view.annotation = heading
+                headingView = view
+                return view
+            }
+
             if annotation.title == "Epicenter" {
                 let identifier = "Epicenter"
                 var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
