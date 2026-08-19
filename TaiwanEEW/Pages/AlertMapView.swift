@@ -110,6 +110,7 @@ private struct CustomMapView: UIViewRepresentable {
         }
 
         context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
+        context.coordinator.refreshEpicenterBlink()
 
         // Check if the event identifier has changed
         if context.coordinator.lastEventIdentifier != eventManager.event.last?.identifier {
@@ -449,6 +450,60 @@ private struct CustomMapView: UIViewRepresentable {
             return MKOverlayRenderer(overlay: overlay)
         }
         
+        deinit {
+            // Timer retains its target, so leaving these running would keep the coordinator
+            // and the map alive after the view is gone.
+            updateTimer?.invalidate()
+            blinkTimer?.invalidate()
+        }
+
+        // MARK: - Epicenter blink
+
+        private static let blinkKey = "epicenterBlink"
+        private weak var epicenterView: MKAnnotationView?
+        /// Re-checks whether the quake is still live. Runs only while one is, and stops
+        /// itself once the window closes.
+        private var blinkTimer: Timer?
+
+        /// Blinks the epicenter for as long as the alert card's status bar considers the
+        /// earthquake to be in progress.
+        ///
+        /// The layer's own animation is the source of truth for whether it is currently
+        /// blinking, rather than a separate flag, so the two cannot fall out of step when
+        /// the annotation is torn down and rebuilt on each new message.
+        func refreshEpicenterBlink() {
+            let shouldBlink = EarthquakeActivity.isActive(arrivalTime: eventManager.arrivalTime)
+
+            if let view = epicenterView {
+                let isBlinking = view.layer.animation(forKey: Self.blinkKey) != nil
+                if shouldBlink && !isBlinking {
+                    // 0.5s each way, so one full cycle a second.
+                    let blink = CABasicAnimation(keyPath: "opacity")
+                    blink.fromValue = 1.0
+                    blink.toValue = 0.15
+                    blink.duration = 0.5
+                    blink.autoreverses = true
+                    blink.repeatCount = .infinity
+                    view.layer.add(blink, forKey: Self.blinkKey)
+                } else if !shouldBlink && isBlinking {
+                    view.layer.removeAnimation(forKey: Self.blinkKey)
+                    view.layer.opacity = 1
+                }
+            }
+
+            // Deliberately not sharing the circle timer: that one stops 120s after origin
+            // time, and a distant quake's arrival plus grace period can outlast it, which
+            // would leave the epicenter blinking after the card had gone quiet.
+            if shouldBlink, blinkTimer == nil {
+                blinkTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                    self?.refreshEpicenterBlink()
+                }
+            } else if !shouldBlink {
+                blinkTimer?.invalidate()
+                blinkTimer = nil
+            }
+        }
+
         // MARK: - User heading cone
 
         private var headingAnnotation: UserHeadingAnnotation?
@@ -518,7 +573,12 @@ private struct CustomMapView: UIViewRepresentable {
                 }
                 
                 annotationView?.image = UIImage(named: "EpicenterCross")
-                
+
+                // The annotation is removed and rebuilt on every message, so the blink has
+                // to be reapplied to the new view rather than assumed to have survived.
+                epicenterView = annotationView
+                refreshEpicenterBlink()
+
                 return annotationView
             }
             

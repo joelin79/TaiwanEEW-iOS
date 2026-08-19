@@ -55,9 +55,10 @@ struct AlertStatusBar : View {
 
     private func updateAlert() {
         
-        // updates isInAlert (true before 10 seconds after wave arrival
-        let now = Date()
-        let isInAlert = now.addingTimeInterval(TimeInterval(0-30)) < arrivalTime
+        // updates isInAlert (true until the grace period after wave arrival). Shared with
+        // the map's blinking epicenter so the two cannot disagree about whether an
+        // earthquake is in progress.
+        let isInAlert = EarthquakeActivity.isActive(arrivalTime: arrivalTime)
         if isInAlert != isAlert {
             isAlert = isInAlert
             if isAlert {
