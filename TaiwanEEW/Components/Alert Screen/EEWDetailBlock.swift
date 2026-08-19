@@ -259,12 +259,12 @@ struct EEWDetailBlock: View {
 #Preview {
     VStack {
         // Preview with default values
-//        EEWDetailBlock(eventManager: EventDispatcher(subscribedCityIndex: .constant(0), subscribedDistrictIndex: .constant(0)))
+//        EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
         
         // iPad Component
         VStack {
             Spacer()
-            EEWDetailBlock(eventManager: EventDispatcher(subscribedCityIndex: .constant(0), subscribedDistrictIndex: .constant(0)))
+            EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
             Spacer()
         }
         .frame(width: 400, height: 310)

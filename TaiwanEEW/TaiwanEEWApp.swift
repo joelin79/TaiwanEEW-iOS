@@ -42,6 +42,11 @@ struct TaiwanEEWApp: App {
     // afterwards, so a fresh dispatcher is how the feed changes over.
     @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
     @State private var didRunMainAppStartup = false
+    // Owned here rather than built inside the body. It used to be constructed inline,
+    // which meant a new one — and a new pair of Firestore listeners that were never
+    // detached — every time this body re-evaluated, which scenePhase alone causes on every
+    // trip to the background.
+    @StateObject private var eventManager = EventDispatcher()
     
     init() {
         Purchases.configure(withAPIKey: AppConfig.revenueCatKey)
@@ -58,6 +63,12 @@ struct TaiwanEEWApp: App {
                     )
                     .interactiveDismissDisabled()
                 }
+                // The dispatcher no longer learns about these by being rebuilt, so it has
+                // to be told. Miss either of these and the intensity maths keeps using the
+                // old district, or the feed keeps reading the old collection — both silent.
+                .onChange(of: subscribedCityIndex) { _ in syncDispatcherDistrict() }
+                .onChange(of: subscribedDistrictIndex) { _ in syncDispatcherDistrict() }
+                .onChange(of: useTestEEWData) { _ in eventManager.restartEventListener() }
         }
     }
 
@@ -75,6 +86,11 @@ struct TaiwanEEWApp: App {
                 isFirstLaunch = false
             }
         )
+    }
+
+    private func syncDispatcherDistrict() {
+        eventManager.updateDistrict(cityIndex: subscribedCityIndex,
+                                    districtIndex: subscribedDistrictIndex)
     }
 
     private func completeOnboarding() {
@@ -118,7 +134,7 @@ struct TaiwanEEWApp: App {
     private func mainTabView(startupEnabled: Bool) -> some View {
         TabView {
             AlertView(
-                eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex),
+                eventManager: eventManager,
                 subscribedCityIndex: $subscribedCityIndex,
                 subscribedDistrictIndex: $subscribedDistrictIndex,
                 notifyThreshold: $notifyThreshold,

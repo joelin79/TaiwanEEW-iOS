@@ -194,7 +194,7 @@ struct Handle: View {
 // Preview
 #Preview("EEW Detail Block"){
     SlideOverCard(slideDirection: .top){
-        EEWDetailBlock(eventManager: EventDispatcher(subscribedCityIndex: .constant(0), subscribedDistrictIndex: .constant(0)))
+        EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
     }
 }
 

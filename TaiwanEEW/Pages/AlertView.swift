@@ -152,9 +152,9 @@ struct AlertView_Previews: PreviewProvider {
     @State static var testThr = NotifyThreshold.eg1
     
     static var previews: some View {
-        AlertView(eventManager: EventDispatcher(subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex), subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex, notifyThreshold: $testThr ).environment(\.locale, Locale.init(identifier: "zh-Hant"))
+        AlertView(eventManager: EventDispatcher(cityIndex: testCityIndex, districtIndex: testDistrictIndex, startListening: false), subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex, notifyThreshold: $testThr ).environment(\.locale, Locale.init(identifier: "zh-Hant"))
         
-        AlertView(eventManager: EventDispatcher(subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex), subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex, notifyThreshold: $testThr).environment(\.colorScheme, .dark)
+        AlertView(eventManager: EventDispatcher(cityIndex: testCityIndex, districtIndex: testDistrictIndex, startListening: false), subscribedCityIndex: $testCityIndex, subscribedDistrictIndex: $testDistrictIndex, notifyThreshold: $testThr).environment(\.colorScheme, .dark)
     }
 }
 

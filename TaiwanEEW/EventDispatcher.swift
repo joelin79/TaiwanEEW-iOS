@@ -13,8 +13,6 @@ import SwiftUI
 import os.log
 
 class EventDispatcher: ObservableObject{
-    @Binding var subscribedCityIndex: Int
-    @Binding var subscribedDistrictIndex: Int
     @Published private(set) var ping: [Ping] = []
     @Published private(set) var lastPingTime: Date = Date(timeIntervalSince1970: 0)
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "EventDispatcher")
@@ -41,12 +39,61 @@ class EventDispatcher: ObservableObject{
     
     let db = Firestore.firestore()
     
-    init(subscribedCityIndex: Binding<Int>, subscribedDistrictIndex: Binding<Int>) {
-        self._subscribedCityIndex = subscribedCityIndex
-        self._subscribedDistrictIndex = subscribedDistrictIndex
-        self.lonA = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].lon
-        self.latA = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].lat
-        self.si = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].si
+    private var eewListener: ListenerRegistration?
+    private var pingListener: ListenerRegistration?
+
+    /// - Parameter startListening: previews pass false so opening a canvas does not attach
+    ///   live Firestore listeners. Defaults to true so the feed can never be left off by
+    ///   forgetting to start it — silence is this object's worst failure mode.
+    init(cityIndex: Int, districtIndex: Int, startListening: Bool = true) {
+        let coordinates = Self.coordinates(cityIndex: cityIndex, districtIndex: districtIndex)
+        self.lonA = coordinates.lon
+        self.latA = coordinates.lat
+        self.si = coordinates.si
+        if startListening {
+            getEvents()
+        }
+    }
+
+    /// Reads the subscribed district straight from UserDefaults, so the app can own one
+    /// long-lived dispatcher without threading bindings through its initialiser.
+    convenience init() {
+        let defaults = UserDefaults.standard
+        self.init(cityIndex: defaults.integer(forKey: "subscribedCityIndex"),
+                  districtIndex: defaults.integer(forKey: "subscribedDistrictIndex"))
+    }
+
+    deinit {
+        eewListener?.remove()
+        pingListener?.remove()
+    }
+
+    /// Falls back to the first district rather than trapping. An index pair that no longer
+    /// resolves — stale defaults, or a district removed from the table — would otherwise
+    /// crash on launch, and a wrong region is recoverable where a crash is not.
+    private static func coordinates(cityIndex: Int, districtIndex: Int) -> (lon: Double, lat: Double, si: Double) {
+        let city = Location.cities.indices.contains(cityIndex) ? Location.cities[cityIndex] : Location.cities[0]
+        let district = city.district.indices.contains(districtIndex) ? city.district[districtIndex] : city.district[0]
+        return (district.lon, district.lat, district.si)
+    }
+
+    /// Repoints the intensity maths at a new district.
+    ///
+    /// Previously this happened by the whole object being rebuilt, which is what made the
+    /// leaked listeners hard to spot: the rebuild was load-bearing rather than incidental.
+    func updateDistrict(cityIndex: Int, districtIndex: Int) {
+        let coordinates = Self.coordinates(cityIndex: cityIndex, districtIndex: districtIndex)
+        guard coordinates.lon != lonA || coordinates.lat != latA || coordinates.si != si else { return }
+        lonA = coordinates.lon
+        latA = coordinates.lat
+        si = coordinates.si
+        logger.info("District changed - recomputing against the new reference point")
+    }
+
+    /// Reattaches the earthquake listener, for when the collection underneath it changes.
+    func restartEventListener() {
+        eewListener?.remove()
+        eewListener = nil
         getEvents()
     }
     
@@ -121,8 +168,12 @@ class EventDispatcher: ObservableObject{
         // TODO: limit data read numbers
         let collectionName = Self.eewCollectionName
         logger.info("Listening to EEW collection: \(collectionName)")
-        db.collection(collectionName).order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { querySnapshot, error in
-            
+        // Held so it can be detached. Combined with the weak capture below this is what
+        // lets the object deallocate at all: Firestore retains the closure, so a strong
+        // self here kept every dispatcher alive for the life of the process.
+        eewListener = db.collection(collectionName).order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { [weak self] querySnapshot, error in
+            guard let self else { return }
+
             // fetch documents into the "documents" array
             guard let documents = querySnapshot?.documents else {
                 self.logger.error("Error fetching EEW documents: \(String(describing: error))")
@@ -169,11 +220,13 @@ class EventDispatcher: ObservableObject{
     func getPings(){
         
         // listening the collection of the selected location
-        db.collection("ping")
+        pingListener?.remove()
+        pingListener = db.collection("ping")
             .order(by: "pingTime", descending: true)
             .limit(to: 2)
-            .addSnapshotListener { querySnapshot, error in
-            
+            .addSnapshotListener { [weak self] querySnapshot, error in
+            guard let self else { return }
+
             // fetch documents into the "documents" array
             guard let documents = querySnapshot?.documents else {
                 self.logger.error("Error fetching Ping documents: \(String(describing: error))")
