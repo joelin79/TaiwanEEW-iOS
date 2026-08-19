@@ -28,6 +28,11 @@ struct OnboardingPermissionsView: View {
 
     @State private var notificationSettings: UNNotificationSettings? = nil
 
+    @ScaledMetric(relativeTo: .body) private var buttonFontSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize: CGFloat = 34
+    @ScaledMetric(relativeTo: .largeTitle) private var iconFontSize: CGFloat = 40
+    @ScaledMetric(relativeTo: .largeTitle) private var iconFrameHeight: CGFloat = 46
+
     private var notificationStatus: NotificationPermissionStatus {
         NotificationPermissionStatus(settings: notificationSettings)
     }
@@ -70,42 +75,47 @@ struct OnboardingPermissionsView: View {
         GeometryReader { geometry in
             let maxWidth = min(geometry.size.width, 650)
 
-            VStack {
-                icon
-                title
+            ScrollView {
+                VStack {
+                    icon
+                    title
 
-                Group {
-                    if needsManualRegion {
-                        manualRegionCard
-                    } else {
-                        autoLocationCard
+                    Group {
+                        if needsManualRegion {
+                            manualRegionCard
+                        } else {
+                            autoLocationCard
+                        }
+                    }
+                    .padding(.top, 24)
+
+                    if notificationsNeedFixing {
+                        notificationWarning
+                            .padding(.top, 16)
+                    }
+
+                    if showsLocationMap {
+                        // Height is taken from the viewport rather than fixed, so the map
+                        // gives up room on a short display instead of pushing content out
+                        // of reach.
+                        locationMap(height: min(180, geometry.size.height * 0.20))
+                            .padding(.top, 16)
                     }
                 }
+                .frame(maxWidth: maxWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
                 .padding(.top, 24)
-
-                if notificationsNeedFixing {
-                    notificationWarning
-                        .padding(.top, 16)
-                }
-
-                if showsLocationMap {
-                    // Height is taken from the viewport rather than fixed, so the map
-                    // gives up room on a short display instead of pushing the button off
-                    // the bottom of it.
-                    locationMap(height: min(180, geometry.size.height * 0.20))
-                        .padding(.top, 16)
-                }
-
-                // Absorbs the slack so the button lands at the same height as the terms
-                // screen's, and collapses first if a small display needs the room.
-                Spacer(minLength: 20)
-
-                continueButton
+                .padding(.bottom, 20)
             }
-            .frame(maxWidth: maxWidth, maxHeight: .infinity)
-            .frame(maxWidth: .infinity)     // center the content
-            .padding(.horizontal, 20)
-            .padding(.vertical, 50)
+            .safeAreaInset(edge: .bottom) {
+                continueButton
+                    .frame(maxWidth: maxWidth)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 20)
+                    .background(Color(.background))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.background))
@@ -154,16 +164,17 @@ struct OnboardingPermissionsView: View {
     private var icon: some View {
         // Location, not a bell: the region is the only thing this page puts on screen.
         Image(systemName: "location.circle.fill")
-            .font(.system(size: 50))
+            .font(.system(size: iconFontSize))
             .foregroundColor(Color.blue)
-            // Must match FirstLaunchView's icon frame so both titles sit at the same y.
-            .frame(height: 60)
+            // Must match FirstLaunchView's scaled icon frame so both titles sit at the
+            // same y at accessibility text sizes.
+            .frame(height: iconFrameHeight)
     }
 
     private var title: some View {
         Text("開始設定")
-            .font(.system(size: 45, weight: .bold, design: .rounded))
-            .padding(.top, 25)
+            .font(.system(size: titleFontSize, weight: .bold, design: .rounded))
+            .padding(.top, 8)
             .foregroundStyle(.primary)
     }
 
@@ -281,13 +292,13 @@ struct OnboardingPermissionsView: View {
     private var continueButton: some View {
         Button(action: finish) {
             Text(isDecliningAutoLocation ? "不使用自動定位" : "開始使用")
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: buttonFontSize, weight: .bold))
                 .foregroundColor(.white)
+                .multilineTextAlignment(.center)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(continueBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .padding(.top, 20)
         }
     }
 
@@ -362,4 +373,7 @@ struct OnboardingPermissionsView: View {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
     }
+}
+#Preview {
+    OnboardingPermissionsView(onDone: {})
 }

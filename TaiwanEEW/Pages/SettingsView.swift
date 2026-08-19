@@ -15,7 +15,7 @@ struct SettingsView: View {
     @AppStorage("subscribedDistrictIndex") var subscribedDistrictIndex: Int = 0
     @AppStorage("HRSelection") var HRSelection: TimeRange = .year
     @AppStorage("notifySelection") var notifySelection: NotifyThreshold = .eg3
-    @AppStorage("locationNarrationEnabled") var locationNarrationEnabled: Bool = true
+    @AppStorage("locationNarrationEnabled") var locationNarrationEnabled: Bool = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
     @State private var copiedItem: String? = nil
@@ -382,6 +382,16 @@ struct SettingsView: View {
                         Text("Threads 官方帳號").frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundStyle(.blue)
                     }
+                }
+            }
+            Link(destination: AppLinks.github){
+                HStack(alignment: .center) {
+                    Image("github-mark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                    Text("GitHub 開源專案").frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(.blue)
                 }
             }
         }

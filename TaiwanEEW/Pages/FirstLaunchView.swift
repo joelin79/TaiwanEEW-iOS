@@ -11,7 +11,10 @@ struct FirstLaunchView: View {
     
     var onDismiss: () -> Void
     @State private var isTermsAccepted = false
-    
+
+    // Twice the default speed for the two buttons' colour changes on accept.
+    private let acceptFade: Animation = .easeInOut(duration: 0.15)
+
     // MARK: https://medium.com/@yeeedward/bullet-list-with-swiftui-7dfb7e3c30f1
     var listItems = [
         NSLocalizedString("term1-string", comment: ""),
@@ -23,8 +26,17 @@ struct FirstLaunchView: View {
     var toNumber: ((Int) -> String) = { "\($0 + 1)." }
     var bulletWidth: CGFloat? = nil
     var bulletAlignment: Alignment = .leading
-    var fontSize: CGFloat = 18
-    
+
+    // Fixed .system(size:) fonts ignore Dynamic Type; @ScaledMetric scales these bases with
+    // the user's text-size setting (the overflow/scroll logic then handles the taller list).
+    @ScaledMetric(relativeTo: .body) private var listFontSize: CGFloat = 18
+    @ScaledMetric(relativeTo: .body) private var cardFontSize: CGFloat = 17
+    @ScaledMetric(relativeTo: .title3) private var cardIconSize: CGFloat = 24
+    @ScaledMetric(relativeTo: .body) private var buttonFontSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize: CGFloat = 34
+    @ScaledMetric(relativeTo: .largeTitle) private var iconFontSize: CGFloat = 40
+    @ScaledMetric(relativeTo: .largeTitle) private var iconFrameHeight: CGFloat = 46
+
     var body: some View {
         GeometryReader { geometry in
             let maxWidth = min(geometry.size.width, 650)
@@ -32,46 +44,17 @@ struct FirstLaunchView: View {
             VStack {
                 icon
                 title
-                content
-                HStack {
-                    Image(systemName: isTermsAccepted ? "checkmark.square.fill" : "square")
-                        .foregroundColor(.green)
-                        .font(.system(size: 26).bold())
-                    
-                    // Text order are different for JA due to grammatic difference
-                    if let languageCode = Locale.current.languageCode, languageCode == "ja" {
-                        Link(destination: URL(string: "https://docs.google.com/document/d/1R4gTmFkp3BZ2pVAdlCj4STJEB5THORklJKKZDosOcd4/edit?tab=t.0")!){
-                            Text("terms-string").foregroundStyle(.blue)
-                        }
-                        Text("term-read-string")
-                    } else {
-                        Text("term-read-string")
-                        Link(destination: URL(string: "https://docs.google.com/document/d/1R4gTmFkp3BZ2pVAdlCj4STJEB5THORklJKKZDosOcd4/edit?tab=t.0")!){
-                            Text("terms-string").foregroundStyle(.blue)
-                        }
-                    }
-                }
-                .font(.system(size: 20).bold())
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(.blue, lineWidth: 3)
-                )
-                .onTapGesture {
-                    isTermsAccepted.toggle()
-                }
-                
-                Text("scroll-string")
-                    .font(.system(size:16))
-                    .foregroundColor(Color(.systemPink))
-                
+                termsRegion
+                termsAcceptance
+                    .padding(.top, 8)
                 close
             }
             .frame(maxWidth: maxWidth, maxHeight: .infinity)
             .frame(maxWidth: .infinity)     // center the content
             .padding(.horizontal, 20)
-            .padding(.vertical, 50)
-            
+            .padding(.top, 24)
+            .padding(.bottom, 20)
+
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.background))
@@ -92,63 +75,223 @@ struct FirstLaunchView_Previews: PreviewProvider {
 }
 
 
+// Carries the terms list's intrinsic height up to the region, read in the same layout pass
+// via overlayPreferenceValue so scroll sizing/affordances need no state round-trip.
+private struct TermsContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
 private extension FirstLaunchView {
     var icon: some View {
         Image(systemName: "rectangle.inset.filled.and.person.filled")
-            .font(.system(size: 50))
+            .font(.system(size: iconFontSize))
             .foregroundColor(Color.blue)
-            // Fixed height so this and the onboarding page's icon occupy identical space
-            // and both titles land at the same y position — SF Symbols render at
-            // different heights for the same point size.
-            .frame(height: 60)
+            // Height tracks the icon size (both scale with Dynamic Type) so the title sits
+            // just below it. Matches the onboarding page's icon at the default text size.
+            .frame(height: iconFrameHeight)
     }
     
     var title: some View {
         Text("term-title-string")
             .font(
-                .system(size: 45, weight: .bold, design: .rounded))
-            .padding(.top, 25)
+                .system(size: titleFontSize, weight: .bold, design: .rounded))
+            .padding(.top, 8)
             .foregroundStyle(.primary)
     }
     
     // MARK: https://medium.com/@yeeedward/bullet-list-with-swiftui-7dfb7e3c30f1
 
-    var content: some View {
-        ScrollView {
-            VStack(alignment: .leading,
-                   spacing: listItemSpacing) {
-                ForEach(listItems.indices, id: \.self) { idx in
-                    HStack(alignment: .top) {
-                        Text(toNumber(idx))
-                            .font(.system(size: fontSize).bold())
-                            .frame(width: bulletWidth,
-                                   alignment: bulletAlignment)
-                            .foregroundStyle(.primary)
-                        Text(listItems[idx])
-                            .font(.system(size: fontSize))
-                            .frame(maxWidth: .infinity,
-                                   alignment: .leading)
-                            .foregroundStyle(.primary)
+    /// The flexible terms area. A hidden copy reports the list's intrinsic height; that
+    /// value is read back in the SAME layout pass (overlayPreferenceValue), so we can decide
+    /// synchronously whether the list overflows the space it's been given. When it fits, the
+    /// area is sized exactly to the content and cannot scroll. When it doesn't, it's capped
+    /// to the available height and gains a bordered frame, a bottom fade, a scroll indicator,
+    /// and the "scroll for more" hint — so it's obvious there's more to read.
+    var termsRegion: some View {
+        GeometryReader { proxy in
+            let available = proxy.size.height
+
+            ZStack { termsMeasurer }                          // publishes intrinsic height
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .overlayPreferenceValue(TermsContentHeightKey.self) { contentH in
+                    let scrollable = contentH > available + 1
+                    let hintHeight: CGFloat = scrollable ? 26 : 0
+                    // Unmeasured (contentH == 0) → fill the space so the list is never blank;
+                    // fits → size to content (no scroll range); overflows → cap and scroll.
+                    let scrollAreaHeight: CGFloat = contentH <= 0
+                        ? available
+                        : (scrollable ? max(available - hintHeight, 0) : contentH)
+
+                    VStack(spacing: 4) {
+                        ZStack(alignment: .bottom) {
+                            ScrollView(.vertical, showsIndicators: scrollable) {
+                                termsList
+                                    .padding(.horizontal, scrollable ? 12 : 0)
+                            }
+                            .frame(height: scrollAreaHeight)
+
+                            if scrollable {
+                                LinearGradient(
+                                    colors: [Color(.background).opacity(0), Color(.background)],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                                .frame(height: 32)
+                                .allowsHitTesting(false)
+                            }
+                        }
+                        // A rounded border only when scrollable, so the area reads as a
+                        // contained, scrollable box rather than free-floating text.
+                        .overlay {
+                            if scrollable {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(Color(.separator), lineWidth: 1)
+                            }
+                        }
+
+                        if scrollable { scrollHint }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
-            }.padding(.top, 20)
         }
     }
-    
+
+    /// Hidden, height-unconstrained copy of the list that reports its INTRINSIC height, so
+    /// overflow is judged by what the list *wants*, not the space it's squeezed into.
+    var termsMeasurer: some View {
+        termsList
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(GeometryReader { g in
+                Color.clear.preference(key: TermsContentHeightKey.self, value: g.size.height)
+            })
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    /// The numbered terms list, sized to its content.
+    var termsList: some View {
+        VStack(alignment: .leading,
+               spacing: listItemSpacing) {
+            ForEach(listItems.indices, id: \.self) { idx in
+                HStack(alignment: .top) {
+                    Text(toNumber(idx))
+                        .font(.system(size: listFontSize).bold())
+                        .frame(width: bulletWidth,
+                               alignment: bulletAlignment)
+                        .foregroundStyle(.primary)
+                    Text(listItems[idx])
+                        .font(.system(size: listFontSize))
+                        .frame(maxWidth: .infinity,
+                               alignment: .leading)
+                        .foregroundStyle(.primary)
+                }
+            }
+        }.padding(.top, 20)
+    }
+
+    /// Shown only while the list overflows: a quiet nudge that there's more to read below.
+    var scrollHint: some View {
+        Label("scroll-string", systemImage: "chevron.down")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.top, 6)
+    }
+
+    // Terms gate: a single tappable card whose whole surface toggles acceptance. Replaces
+    // the old blue-outlined box + pink text, which read as an error state rather than a
+    // control. The scroll hint now lives above this card, only while the list overflows.
+    var termsAcceptance: some View {
+        // Center-align so the checkbox sits vertically centered against the label, which is a
+        // single continuous Text that wraps to as many lines as it needs.
+        HStack(alignment: .center, spacing: 12) {
+            Image(systemName: isTermsAccepted ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: cardIconSize))
+                .foregroundStyle(isTermsAccepted ? Color.green : Color.secondary)
+
+            termsText
+                .font(.system(size: cardFontSize, weight: .semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(isTermsAccepted
+                      ? Color.green.opacity(0.12)
+                      : Color(.secondarySystemGroupedBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(isTermsAccepted
+                              ? Color.green.opacity(0.5)
+                              : Color(.separator),
+                              lineWidth: 1)
+        )
+        // Whole card is the tap target; the inline link still opens the terms.
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .onTapGesture {
+            withAnimation(acceptFade) { isTermsAccepted.toggle() }
+        }
+        .animation(acceptFade, value: isTermsAccepted)
+    }
+
+    /// One continuous, wrapping sentence with the terms name as an inline tappable link
+    /// (built from Markdown) so the text flows as a paragraph rather than separate pieces.
+    /// Order differs for JA due to a grammatical difference.
+    var termsText: some View {
+        let url = "https://docs.google.com/document/d/1R4gTmFkp3BZ2pVAdlCj4STJEB5THORklJKKZDosOcd4/edit?tab=t.0"
+        let read = NSLocalizedString("term-read-string", comment: "")
+        let name = NSLocalizedString("terms-string", comment: "")
+        // The ↗ sits inside the link text so it stays attached and inline.
+        let link = "[\(name) ↗](\(url))"
+        let isJA = Locale.current.languageCode == "ja"
+        let sentence = isJA ? "\(link) \(read)" : "\(read) \(link)"
+
+        return Text(attributedTerms(sentence))
+            .tint(.blue)
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Parses the Markdown sentence (with its inline link) into an AttributedString.
+    func attributedTerms(_ markdown: String) -> AttributedString {
+        (try? AttributedString(
+            markdown: markdown,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )) ?? AttributedString(markdown)
+    }
+
     var close: some View {
         Button(action: {
             onDismiss()
         }) {
             Text("dismiss-string")
-                .font(.system(size: 20, weight: .bold))
+                .font(.system(size: buttonFontSize, weight: .bold))
                 .foregroundColor(.white)
                 .padding()
                 .frame(maxWidth: .infinity)
-                .background(isTermsAccepted ? Color.blue : Color.gray)
+                .background(closeBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .padding(.top, 20)
+                .padding(.top, 6)
         }
         .disabled(!isTermsAccepted)
+        .animation(acceptFade, value: isTermsAccepted)
+    }
+
+    /// Liquid Glass on iOS 26+ with the identical solid fill below it, mirroring the
+    /// onboarding page's continue button so the two screens' buttons match.
+    @ViewBuilder
+    var closeBackground: some View {
+        let tint: Color = isTermsAccepted ? .blue : .gray
+        if #available(iOS 26.0, *) {
+            tint.glassEffect(.regular.tint(tint).interactive(),
+                             in: .rect(cornerRadius: 16))
+        } else {
+            tint
+        }
     }
 }
 

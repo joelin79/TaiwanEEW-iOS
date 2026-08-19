@@ -16,6 +16,7 @@ struct AlertView: View {
     @Binding var subscribedCityIndex: Int
     @Binding var subscribedDistrictIndex: Int
     @Binding var notifyThreshold: NotifyThreshold
+    var startupEnabled: Bool = true
     @Environment(\.colorScheme) var colorScheme
     var lastPingTime: Date {eventManager.lastPingTime}
     var originTime: Date {eventManager.originTime}
@@ -25,6 +26,7 @@ struct AlertView: View {
     var msgType: String? {eventManager.event.last?.msgType.lowercased()}
     
     @State private var locationName: String? = nil
+    @State private var didRunStartupTasks = false
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
     var intensity: String {eventManager.intensity}
@@ -48,12 +50,26 @@ struct AlertView: View {
             NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
         }
     }
+
+    private func runStartupTasksIfNeeded() {
+        guard startupEnabled, !didRunStartupTasks else { return }
+        didRunStartupTasks = true
+        onAppLaunch()
+    }
     
     var body: some View {
-        if (Device.deviceType == .iphone) {
-            iPhoneView
-        } else {
-            iPadView
+        Group {
+            if (Device.deviceType == .iphone) {
+                iPhoneView
+            } else {
+                iPadView
+            }
+        }
+        .onAppear {
+            runStartupTasksIfNeeded()
+        }
+        .onChange(of: startupEnabled) { _ in
+            runStartupTasksIfNeeded()
         }
     }
 }
@@ -77,9 +93,6 @@ private extension AlertView {
             SlideOverCard(slideDirection: .bottom){
                 EEWDetailBlock(eventManager: eventManager)
             }
-        }
-        .onAppear(){
-            onAppLaunch()
         }
         .analyticsScreen(name: "AlertView", extraParameters: [
             "watch_location" : Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName
@@ -124,9 +137,6 @@ private extension AlertView {
             }
 
             
-        }
-        .onAppear(){
-            onAppLaunch()
         }
         .analyticsScreen(name: "AlertView", extraParameters: [
             "watch_location" : Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName

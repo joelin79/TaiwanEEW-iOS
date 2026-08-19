@@ -36,6 +36,7 @@ struct TaiwanEEWApp: App {
     // onboarding and never lose their subscription.
     @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
     @AppStorage("notifyThreshold") var notifyThreshold: NotifyThreshold = .eg3
+    @State private var didRunMainAppStartup = false
     
     init() {
         Purchases.configure(withAPIKey: AppConfig.revenueCatKey)
@@ -44,46 +45,80 @@ struct TaiwanEEWApp: App {
     var body: some Scene {
         WindowGroup {
             let _ = logger.info("[Init] isFirstLaunch is currently \(isFirstLaunch)")
-            // ZStack so the outgoing and incoming pages overlap for the length of the
-            // transition. Swapped straight in an if/else there is nothing for SwiftUI to
-            // animate between, which is why the screen changed abruptly.
-            ZStack {
-                if isFirstLaunch {
-                    FirstLaunchView(onDismiss: {
-                        withAnimation(Self.pageTransition) {
-                            isFirstLaunch = false
-                        }
-                    })
-                    // Leaves to the left as the permissions page arrives from the right,
-                    // so the two read as consecutive pages of one flow.
-                    .transition(.asymmetric(insertion: .identity,
-                                            removal: .move(edge: .leading)))
-                    .zIndex(2)
-                } else if !hasCompletedOnboarding {
-                    OnboardingPermissionsView(onDone: {
-                        withAnimation(Self.pageTransition) { hasCompletedOnboarding = true }
-                    })
-                    // Arrives from the right as the next page in the flow, but leaves
-                    // downwards: onboarding is finished with rather than navigated past,
-                    // and sliding it off the bottom uncovers the app underneath.
-                    .transition(.asymmetric(insertion: .move(edge: .trailing),
-                                            removal: .move(edge: .bottom)))
-                    .zIndex(1)
-                } else {
-                    // No transition of its own — it is revealed by the page sliding off it,
-                    // so it has to be sitting there already rather than arriving.
-                    mainTabView
-                        .zIndex(0)
+            mainTabView(startupEnabled: !isShowingOnboarding)
+                .fullScreenCover(isPresented: onboardingPresentation) {
+                    OnboardingFlowView(
+                        isFirstLaunch: $isFirstLaunch,
+                        onDone: completeOnboarding
+                    )
+                    .interactiveDismissDisabled()
                 }
+        }
+    }
+
+    fileprivate static let pageTransition: Animation = .easeInOut(duration: 0.35)
+
+    private var isShowingOnboarding: Bool {
+        isFirstLaunch || !hasCompletedOnboarding
+    }
+
+    private var onboardingPresentation: Binding<Bool> {
+        Binding(
+            get: { isShowingOnboarding },
+            set: { isPresented in
+                guard !isPresented, hasCompletedOnboarding else { return }
+                isFirstLaunch = false
+            }
+        )
+    }
+
+    private func completeOnboarding() {
+        isFirstLaunch = false
+        hasCompletedOnboarding = true
+    }
+
+    private func runMainAppStartupIfNeeded(startupEnabled: Bool) {
+        guard startupEnabled, !didRunMainAppStartup else { return }
+        didRunMainAppStartup = true
+
+        // correct the transparency bug for Tab bars
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithDefaultBackground()
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        // correct the transparency bug for Navigation bars
+//            let navigationBarAppearance = UINavigationBarAppearance()
+//            navigationBarAppearance.configureWithOpaqueBackground()
+//            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+
+        // Validate and recover subscription state
+        NotificationManager.AWSManager.validateSubscriptionState()
+
+        // Initialize location manager and set up auto-location callback
+        let locationManager = LocationManager.shared
+        locationManager.onLocationChanged = { cityIndex, districtIndex in
+            // Handle auto-location changes through the coordinated path
+            // This ensures @AppStorage is updated and prevents double subscriptions
+            DispatchQueue.main.async {
+                subscribedCityIndex = cityIndex
+                subscribedDistrictIndex = districtIndex
+                NotificationManager.setNotifyMode(
+                    cityIndex: cityIndex,
+                    districtIndex: districtIndex,
+                    threshold: notifyThreshold
+                )
             }
         }
     }
 
-    private static let pageTransition: Animation = .easeInOut(duration: 0.35)
-
-    private var mainTabView: some View {
+    private func mainTabView(startupEnabled: Bool) -> some View {
         TabView {
-            AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)
+            AlertView(
+                eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex),
+                subscribedCityIndex: $subscribedCityIndex,
+                subscribedDistrictIndex: $subscribedDistrictIndex,
+                notifyThreshold: $notifyThreshold,
+                startupEnabled: startupEnabled
+            )
                 .tabItem {
                     Label(LocalizedStringKey("nav-alert-string"), systemImage: "exclamationmark.triangle")    // TODO: localization
                 }
@@ -119,37 +154,40 @@ struct TaiwanEEWApp: App {
             }
         }
         .onAppear {
-            // correct the transparency bug for Tab bars
-            let tabBarAppearance = UITabBarAppearance()
-            tabBarAppearance.configureWithDefaultBackground()
-            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-            // correct the transparency bug for Navigation bars
-//            let navigationBarAppearance = UINavigationBarAppearance()
-//            navigationBarAppearance.configureWithOpaqueBackground()
-//            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
-
-            // Validate and recover subscription state
-            NotificationManager.AWSManager.validateSubscriptionState()
-
-            // Initialize location manager and set up auto-location callback
-            let locationManager = LocationManager.shared
-            locationManager.onLocationChanged = { cityIndex, districtIndex in
-                // Handle auto-location changes through the coordinated path
-                // This ensures @AppStorage is updated and prevents double subscriptions
-                DispatchQueue.main.async {
-                    subscribedCityIndex = cityIndex
-                    subscribedDistrictIndex = districtIndex
-                    NotificationManager.setNotifyMode(
-                        cityIndex: cityIndex,
-                        districtIndex: districtIndex,
-                        threshold: notifyThreshold
-                    )
-                }
-            }
+            runMainAppStartupIfNeeded(startupEnabled: startupEnabled)
+        }
+        .onChange(of: startupEnabled) { value in
+            runMainAppStartupIfNeeded(startupEnabled: value)
         }
     }
     
     
+}
+
+private struct OnboardingFlowView: View {
+    @Binding var isFirstLaunch: Bool
+    let onDone: () -> Void
+
+    var body: some View {
+        ZStack {
+            if isFirstLaunch {
+                FirstLaunchView(onDismiss: {
+                    withAnimation(TaiwanEEWApp.pageTransition) {
+                        isFirstLaunch = false
+                    }
+                })
+                .transition(.asymmetric(insertion: .identity,
+                                        removal: .move(edge: .leading)))
+                .zIndex(2)
+            } else {
+                OnboardingPermissionsView(onDone: onDone)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                            removal: .identity))
+                    .zIndex(1)
+            }
+        }
+        .background(Color(.background))
+    }
 }
 
 // MARK: Notification Handling -
@@ -381,4 +419,3 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
     }
   }
 }
-

@@ -103,20 +103,20 @@ struct AutoLocationStatusRow: View {
     @ObservedObject var locationManager: LocationManager
 
     var body: some View {
-        PermissionStatusRow(icon: permission.icon,
-                            color: permission.color,
-                            headline: permission.headline) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: permission.icon)
+                    .foregroundColor(permission.color)
+                Text(permission.headline)
+                    .font(.headline)
+                Spacer()
+            }
+
             if let location = locationManager.currentLocation {
                 let (cityIndex, districtIndex, distance) = locationManager.findClosestDistrict(to: location.coordinate)
                 let districtName = Location.cities[cityIndex].district[districtIndex].districtName
                 let distanceKm = String(format: "%.1f", distance / 1000)
-                HStack {
-                    Text("最近震度參考點：\(districtName)")
-                        .font(.caption)
-                    Text("(\(distanceKm) 公里)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                PermissionDetailText(text: "最近震度參考點：\(districtName) (\(distanceKm) 公里)")
             } else if permission.canFetchLocation {
                 // Only claim we are working on it when permission actually allows it;
                 // otherwise the detail line below explains what is blocking.
@@ -130,6 +130,7 @@ struct AutoLocationStatusRow: View {
                 color: permission.status == .authorizedAlways ? .secondary : permission.color
             )
         }
+        .padding(.vertical, 8)
     }
 }
 
