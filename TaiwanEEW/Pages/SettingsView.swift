@@ -17,6 +17,7 @@ struct SettingsView: View {
     @AppStorage("notifySelection") var notifySelection: NotifyThreshold = .eg3
     @AppStorage("locationNarrationEnabled") var locationNarrationEnabled: Bool = false
     @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
+    @AppStorage("showMapFramingDebug") var showMapFramingDebug: Bool = false
     @State private var confirmingTestEEWData = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
@@ -122,6 +123,16 @@ struct SettingsView: View {
                     Label("目前顯示 EEW-test 測試資料，不會顯示真實地震", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                // Harmless either way, so no confirmation — it only draws over the map.
+                Toggle("顯示地圖取景範圍", isOn: $showMapFramingDebug)
+
+                if showMapFramingDebug {
+                    Text("在地圖上畫出取景範圍、目前位置與震央的連線，以及兩點的中心。中心點不會落在畫面正中央，差距即為邊界留白與下方卡片所佔的空間。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 

@@ -35,6 +35,9 @@ private struct CustomMapView: UIViewRepresentable {
     /// user's dot on without the app being relaunched.
     @ObservedObject private var locationManager = LocationManager.shared
     @ObservedObject var headingProvider: HeadingProvider
+    /// Draws the framing geometry over the map. Debug and TestFlight only — the toggle
+    /// lives in Settings' diagnostics section and is not shown to App Store users.
+    @AppStorage("showMapFramingDebug") private var showFramingDebug = false
     @State private var userTrackingMode: MKUserTrackingMode = .none
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "CustomMapView")
 
@@ -116,6 +119,23 @@ private struct CustomMapView: UIViewRepresentable {
 
         context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
         context.coordinator.refreshEpicenterBlink()
+        // Redrawn every pass so it stays correct after a rotation or relayout.
+        drawTargetArea(on: uiView, insets: Self.mapInsets(for: uiView))
+
+        // The geographic markers are otherwise only drawn while framing, which happens on
+        // launch and on a new report — so without this the toggle appeared to do nothing
+        // until the next earthquake.
+        if context.coordinator.lastFramingDebugEnabled != showFramingDebug {
+            context.coordinator.lastFramingDebugEnabled = showFramingDebug
+            drawFramingDebug(on: uiView, fitted: preferredMapRect())
+        }
+
+        // Reframe the moment the first fix lands. Without this the map keeps whatever it
+        // opened with — the epicenter alone — until the next earthquake arrives.
+        if !context.coordinator.hasFramedWithUserLocation, locationManager.currentLocation != nil {
+            context.coordinator.hasFramedWithUserLocation = true
+            setupRegionForMap(uiView)
+        }
 
         let renderKey = Self.renderKey(for: eventManager.event.last)
         if context.coordinator.lastRenderKey != renderKey {
@@ -170,25 +190,220 @@ private struct CustomMapView: UIViewRepresentable {
         MapCoordinator(eventManager: eventManager)
     }
     
+    // MARK: - Framing
+
+    /// Whole-island view, for when there is nothing better to centre on.
+    private static let islandCentre = CLLocationCoordinate2D(latitude: 23.6978, longitude: 120.9605)
+    private static let islandMetres: CLLocationDistance = 400_000
+    /// One point and no second reference — show its surroundings.
+    private static let soloMetres: CLLocationDistance = 200_000
+    /// Floor on the fitted view. A quake on top of you should still show the region it
+    /// happened in, not the street you are standing on.
+    private static let minimumMetres: CLLocationDistance = 50_000
+    /// Side clearance. Both markers sit on the box's corners by construction, so without
+    /// this they land on the screen edge, half cut off. Generous because horizontal room
+    /// is cheap — nothing else is competing for it.
+    private static let horizontalMargin: CGFloat = 8
+    /// Top and bottom clearance, beyond the safe area and the card. Deliberately small:
+    /// vertical room is the scarce kind. The card already takes 457pt of an 852pt screen,
+    /// so every point added here costs about 1% of the map that is actually visible — at
+    /// 88 a side the usable band fell to a quarter of the view and the map showed nearly
+    /// four times the area that mattered.
+    private static let verticalMargin: CGFloat = 8
+    /// Two things float over the top of the map, and they are cleared in different
+    /// directions because they are shaped differently.
+    ///
+    /// The intensity legend is narrow and tall — about 36pt wide but reaching 88pt below
+    /// the status bar. Clearing it sideways costs 36pt of width; clearing it downwards
+    /// would cost 88pt of height, and height is the scarce axis here.
+    ///
+    /// The connection pill is the reverse: it ends 20pt below the status bar but runs
+    /// about 150pt across, so it is far cheaper to clear downwards.
+    private static let legendWidth: CGFloat = 36
+    private static let statusPillHeight: CGFloat = 20
+
+    private static let targetAreaTag = 77_301
+
     private func setupRegionForMap(_ mapView: MKMapView) {
-        
-        // The default map range. iPhone with the lat - 1 to center on screen.
-        var lat: Double
-        var lon: Double
-        if Device.deviceType == .iphone {
-            lat = eventManager.latB == 0 ? 22.95723 : eventManager.latB - 1
-            lon = 120.82812 // 南投
-        } else {
-            lat = eventManager.latB == 0 ? 22.95723 : min(eventManager.latB, 23.75)
-            lon = 121.32664 // 光復鄉
-        }
-        let region = MKCoordinateRegion(
-            center: CLLocationCoordinate2DMake(lat, lon),
-            span: MKCoordinateSpan(latitudeDelta: 3, longitudeDelta: 3)
-        )
-        mapView.setRegion(region, animated: true)
+        let rect = preferredMapRect()
+        let insets = Self.mapInsets(for: mapView)
+        mapView.setVisibleMapRect(rect, edgePadding: insets, animated: true)
+        drawTargetArea(on: mapView, insets: insets)
+        drawFramingDebug(on: mapView, fitted: rect)
+        logFraming(mapView, requested: rect, insets: insets)
     }
-    
+
+    /// Outlines the area the map is actually being fitted into — the view minus the status
+    /// bar, the alert card and the margins.
+    ///
+    /// Drawn in screen space rather than on the map, because that is what it describes: it
+    /// does not move when the map pans. If the geographic box from drawFramingDebug does
+    /// not sit inside this one, the placement is wrong. If it does sit inside and still
+    /// looks off, this rectangle is wrong — which is the part worth checking first, since
+    /// the card height is read from CardPosition and may not match what is on screen.
+    func drawTargetArea(on mapView: MKMapView, insets: UIEdgeInsets) {
+        mapView.viewWithTag(Self.targetAreaTag)?.removeFromSuperview()
+        guard showFramingDebug, LocationManager.isDiagnosticsAvailable else { return }
+
+        let box = UIView(frame: mapView.bounds.inset(by: insets))
+        box.tag = Self.targetAreaTag
+        box.isUserInteractionEnabled = false
+        box.backgroundColor = .clear
+        box.layer.borderColor = UIColor.systemGreen.cgColor
+        box.layer.borderWidth = 2
+        mapView.addSubview(box)
+    }
+
+    /// Reports what was asked for against what MapKit settled on.
+    ///
+    /// The fitted box keeps coming out smaller than the space reserved for it, and the two
+    /// candidate causes need different fixes. If MapKit rounds the zoom to a coarser step
+    /// it wastes up to half the scale, and no amount of inset tuning corrects that. If the
+    /// card reserve is simply too large, that is one wrong number. The ratio separates
+    /// them: near 1 means the fit is honest and the insets are just too big; near 2 means
+    /// the zoom was rounded.
+    private func logFraming(_ mapView: MKMapView, requested: MKMapRect, insets: UIEdgeInsets) {
+        guard showFramingDebug, LocationManager.isDiagnosticsAvailable else { return }
+
+        let metresPerPoint = 1 / MKMapPointsPerMeterAtLatitude(mapView.centerCoordinate.latitude)
+        let requestedKm = requested.height * metresPerPoint / 1000
+        let viewHeight = mapView.bounds.height
+        let usableBand = viewHeight - insets.top - insets.bottom
+        let safeTop = mapView.safeAreaInsets.top
+
+        // Read back after the animation, so this is what ended up on screen rather than
+        // what was asked for.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            let visibleKm = mapView.visibleMapRect.height * metresPerPoint / 1000
+            let bandCoversKm = visibleKm * (usableBand / max(viewHeight, 1))
+            let ratio = bandCoversKm / max(requestedKm, 0.001)
+            logger.info("framing — view \(viewHeight)pt safeTop \(safeTop)pt insets \(insets.top)/\(insets.bottom) band \(usableBand)pt | requested \(requestedKm)km, band now covers \(bandCoversKm)km, ratio \(ratio)")
+        }
+    }
+
+    /// Shows what the framing decided: the box being fitted, the line between the two
+    /// points, and the geometric midpoint.
+    ///
+    /// The midpoint marker will not sit in the middle of the screen, and that is the
+    /// useful part — the gap between it and the visual centre is the edge padding and the
+    /// alert card at work. When the framing looks wrong, this separates a box computed
+    /// wrongly from a box merely placed differently than expected.
+    private func drawFramingDebug(on mapView: MKMapView, fitted rect: MKMapRect) {
+        mapView.removeOverlays(mapView.overlays.filter { overlay in
+            guard let title = overlay.title ?? nil else { return false }
+            return title.hasPrefix("debug_")
+        })
+        guard showFramingDebug, LocationManager.isDiagnosticsAvailable else { return }
+
+        let corners = [
+            MKMapPoint(x: rect.minX, y: rect.minY).coordinate,
+            MKMapPoint(x: rect.maxX, y: rect.minY).coordinate,
+            MKMapPoint(x: rect.maxX, y: rect.maxY).coordinate,
+            MKMapPoint(x: rect.minX, y: rect.maxY).coordinate
+        ]
+        let box = MKPolygon(coordinates: corners, count: corners.count)
+        box.title = "debug_frame"
+        mapView.addOverlay(box, level: .aboveLabels)
+
+        guard eventManager.latB != 0,
+              let user = locationManager.currentLocation?.coordinate else { return }
+        let epicenter = CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
+
+        var ends = [user, epicenter]
+        let line = MKPolyline(coordinates: &ends, count: ends.count)
+        line.title = "debug_line"
+        mapView.addOverlay(line, level: .aboveLabels)
+
+        let midpoint = CLLocationCoordinate2D(latitude: (user.latitude + epicenter.latitude) / 2,
+                                              longitude: (user.longitude + epicenter.longitude) / 2)
+        // Fixed metres, so it stays a dot rather than growing with the zoom.
+        let marker = MKCircle(center: midpoint, radius: 2_000)
+        marker.title = "debug_mid"
+        mapView.addOverlay(marker, level: .aboveLabels)
+    }
+
+    /// The alert card covers the bottom of the screen, so the map is fitted into what is
+    /// left above it rather than into the whole view — otherwise the thing being centred
+    /// ends up behind the card.
+    ///
+    /// The card's resting height is a fixed number of points, which is a larger share of a
+    /// small phone than a large one, so this is read from the card rather than guessed.
+    /// iPad lays the card out beside the map instead of over it, so nothing is covered.
+    private static func mapInsets(for mapView: MKMapView) -> UIEdgeInsets {
+        let safeTop = mapView.safeAreaInsets.top
+
+        // The card's resting position is computed from the full screen height, but applied
+        // inside a coordinate space that already begins below the status bar — so it lands
+        // one safe area lower than its raw value suggests. Measured on device: the raw
+        // value puts its top edge at 395pt while it actually sits at 456pt, and reserving
+        // the difference cost 78pt of map that nothing was covering.
+        //
+        // iPad lays the card out beside the map instead of over it, so nothing is hidden.
+        let cardTop = safeTop + CardPosition.middle.rawValue
+        let obscuredByCard = Device.deviceType == .iphone
+            ? max(mapView.bounds.height - cardTop, 0)
+            : 0
+
+        return UIEdgeInsets(top: safeTop + statusPillHeight + verticalMargin,
+                            left: legendWidth + horizontalMargin,
+                            bottom: obscuredByCard + verticalMargin,
+                            right: horizontalMargin)
+    }
+
+    /// The area worth showing: you and the epicenter, or whichever of the two exists.
+    private func preferredMapRect() -> MKMapRect {
+        let epicenter = eventManager.latB == 0
+            ? nil
+            : CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
+        let user = locationManager.currentLocation?.coordinate
+
+        switch (epicenter, user) {
+        case let (epicenter?, user?):
+            return mapRect(spanning: epicenter, and: user)
+        case let (epicenter?, nil):
+            return mapRect(around: epicenter, metres: Self.soloMetres)
+        case let (nil, user?):
+            return mapRect(around: user, metres: Self.soloMetres)
+        case (nil, nil):
+            return mapRect(around: Self.islandCentre, metres: Self.islandMetres)
+        }
+    }
+
+    /// Exactly the box the line between the two points needs, widened to the minimum if
+    /// they are close together.
+    ///
+    /// Done in map points rather than degrees because a degree of longitude is shorter the
+    /// further north you are, so a degree-based box would be the wrong shape.
+    private func mapRect(spanning a: CLLocationCoordinate2D,
+                         and b: CLLocationCoordinate2D) -> MKMapRect {
+        let pointA = MKMapPoint(a)
+        let pointB = MKMapPoint(b)
+        var rect = MKMapRect(x: min(pointA.x, pointB.x),
+                             y: min(pointA.y, pointB.y),
+                             width: abs(pointA.x - pointB.x),
+                             height: abs(pointA.y - pointB.y))
+
+        let midLatitude = (a.latitude + b.latitude) / 2
+        let minimum = Self.minimumMetres * MKMapPointsPerMeterAtLatitude(midLatitude)
+        if rect.width < minimum {
+            rect = rect.insetBy(dx: -(minimum - rect.width) / 2, dy: 0)
+        }
+        if rect.height < minimum {
+            rect = rect.insetBy(dx: 0, dy: -(minimum - rect.height) / 2)
+        }
+        return rect
+    }
+
+    private func mapRect(around centre: CLLocationCoordinate2D,
+                         metres: CLLocationDistance) -> MKMapRect {
+        let size = metres * MKMapPointsPerMeterAtLatitude(centre.latitude)
+        let origin = MKMapPoint(centre)
+        return MKMapRect(x: origin.x - size / 2,
+                         y: origin.y - size / 2,
+                         width: size,
+                         height: size)
+    }
+
     //    private func setupMapBoundary(_ mapView: MKMapView) {
     //        // Define the bounding coordinates for Taiwan
     //        let northEast = CLLocationCoordinate2D(latitude: 25.3, longitude: 122.0)
@@ -414,6 +629,13 @@ private struct CustomMapView: UIViewRepresentable {
         let eventManager: EventDispatcher
         /// Fingerprint of the last report drawn. See CustomMapView.renderKey.
         var lastRenderKey: String?
+        /// The map is framed in makeUIView, which usually runs before the first location
+        /// fix — so it opens on the epicenter alone. This lets it reframe once, when the
+        /// fix arrives, without reframing on every subsequent location update and fighting
+        /// the user's panning.
+        var hasFramedWithUserLocation = false
+        /// Last state of the debug toggle, so flipping it redraws immediately.
+        var lastFramingDebugEnabled: Bool?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         
@@ -472,6 +694,10 @@ private struct CustomMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if overlay is WaveFillOverlay {
                 return WaveFillRenderer(overlay: overlay)
+            } else if let line = overlay as? MKPolyline {
+                return Self.debugLineRenderer(for: line)
+            } else if let circle = overlay as? MKCircle {
+                return Self.debugMidpointRenderer(for: circle)
             } else if let polygon = overlay as? MKPolygon {
                 return polygonRenderer(for: polygon)
             } else if let multiPolygon = overlay as? MKMultiPolygon {
@@ -714,7 +940,14 @@ private struct CustomMapView: UIViewRepresentable {
         }
         
         private func polygonRenderer(for polygon: MKPolygon) -> MKPolygonRenderer {
-            if polygon.title!.starts(with: "static_") {
+            if polygon.title?.hasPrefix("debug_") == true {
+                let renderer = MKPolygonRenderer(polygon: polygon)
+                renderer.fillColor = .clear
+                renderer.strokeColor = .systemPurple
+                renderer.lineWidth = 2
+                renderer.lineDashPattern = [6, 4]
+                return renderer
+            } else if polygon.title!.starts(with: "static_") {
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 renderer.fillColor = UIColor.clear
                 renderer.strokeColor = UIColor.black
@@ -745,26 +978,21 @@ private struct CustomMapView: UIViewRepresentable {
             }
         }
         
-        /// The last intensity applied to each district, so a message that does not change
-        /// one is not repainted.
-        private var appliedIntensity: [String: String] = [:]
-
-        /// Repaints only the districts whose predicted intensity actually moved.
+        /// Repaints every district from the current report.
         ///
-        /// Assigning fillColor invalidates the renderer whether or not the value differs,
-        /// and there are ~370 of these covering the island, so repainting them all forces
-        /// every tile on the map to re-rasterise. Doing that on each message — which during
-        /// a quake is every few seconds — costs far more than anything the wave fronts do.
-        /// Districts far from the epicenter sit at zero throughout and now cost nothing.
+        /// No memoisation. A previous version remembered the last colour applied and
+        /// skipped unchanged districts, which was cheaper but wrong: MapKit builds
+        /// renderers lazily, so at launch there is often nothing to paint yet, and any
+        /// bookkeeping done before that point marks work as finished that never happened.
+        /// Repainting all of them is the behaviour that has always worked. If this needs
+        /// optimising later, the state has to live where the renderer does — not beside it.
         func refreshDistrictColours(on mapView: MKMapView) {
             for overlay in mapView.overlays {
                 guard let title = overlay.title ?? nil,
-                      let intensity = intensityKey(for: title),
-                      appliedIntensity[title] != intensity else { continue }
-
-                appliedIntensity[title] = intensity
-                (mapView.renderer(for: overlay) as? MKOverlayPathRenderer)?
-                    .fillColor = colour(forIntensity: intensity)
+                      title.hasPrefix("dynamic_"),
+                      let renderer = mapView.renderer(for: overlay) as? MKOverlayPathRenderer
+                else { continue }
+                renderer.fillColor = fillColor(for: title)
             }
         }
 
@@ -794,6 +1022,25 @@ private struct CustomMapView: UIViewRepresentable {
             intensity == Self.unsupportedArea ? .gray : UIColor(Color(intensity))
         }
 
+        /// The line whose length the framing is fitted to.
+        private static func debugLineRenderer(for line: MKPolyline) -> MKOverlayRenderer {
+            let renderer = MKPolylineRenderer(polyline: line)
+            renderer.strokeColor = .systemPurple
+            renderer.lineWidth = 2
+            renderer.lineDashPattern = [2, 6]
+            return renderer
+        }
+
+        /// The geometric midpoint. Deliberately not where the screen centres — the offset
+        /// between the two is the padding and the alert card.
+        private static func debugMidpointRenderer(for circle: MKCircle) -> MKOverlayRenderer {
+            let renderer = MKCircleRenderer(circle: circle)
+            renderer.fillColor = UIColor.systemPurple.withAlphaComponent(0.9)
+            renderer.strokeColor = .white
+            renderer.lineWidth = 1
+            return renderer
+        }
+
         func fillColor(for identifier: String) -> UIColor {
             guard let intensity = intensityKey(for: identifier) else { return .clear }
             return colour(forIntensity: intensity)
@@ -808,6 +1055,14 @@ private struct CustomMapView: UIViewRepresentable {
         /// of times returns the order to where it started, so the flicker was the swap
         /// itself, not a race.
         func mapView(_ mapView: MKMapView, didAdd renderers: [MKOverlayRenderer]) {
+            // A newly added overlay is not always composited until something forces a
+            // redraw. The subview swap below used to run on every batch and did that as a
+            // side effect; once it was limited to running once, the districts — which
+            // arrive in a later batch, since the geojson parse is asynchronous — stayed
+            // blank at launch until the map was panned. Asking for the invalidation
+            // directly does not depend on a side effect of unrelated code.
+            renderers.forEach { $0.setNeedsDisplay() }
+
             guard !hasReorderedSubviews else { return }
             guard mapView.subviews.count >= 3 else { return }
             hasReorderedSubviews = true
