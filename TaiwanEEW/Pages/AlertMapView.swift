@@ -38,8 +38,6 @@ private struct CustomMapView: UIViewRepresentable {
     @State private var userTrackingMode: MKUserTrackingMode = .none
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "CustomMapView")
 
-    let mapView = MKMapView()
-
     /// Only ask MapKit for the user's dot once permission is already granted. Setting
     /// showsUserLocation while the status is still .notDetermined can make MapKit raise
     /// the location prompt itself, which would appear unannounced on the alert screen
@@ -50,6 +48,13 @@ private struct CustomMapView: UIViewRepresentable {
 
     // MARK: - Make Map View
     func makeUIView(context: Context) -> MKMapView {
+        // Built here, not stored on the struct. SwiftUI recreates this value whenever
+        // anything it observes changes — and headingProvider publishes every couple of
+        // degrees of compass movement, so turning the phone did it several times a second.
+        // As a stored property that allocated a whole new MKMapView each time, spinning up
+        // a map engine and discarding it, while the one SwiftUI actually kept was the
+        // single instance makeUIView returned on the first pass.
+        let mapView = MKMapView()
         setupRegionForMap(mapView)
         //        setupMapBoundary(mapView)
         
@@ -377,8 +382,14 @@ private struct CustomMapView: UIViewRepresentable {
     
     // MARK: - Map Coordinator
     class MapCoordinator: NSObject, MKMapViewDelegate {
-        @ObservedObject var eventManager: EventDispatcher
-        @State var lastEventIdentifier: String?
+        // Plain properties. These carried @ObservedObject and @State, which are storage for
+        // SwiftUI View structs and have nothing to persist into on a class SwiftUI does not
+        // manage. @State in particular silently dropped every write, so lastEventIdentifier
+        // stayed nil and the "event identifier changed" branch in updateUIView ran on every
+        // single call — several times a second while the compass moved — rebuilding the
+        // wave fronts, re-adding the epicenter and re-animating setRegion each time.
+        let eventManager: EventDispatcher
+        var lastEventIdentifier: String?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         
