@@ -59,6 +59,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		431167743036C83800493ECA /* Broadview, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Broadview, Seattle.gpx"; sourceTree = "<group>"; };
 		4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaiwanEEWTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "U District, Seattle.gpx"; sourceTree = "<group>"; };
 		B40038EC28743FAB0095D49F /* TaiwanEEW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaiwanEEW.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -166,6 +167,7 @@
 		B40038E328743FAB0095D49F = {
 			isa = PBXGroup;
 			children = (
+				431167743036C83800493ECA /* Broadview, Seattle.gpx */,
 				43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */,
 				C7F707F72E6A70E5004D34D0 /* TaiwanEEW */,
 				C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */,
@@ -476,6 +478,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = XS4STNY663;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -538,6 +541,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = XS4STNY663;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;

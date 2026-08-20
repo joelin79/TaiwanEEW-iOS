@@ -481,39 +481,29 @@ private struct CustomMapView: UIViewRepresentable {
             lowerOutlinesBelowAnnotations(on: mapView)
         }
 
-        /// Slips the outline view underneath MapKit's annotation views.
+        /// Moves the outline view into the container MapKit keeps its annotation views in,
+        /// underneath them all.
         ///
-        /// Added to the map directly it sits above everything, so the fronts drew over the
-        /// user's dot and its cone. Below the annotations it still covers the district
-        /// polygons, which is where it has to be, and passes under the dot, which is where
-        /// it was asked to be. The epicenter shares that container, so the fronts pass
-        /// under it too — they radiate away from it, so they barely meet.
+        /// Reparenting into that container rather than reordering against the map's own
+        /// subviews: annotation views are nested inside the map's content view, so walking
+        /// up to a sibling of the map lands on the content view itself, and inserting below
+        /// that buries the fronts behind the opaque tile layer — they disappear rather than
+        /// move. The annotation container sits above the tiles by construction, which is
+        /// what makes it a safe home.
         ///
         /// Idempotent, so it is safe to call whenever annotation views appear.
         func lowerOutlinesBelowAnnotations(on mapView: MKMapView) {
-            guard let outlines = outlineView, let parent = outlines.superview else { return }
+            guard let outlines = outlineView else { return }
+            guard let container = mapView.annotations
+                .compactMap({ mapView.view(for: $0) })
+                .first?.superview else { return }
 
-            let anchors = mapView.annotations
-                .compactMap { mapView.view(for: $0) }
-                .compactMap { sibling(of: $0, under: parent) }
+            // Already where it belongs.
+            guard !(outlines.superview === container && container.subviews.first === outlines) else { return }
 
-            guard let anchor = anchors.first,
-                  let outlineIndex = parent.subviews.firstIndex(of: outlines),
-                  let anchorIndex = parent.subviews.firstIndex(of: anchor),
-                  outlineIndex > anchorIndex else { return }
-
-            parent.insertSubview(outlines, belowSubview: anchor)
-        }
-
-        /// Walks up from an annotation view to whichever ancestor is a direct child of
-        /// `parent`, since only siblings can be ordered against each other.
-        private func sibling(of view: UIView, under parent: UIView) -> UIView? {
-            var current: UIView? = view
-            while let candidate = current {
-                if candidate.superview === parent { return candidate }
-                current = candidate.superview
-            }
-            return nil
+            outlines.frame = container.bounds
+            outlines.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            container.insertSubview(outlines, at: 0)
         }
 
         func removeWaveFronts(from mapView: MKMapView) {
@@ -525,8 +515,8 @@ private struct CustomMapView: UIViewRepresentable {
             outlineView = nil
         }
 
-        /// Redraws the outlines from the current radii. Cheap enough to call on every tick
-        /// and on every frame of a pan or zoom, because it only rewrites two paths.
+        /// Redraws the outlines from the current radii. Cheap enough for every tick and
+        /// every frame of a pan or zoom, because it only rewrites two paths.
         func redrawWaveOutlines(on mapView: MKMapView) {
             guard let outlines = outlineView, let fill = fillOverlay else { return }
             guard fill.pRadius > 0 || fill.sRadius > 0 else {
@@ -540,8 +530,8 @@ private struct CustomMapView: UIViewRepresentable {
                             sRadius: screenRadius(for: fill.sRadius, at: fill.coordinate, on: mapView, in: outlines))
         }
 
-        /// Metres to points on screen, measured rather than derived, so it stays correct at
-        /// any zoom without duplicating MapKit's projection maths.
+        /// Metres to points on screen, measured from two projected coordinates rather than
+        /// derived, so it stays right at any zoom without reimplementing the projection.
         private func screenRadius(for metres: CLLocationDistance,
                                   at centre: CLLocationCoordinate2D,
                                   on mapView: MKMapView,
@@ -555,8 +545,8 @@ private struct CustomMapView: UIViewRepresentable {
             return hypot(edgePoint.x - centrePoint.x, edgePoint.y - centrePoint.y)
         }
 
-        /// The outlines are positioned in screen space, so a pan or zoom moves them out of
-        /// place until they are recomputed.
+        /// The outlines live in screen space, so panning or zooming leaves them behind
+        /// until they are recomputed.
         func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
             redrawWaveOutlines(on: mapView)
         }
