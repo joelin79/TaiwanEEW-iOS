@@ -275,7 +275,7 @@ Next release (2.1.1) and ongoing cleanup, roughly in priority order.
 
 ### Hardening
 
-- Firebase App Check — integrate unenforced, monitor verified traffic, enforce only after adoption (enforcing early breaks every client in the field)
+- ~~Firebase App Check~~ — **tried and removed in 2.2.0. Do not reinstate without solving the latency first.** Firestore withholds its first request until App Check yields a token, and on this app that cost about five seconds on *every* cold launch, in Release as well as Debug. The token was never cached, which matches the Installations checkin failures in the logs — so it was failing rather than merely slow, and enforcing it would have cut every client off from Firestore. Weighed against that it protected nothing (it was unenforced) and what it would have protected is quota abuse of a public earthquake feed. Five seconds without live data, at the moment someone opens the app because they felt something, is not a trade worth making. Firestore rules still deny writes and cap list reads; a billing alert covers runaway usage.
 - Add a billing budget alert; tighten the SNS topic subscribe policy (currently allows subscribe from any principal)
 - (Done) Firebase read/write rules locked, Cognito unauthenticated role scoped to the minimum SNS actions
 

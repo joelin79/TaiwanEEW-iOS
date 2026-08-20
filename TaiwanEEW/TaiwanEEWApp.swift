@@ -10,7 +10,6 @@
 import SwiftUI
 import AWSSNS
 import Firebase
-import FirebaseAppCheck
 import RevenueCat
 import UserNotifications
 import BackgroundTasks
@@ -244,10 +243,18 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Register BGTasks as early as possible (before returning from didFinishLaunching)
         LocationManager.registerBackgroundTasks()
 
-        // Install App Check before configuring Firebase so every Firebase request carries an
-        // attestation token. Registered but unenforced in the console for now — see
-        // AppCheckProviderFactory for the enforcement rollout plan.
-        AppCheck.setAppCheckProviderFactory(TaiwanEEWAppCheckProviderFactory())
+        // App Check was installed here and has been removed. Firestore will not issue its
+        // first request until App Check has produced a token, and on this app that took
+        // about five seconds on every cold launch, in Release as well as Debug — the token
+        // was never being cached, which matches the Installations checkin failures in the
+        // logs. So it was not merely slow, it was failing, and had it ever been enforced it
+        // would have cut every client off from Firestore entirely.
+        //
+        // Against that: it was unenforced, so it protected nothing, and what it would have
+        // protected is quota abuse of a public earthquake feed. Five seconds of no live
+        // data, right when someone opens the app because they felt something, is not worth
+        // that. Firestore rules still deny writes and cap list reads; a billing alert
+        // covers runaway usage.
 
         // Configure Firebase and FCM (to disable FCM notification (fuck FCM lmao
         FirebaseApp.configure()
