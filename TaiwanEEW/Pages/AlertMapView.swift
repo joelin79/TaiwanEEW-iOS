@@ -117,8 +117,8 @@ private struct CustomMapView: UIViewRepresentable {
         context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
         context.coordinator.refreshEpicenterBlink()
 
-        // Check if the event identifier has changed
-        if context.coordinator.lastEventIdentifier != eventManager.event.last?.identifier {
+        let renderKey = Self.renderKey(for: eventManager.event.last)
+        if context.coordinator.lastRenderKey != renderKey {
             if (Date().timeIntervalSince(self.eventManager.originTime) < 120) {
                 context.coordinator.startCircleUpdateTimer()
             } else {
@@ -134,8 +134,8 @@ private struct CustomMapView: UIViewRepresentable {
             context.coordinator.removeWaveFronts(from: uiView)
             addEpicenterAnnotationAndCircles(to: uiView, coordinator: context.coordinator)
             
-            // Update the last event identifier
-            context.coordinator.lastEventIdentifier = eventManager.event.last?.identifier
+            // Remember what was just drawn
+            context.coordinator.lastRenderKey = renderKey
             
             if eventManager.latB != 0 {
                 setupRegionForMap(uiView)
@@ -143,6 +143,29 @@ private struct CustomMapView: UIViewRepresentable {
         }
     }
     
+    /// Every value the map's drawing reads, combined into one fingerprint.
+    ///
+    /// Not the identifier alone: that is the CWA event id, identical across every revision
+    /// of one earthquake, so keying on it drew the first message and ignored the rest.
+    /// Not identifier and msgNo alone either — a report can be corrected without the
+    /// number moving, and then the epicenter, the circles and every district colour would
+    /// go on describing the superseded figures. Keying on the inputs themselves means the
+    /// map redraws exactly when the picture would differ, and stays still otherwise, which
+    /// is what keeps compass updates from rebuilding it.
+    private static func renderKey(for report: EEWReport?) -> String? {
+        guard let report else { return nil }
+        return [
+            report.identifier,
+            String(report.msgNo),
+            String(report.magnitudeValue),
+            String(report.depth),
+            String(report.epicenterLat),
+            String(report.epicenterLon),
+            String(report.pgaAdj),
+            String(report.originTime.timeIntervalSince1970)
+        ].joined(separator: "#")
+    }
+
     func makeCoordinator() -> MapCoordinator {
         MapCoordinator(eventManager: eventManager)
     }
@@ -384,12 +407,13 @@ private struct CustomMapView: UIViewRepresentable {
     class MapCoordinator: NSObject, MKMapViewDelegate {
         // Plain properties. These carried @ObservedObject and @State, which are storage for
         // SwiftUI View structs and have nothing to persist into on a class SwiftUI does not
-        // manage. @State in particular silently dropped every write, so lastEventIdentifier
+        // manage. @State in particular silently dropped every write, so lastMessageKey
         // stayed nil and the "event identifier changed" branch in updateUIView ran on every
         // single call — several times a second while the compass moved — rebuilding the
         // wave fronts, re-adding the epicenter and re-animating setRegion each time.
         let eventManager: EventDispatcher
-        var lastEventIdentifier: String?
+        /// Fingerprint of the last report drawn. See CustomMapView.renderKey.
+        var lastRenderKey: String?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         
