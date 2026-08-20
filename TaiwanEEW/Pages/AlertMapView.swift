@@ -122,13 +122,7 @@ private struct CustomMapView: UIViewRepresentable {
             logger.debug("Event identifier changed. Updating dynamic overlays...")
             
             // Update the colors of existing overlays
-            for overlay in uiView.overlays {
-                if let renderer = uiView.renderer(for: overlay) as? MKOverlayPathRenderer {
-                    if let title = overlay.title, ((title?.starts(with: "dynamic_")) != nil) {
-                        renderer.fillColor = context.coordinator.fillColor(for: title!)
-                    }
-                }
-            }
+            context.coordinator.refreshDistrictColours(on: uiView)
             
             // Remove and re-add epicenter annotation and circles
             uiView.removeAnnotations(uiView.annotations.filter { $0.title == "Epicenter" })
@@ -716,27 +710,60 @@ private struct CustomMapView: UIViewRepresentable {
             }
         }
         
-        func fillColor(for identifier: String) -> UIColor {
-            if identifier.starts(with: "dynamic_") {
-                let townID = String(identifier.dropFirst(8))  // Remove "dynamic_" prefix
-                if townID.prefix(2) != "09" {  // exclude unsupported areas
-                    let sel = Location.selectionFromID(id: Location.polygonIDMapping[townID]!)
-                    let loc = Location.cities[sel[0]].district[sel[1]]
-                    let intensity = EEWService.pgaToIntensity(pga: EEWService.pga(ML: eventManager.magnitude,
-                                                                                  depth: eventManager.depth,
-                                                                                  dist: EEWService.dist(latA: loc.lat, lonA: loc.lon,
-                                                                                                        latB: eventManager.latB, lonB: eventManager.lonB),
-                                                                                  Si: loc.si,
-                                                                                  Padj: eventManager.pgaAdj))
-                    return UIColor(Color(intensity))
-                } else {
-                    return UIColor.gray
-                }
-            } else {
-                return UIColor.clear
+        /// The last intensity applied to each district, so a message that does not change
+        /// one is not repainted.
+        private var appliedIntensity: [String: String] = [:]
+
+        /// Repaints only the districts whose predicted intensity actually moved.
+        ///
+        /// Assigning fillColor invalidates the renderer whether or not the value differs,
+        /// and there are ~370 of these covering the island, so repainting them all forces
+        /// every tile on the map to re-rasterise. Doing that on each message — which during
+        /// a quake is every few seconds — costs far more than anything the wave fronts do.
+        /// Districts far from the epicenter sit at zero throughout and now cost nothing.
+        func refreshDistrictColours(on mapView: MKMapView) {
+            for overlay in mapView.overlays {
+                guard let title = overlay.title ?? nil,
+                      let intensity = intensityKey(for: title),
+                      appliedIntensity[title] != intensity else { continue }
+
+                appliedIntensity[title] = intensity
+                (mapView.renderer(for: overlay) as? MKOverlayPathRenderer)?
+                    .fillColor = colour(forIntensity: intensity)
             }
         }
-        
+
+        /// The intensity a district is predicted to feel, as the string the colour assets
+        /// are named after. nil for overlays that are not intensity polygons.
+        private func intensityKey(for identifier: String) -> String? {
+            guard identifier.starts(with: "dynamic_") else { return nil }
+            let townID = String(identifier.dropFirst(8))  // Remove "dynamic_" prefix
+            guard townID.prefix(2) != "09" else { return Self.unsupportedArea }
+            // Was a force unwrap. A district present in the geojson but missing from the
+            // mapping would have trapped here — on the alert screen, mid-earthquake.
+            guard let mappedID = Location.polygonIDMapping[townID] else { return Self.unsupportedArea }
+
+            let sel = Location.selectionFromID(id: mappedID)
+            let loc = Location.cities[sel[0]].district[sel[1]]
+            return EEWService.pgaToIntensity(pga: EEWService.pga(ML: eventManager.magnitude,
+                                                                 depth: eventManager.depth,
+                                                                 dist: EEWService.dist(latA: loc.lat, lonA: loc.lon,
+                                                                                       latB: eventManager.latB, lonB: eventManager.lonB),
+                                                                 Si: loc.si,
+                                                                 Padj: eventManager.pgaAdj))
+        }
+
+        private static let unsupportedArea = "unsupported"
+
+        private func colour(forIntensity intensity: String) -> UIColor {
+            intensity == Self.unsupportedArea ? .gray : UIColor(Color(intensity))
+        }
+
+        func fillColor(for identifier: String) -> UIColor {
+            guard let intensity = intensityKey(for: identifier) else { return .clear }
+            return colour(forIntensity: intensity)
+        }
+
         /// Undocumented subview reordering inherited from before this was open sourced.
         ///
         /// It runs once now rather than on every batch of renderers. Left unguarded it
