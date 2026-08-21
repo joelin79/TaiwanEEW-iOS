@@ -192,11 +192,38 @@ private struct CustomMapView: UIViewRepresentable {
     
     // MARK: - Framing
 
-    /// Whole-island view, for when there is nothing better to centre on.
-    private static let islandCentre = CLLocationCoordinate2D(latitude: 23.6978, longitude: 120.9605)
-    private static let islandMetres: CLLocationDistance = 400_000
+    /// The island, corner to corner, for when there is nothing better to frame.
+    ///
+    /// Given as explicit corners rather than a centre and a radius so the box is the shape
+    /// of Taiwan rather than a square around it — a square wastes the difference on sea,
+    /// and it is the longer side that decides the zoom.
+    private static let taiwanNorthEast = CLLocationCoordinate2D(latitude: 25.326903, longitude: 122.104184)
+    private static let taiwanSouthWest = CLLocationCoordinate2D(latitude: 21.893754, longitude: 119.377507)
+
+    /// Fraction trimmed off each side of the island box before it is framed.
+    ///
+    /// The corners above bound the island with some sea around it; this pulls the view in
+    /// onto land. Set to 0 to frame exactly the corners as given.
+    private static let taiwanFramingInset = 0.20
+
+    private static var taiwanRect: MKMapRect {
+        let northEast = MKMapPoint(taiwanNorthEast)
+        let southWest = MKMapPoint(taiwanSouthWest)
+        // y grows southward in map points, so the corners cannot be assumed to be in order.
+        let full = MKMapRect(x: min(northEast.x, southWest.x),
+                             y: min(northEast.y, southWest.y),
+                             width: abs(northEast.x - southWest.x),
+                             height: abs(northEast.y - southWest.y))
+        return full.insetBy(dx: full.width * taiwanFramingInset,
+                            dy: full.height * taiwanFramingInset)
+    }
     /// One point and no second reference — show its surroundings.
     private static let soloMetres: CLLocationDistance = 200_000
+    /// How far from the nearest district still counts as being in Taiwan. Compared against
+    /// the closest district rather than a latitude and longitude box, which would have to
+    /// be drawn so wide to include 金門, 馬祖 and 澎湖 that it would swallow a good part of
+    /// the mainland along with them.
+    private static let taiwanProximityMetres: CLLocationDistance = 100_000
     /// Floor on the fitted view. A quake on top of you should still show the region it
     /// happened in, not the street you are standing on.
     private static let minimumMetres: CLLocationDistance = 50_000
@@ -357,6 +384,13 @@ private struct CustomMapView: UIViewRepresentable {
             : CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
         let user = locationManager.currentLocation?.coordinate
 
+        // Someone abroad gets the island instead. Fitting their position and the epicenter
+        // together would stretch the box from wherever they are back to Taiwan, at a zoom
+        // that shows neither end usefully.
+        if let user, !isNearTaiwan(user) {
+            return Self.taiwanRect
+        }
+
         switch (epicenter, user) {
         case let (epicenter?, user?):
             return mapRect(spanning: epicenter, and: user)
@@ -365,8 +399,12 @@ private struct CustomMapView: UIViewRepresentable {
         case let (nil, user?):
             return mapRect(around: user, metres: Self.soloMetres)
         case (nil, nil):
-            return mapRect(around: Self.islandCentre, metres: Self.islandMetres)
+            return Self.taiwanRect
         }
+    }
+
+    private func isNearTaiwan(_ coordinate: CLLocationCoordinate2D) -> Bool {
+        locationManager.findClosestDistrict(to: coordinate).distance <= Self.taiwanProximityMetres
     }
 
     /// Exactly the box the line between the two points needs, widened to the minimum if
