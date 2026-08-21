@@ -4,6 +4,13 @@
 //
 //  Created by 林子祐 on 2024/7/7.
 //  https://gist.github.com/mshafer/7e05d0a120810a9eb49d3589ce1f6f40#file-slideovercard-swift
+//
+//  FROZEN — iOS 15 and 16 only. FloatingAlertCard replaces this from iOS 17 up, and all
+//  new work on the alert card goes there. This is kept because it works, not because it
+//  is good: the detents are fixed point values so the card takes 69% of an SE and 48% of
+//  a Pro Max, PreventableScrollView never actually scrolls (canScroll is never set true),
+//  and there is no drag affordance. Fix things here only if they are broken for the
+//  users still on 15–16.
 
 import SwiftUI
 import MapKit
@@ -30,12 +37,18 @@ struct SlideOverCard<Content: View>: View {
 
     var content: () -> Content
     var slideDirection: SlideDirection
+    /// Points of the screen's bottom edge the card covers once settled. Measured after the
+    /// offset is applied, which lands on safeTop + position.rawValue — the same number the
+    /// map used to reconstruct for itself, now worked out by the card that causes it.
+    var onSettle: (CGFloat) -> Void = { _ in }
 
     init(slideDirection: SlideDirection = .bottom,
          position: Binding<CardPosition>,
+         onSettle: @escaping (CGFloat) -> Void = { _ in },
          @ViewBuilder content: @escaping () -> Content) {
         self.slideDirection = slideDirection
         self.content = content
+        self.onSettle = onSettle
         self._position = position
         self._canScroll = State(initialValue: false)
     }
@@ -76,6 +89,13 @@ struct SlideOverCard<Content: View>: View {
         .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10.0)
         .offset(y: offsetForPosition())
         .animation(.interpolatingSpring(stiffness: 300.0, damping: 30.0, initialVelocity: 10.0), value: self.dragState.isDragging)
+        .background(
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { report(proxy) }
+                    .onChange(of: position) { _ in report(proxy) }
+            }
+        )
         .gesture(drag)
     }
     
@@ -95,6 +115,16 @@ struct SlideOverCard<Content: View>: View {
         }
     }
     
+    /// Deferred a frame: at the moment position changes the view has not been laid out at
+    /// its new offset yet, so reading the frame immediately returns the old one.
+    private func report(_ proxy: GeometryProxy) {
+        DispatchQueue.main.async {
+            let top = proxy.frame(in: .global).minY
+            guard top > 0 else { return }
+            onSettle(max(UIScreen.screenHeight - top, 0))
+        }
+    }
+
     private func onDragEnded(drag: DragGesture.Value) {
         let verticalDirection = drag.predictedEndLocation.y - drag.location.y
         let cardTopEdgeLocation = position.rawValue + dragState.translation.height

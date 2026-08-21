@@ -16,15 +16,18 @@ import os.log
 struct AlertMapView: View {
     let taiwan = CLLocationCoordinate2D(latitude: 23.69484955415681, longitude: 120.96082538424629)
     @ObservedObject var eventManager: EventDispatcher
-    /// Where the alert card is resting. The framing needs it to know how much of the map
-    /// is actually visible.
-    var cardPosition: CardPosition = .middle
+    /// Points of the map's bottom edge the alert card covers, once it has settled.
+    ///
+    /// A plain number rather than a CardPosition: two card implementations exist and they
+    /// compute their height completely differently, so the map is better off not knowing
+    /// which one is running.
+    var cardObscuredHeight: CGFloat = 0
     @StateObject private var headingProvider = HeadingProvider()
 
     var body: some View {
         CustomMapView(eventManager: eventManager,
                       headingProvider: headingProvider,
-                      cardPosition: cardPosition)
+                      cardObscuredHeight: cardObscuredHeight)
             // The magnetometer runs only while the map is on screen — switching tabs or
             // backgrounding stops it rather than leaving it spinning for a cone nobody
             // is looking at.
@@ -40,7 +43,7 @@ private struct CustomMapView: UIViewRepresentable {
     /// user's dot on without the app being relaunched.
     @ObservedObject private var locationManager = LocationManager.shared
     @ObservedObject var headingProvider: HeadingProvider
-    let cardPosition: CardPosition
+    let cardObscuredHeight: CGFloat
     /// Draws the framing geometry over the map. Debug and TestFlight only — the toggle
     /// lives in Settings' diagnostics section and is not shown to App Store users.
     @AppStorage("showMapFramingDebug") private var showFramingDebug = false
@@ -126,13 +129,13 @@ private struct CustomMapView: UIViewRepresentable {
         context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
         context.coordinator.refreshEpicenterBlink()
         // Redrawn every pass so it stays correct after a rotation or relayout.
-        drawTargetArea(on: uiView, insets: Self.mapInsets(for: uiView, cardPosition: cardPosition))
+        drawTargetArea(on: uiView, insets: Self.mapInsets(for: uiView, obscuredByCard: cardObscuredHeight))
 
         // Dragging the card changes how much map is left, so both the area being framed
         // into and what fits inside it have to be worked out again. Keyed on the settled
         // position rather than the drag, so this runs once when the card lands.
-        if context.coordinator.lastCardPosition != cardPosition {
-            context.coordinator.lastCardPosition = cardPosition
+        if context.coordinator.lastCardObscuredHeight != cardObscuredHeight {
+            context.coordinator.lastCardObscuredHeight = cardObscuredHeight
             setupRegionForMap(uiView)
         }
 
@@ -267,7 +270,7 @@ private struct CustomMapView: UIViewRepresentable {
 
     private func setupRegionForMap(_ mapView: MKMapView) {
         let rect = preferredMapRect()
-        let insets = Self.mapInsets(for: mapView, cardPosition: cardPosition)
+        let insets = Self.mapInsets(for: mapView, obscuredByCard: cardObscuredHeight)
         mapView.setVisibleMapRect(rect, edgePadding: insets, animated: true)
         drawTargetArea(on: mapView, insets: insets)
         drawFramingDebug(on: mapView, fitted: rect)
@@ -367,29 +370,24 @@ private struct CustomMapView: UIViewRepresentable {
     /// left above it rather than into the whole view — otherwise the thing being centred
     /// ends up behind the card.
     ///
-    /// Each card position is a fixed number of points, which is a larger share of a small
-    /// phone than a large one, so this is read from the card rather than guessed — and it
-    /// is the position the card is actually in, not its resting one, so dropping the card
-    /// hands the map back the 150pt it stops covering.
+    /// How much the card covers is passed in already measured, rather than reconstructed
+    /// here from a position. That distinction matters: the old card's offset is computed
+    /// from the full screen height but applied in a coordinate space starting below the
+    /// status bar, so deriving its top edge needed a safe-area correction that was found
+    /// by measuring on device — its raw value said 395pt while it really sat at 456pt, and
+    /// reserving the difference cost 78pt of map nothing was covering. Each card now works
+    /// out its own coverage, so that class of bug lives with the card that causes it.
+    ///
     /// iPad lays the card out beside the map instead of over it, so nothing is covered.
-    private static func mapInsets(for mapView: MKMapView, cardPosition: CardPosition) -> UIEdgeInsets {
+    private static func mapInsets(for mapView: MKMapView, obscuredByCard: CGFloat) -> UIEdgeInsets {
         let safeTop = mapView.safeAreaInsets.top
-
-        // The card's resting position is computed from the full screen height, but applied
-        // inside a coordinate space that already begins below the status bar — so it lands
-        // one safe area lower than its raw value suggests. Measured on device: the raw
-        // value puts its top edge at 395pt while it actually sits at 456pt, and reserving
-        // the difference cost 78pt of map that nothing was covering.
-        //
-        // iPad lays the card out beside the map instead of over it, so nothing is hidden.
-        let cardTop = safeTop + cardPosition.rawValue
-        let obscuredByCard = Device.deviceType == .iphone
-            ? max(mapView.bounds.height - cardTop, 0)
+        let obscured = Device.deviceType == .iphone
+            ? min(max(obscuredByCard, 0), mapView.bounds.height)
             : 0
 
         return UIEdgeInsets(top: safeTop + statusPillHeight + verticalMargin,
                             left: legendWidth + horizontalMargin,
-                            bottom: obscuredByCard + verticalMargin,
+                            bottom: obscured + verticalMargin,
                             right: horizontalMargin)
     }
 
@@ -690,9 +688,9 @@ private struct CustomMapView: UIViewRepresentable {
         var hasFramedWithUserLocation = false
         /// Last state of the debug toggle, so flipping it redraws immediately.
         var lastFramingDebugEnabled: Bool?
-        /// Where the card was the last time the map was framed, so dragging it reframes
-        /// into the space that just opened up or closed.
-        var lastCardPosition: CardPosition?
+        /// How much the card covered the last time the map was framed, so dragging it
+        /// reframes into the space that just opened up or closed.
+        var lastCardObscuredHeight: CGFloat?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         
