@@ -23,16 +23,20 @@ struct PreventableScrollView<Content>: View where Content: View {
 
 struct SlideOverCard<Content: View>: View {
     @GestureState private var dragState = DragState.inactive
-    @State var position: CardPosition
+    /// Owned by the parent rather than the card, because the map behind it has to know how
+    /// much of itself is covered in order to frame inside what is left.
+    @Binding var position: CardPosition
     @State var canScroll: Bool
-    
+
     var content: () -> Content
     var slideDirection: SlideDirection
-    
-    init(slideDirection: SlideDirection = .bottom, @ViewBuilder content: @escaping () -> Content) {
+
+    init(slideDirection: SlideDirection = .bottom,
+         position: Binding<CardPosition>,
+         @ViewBuilder content: @escaping () -> Content) {
         self.slideDirection = slideDirection
         self.content = content
-        self._position = State(initialValue: .middle)
+        self._position = position
         self._canScroll = State(initialValue: false)
     }
     
@@ -193,14 +197,14 @@ struct Handle: View {
 
 // Preview
 #Preview("EEW Detail Block"){
-    SlideOverCard(slideDirection: .top){
+    SlideOverCard(slideDirection: .top, position: .constant(.middle)){
         EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
     }
 }
 
 struct SlideOverCard_Previews: PreviewProvider {
     static var previews: some View {
-        SlideOverCard(slideDirection: .bottom) {
+        SlideOverCard(slideDirection: .bottom, position: .constant(.middle)) {
             Text("Bottom Sliding Card")
         }
     }

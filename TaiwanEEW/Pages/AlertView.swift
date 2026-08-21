@@ -27,6 +27,8 @@ struct AlertView: View {
     
     @State private var locationName: String? = nil
     @State private var didRunStartupTasks = false
+    /// Held here rather than inside the card so the map can frame around it.
+    @State private var cardPosition: CardPosition = .middle
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
     var intensity: String {eventManager.intensity}
@@ -77,7 +79,7 @@ struct AlertView: View {
 private extension AlertView {
     var iPhoneView: some View {
         ZStack(alignment: Alignment(horizontal: .center, vertical: .top)){
-            AlertMapView(eventManager: eventManager)
+            AlertMapView(eventManager: eventManager, cardPosition: cardPosition)
                 .ignoresSafeArea()
             ErrorBanner(msgType: msgType, status: status)
             
@@ -90,7 +92,7 @@ private extension AlertView {
                     .offset(x:UIScreen.baseLine/2)
             }.padding(.horizontal, UIScreen.baseLine)
             
-            SlideOverCard(slideDirection: .bottom){
+            SlideOverCard(slideDirection: .bottom, position: $cardPosition){
                 EEWDetailBlock(eventManager: eventManager)
             }
         }
@@ -101,7 +103,9 @@ private extension AlertView {
     
     var iPadView: some View {
         ZStack (alignment: Alignment(horizontal: .center, vertical: .top)) {
-            AlertMapView(eventManager: eventManager)
+            // iPad puts the detail panel beside the map, so nothing is covered and the
+            // framing has no card to work around.
+            AlertMapView(eventManager: eventManager, cardPosition: .middle)
                 .ignoresSafeArea()
             ErrorBanner(msgType: msgType, status: status)
             
