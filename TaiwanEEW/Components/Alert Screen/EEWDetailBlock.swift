@@ -171,46 +171,11 @@ struct EEWDetailBlock: View {
     }
     
     func fetchLocationName(lat: Double, lon: Double) async -> String? {
-        let geoCoder = CLGeocoder()
-        let twLocale = Locale(identifier: "zh-Hant")
-        
-        // TODO: temporary Manderin placeholder for all languages before next localization update.
-        let location = CLLocation(latitude: lat, longitude: lon)
-        
-        do {
-            let placemarks = try await geoCoder.reverseGeocodeLocation(location, preferredLocale: twLocale)
-            if let placemark = placemarks.first,
-               let locality = placemark.administrativeArea,
-               let subLocality = placemark.locality {
-                return "\(locality)\(subLocality)"
-            } else {
-                return fetchOceanData(lat: lat, lon: lon)
-            }
-        } catch {
-            logger.error("Geocoding error: \(error.localizedDescription)")
-            return fetchOceanData(lat: lat, lon: lon)
-        }
-        
-
+        await EpicenterName.resolve(lat: lat, lon: lon)
     }
-    
-    func fetchOceanData(lat: Double, lon: Double)-> String {
-        if(lat >= 24.31343 && lon >= 121.76857){
-            return "東北部海域"
-        }
-        if(lat >= 23.43494 && lat <= 24.31343 && lon >= 121){
-            return "東部海域"
-        }
-        if(lat >= 22.24595 && lat <= 23.43494 && lon >= 120.79958){
-            return "東南部海域"
-        }
-        if(lat >= 24.73429 && lon <= 121.76857){
-            return "北部海域"
-        }
-        if(lat >= 23.53352 && lat <= 24.73429 && lon <= 121){
-            return "中部海域"
-        }
-        return "南部海域"
+
+    func fetchOceanData(lat: Double, lon: Double) -> String {
+        EpicenterName.oceanArea(lat: lat, lon: lon)
     }
 }
 
