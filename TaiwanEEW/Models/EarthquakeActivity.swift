@@ -19,9 +19,17 @@ enum EarthquakeActivity {
     /// and every comparison against "now" would otherwise read as long past.
     private static let noEventThreshold = Date(timeIntervalSince1970: 1000)
 
+    /// Whether a real report has arrived at all. Exposed because anything keying off the
+    /// arrival time needs the same sentinel — treating the 1970 default as a real arrival
+    /// reads as "the wave got here decades ago", which is indistinguishable from a genuine
+    /// past event unless you know to check.
+    static func hasEvent(arrivalTime: Date) -> Bool {
+        arrivalTime > noEventThreshold
+    }
+
     /// - Parameter now: injectable so this is testable without waiting for the clock.
     static func isActive(arrivalTime: Date, now: Date = Date()) -> Bool {
-        guard arrivalTime > noEventThreshold else { return false }
+        guard hasEvent(arrivalTime: arrivalTime) else { return false }
         return now.addingTimeInterval(-gracePeriod) < arrivalTime
     }
 }
