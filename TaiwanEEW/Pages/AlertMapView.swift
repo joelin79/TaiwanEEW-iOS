@@ -495,9 +495,9 @@ private struct CustomMapView: UIViewRepresentable {
         
         // Add dynamic overlays from the first GeoJSON
         self.parseDynamicGeoJSON { dynamicOverlays in
-            // Stated rather than left to the default: the wave fills are added below this
-            // level and the outlines at it, so the layering depends on this being explicit.
-            mapView.addOverlays(dynamicOverlays, level: .aboveLabels)
+            // Below labels so city and place names remain readable over the intensity
+            // polygons. Wave outlines and debug geometry still draw above labels.
+            mapView.addOverlays(dynamicOverlays, level: .aboveRoads)
             
             // Add static overlays from the second GeoJSON
             //                parseStaticTaiwanGeoJSON { staticTaiwanOverlays in
