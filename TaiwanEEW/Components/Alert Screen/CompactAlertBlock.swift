@@ -67,14 +67,18 @@ struct CompactAlertBlock: View {
     /// intensity. maxWidth .infinity is what makes that true — without it the row sizes
     /// to its content and the Spacer has nothing to push against.
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             intensityPill
             context
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
             countdownPill
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, UIScreen.baseLine)
+        // Symmetric, and smaller than the UIScreen.baseLine the full-width layouts use:
+        // the card now supplies its own outer margin, so paying baseLine again here made
+        // the row wider than the card could hold. The pills are incompressible, so the
+        // excess pushed the card open until it touched both screen edges.
+        .padding(.horizontal, 12)
     }
 
     private var intensityPill: some View {
@@ -108,22 +112,24 @@ struct CompactAlertBlock: View {
     private var context: some View {
         VStack(alignment: .leading, spacing: 1) {
             Text(locationName)
-                .font(.system(size: 15).bold())
+                .font(.system(size: 14).bold())
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             HStack(spacing: 3) {
                 Text("M\(String(format: "%.1f", magnitude))")
-                    .font(.system(size: 13, design: .monospaced).bold())
+                    .font(.system(size: 12, design: .monospaced).bold())
                     .foregroundStyle(magnitudeColor)
                 Image(systemName: "water.waves.and.arrow.down")
                     .font(.system(size: 9))
                     .foregroundStyle(Color("TimeText"))
                 Text("\(String(format: "%.1f", depth))km")
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(Color("TimeText"))
             }
+            // lineLimit alone stops the wrap; scaling rather than fixedSize leaves this
+            // row compressible, so it — not the card's width — gives when space is short.
             .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
+            .minimumScaleFactor(0.8)
         }
     }
 
@@ -132,9 +138,9 @@ struct CompactAlertBlock: View {
 /// Display Zoom is what the rest of the alert screen keys its type off, so the compact
 /// block follows the same convention rather than introducing a second one.
 private enum PillMetrics {
-    static var label: CGFloat { UIScreen.isZoomed ? 11 : 13 }
-    static var value: CGFloat { UIScreen.isZoomed ? 24 : 28 }
-    static var unit: CGFloat { UIScreen.isZoomed ? 12 : 14 }
+    static var label: CGFloat { UIScreen.isZoomed ? 10 : 12 }
+    static var value: CGFloat { UIScreen.isZoomed ? 21 : 24 }
+    static var unit: CGFloat { UIScreen.isZoomed ? 11 : 12 }
 }
 
 /// The 170pt square blocks reduced to a bar-height pill: same fill, same continuous
@@ -152,14 +158,14 @@ private struct StatPill<Content: View>: View {
         }
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color("Pad"))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(borderColor, lineWidth: 2)
         )
     }
@@ -268,7 +274,7 @@ private struct CountdownPill: View {
                       locationName: "宜蘭縣蘇澳鎮")
     CompactAlertBlock(intensity: "5+",
                       arrivalTime: Date().addingTimeInterval(12),
-                      magnitude: 6.5,
+                      magnitude: 7.0,
                       depth: 15.2,
                       locationName: "宜蘭縣蘇澳鎮")
 }

@@ -31,7 +31,11 @@ struct AlertStatusBar : View {
                 RoundedRectangle(cornerRadius: cornerRad)
                     .strokeBorder(((isUpdated) ? (isAlert) ? (isMajor) ? Color("WarningBoarder") : Color("CautionBoarder") : Color(.black) : Color.black))
             )
-            .frame(width: UIScreen.isZoomed ? UIScreen.baseLine+280 : UIScreen.baseLine+340, height: 30.0)
+            // Flexible, not a fixed width. It was baseLine+340, and since baseLine is
+            // (screenWidth-340)/3 with EEWDetailBlock padding baseLine on both sides, the
+            // three summed to exactly screenWidth — incompressible and therefore always
+            // 20pt too wide for a card inset from the screen edges.
+            .frame(maxWidth: .infinity, minHeight: 30.0, maxHeight: 30.0)
             .clipped()
             .overlay(
                 HStack {

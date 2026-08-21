@@ -54,15 +54,32 @@ struct EEWDetailBlock: View {
         return dateFormatter.string(from: originTime)
     }
     
+    private static var alertBlockWidth: CGFloat { UIScreen.isZoomed ? 140 : 170 }
+    private static var floatingCardHorizontalMargin: CGFloat { 10 }
+
+    /// Matches the outer edges of the intensity and countdown blocks. The large blocks
+    /// sit inside a row with equal left, middle and right gaps, so the rows above use the
+    /// same edge inset instead of their old independent baseline padding.
+    static var contentInset: CGFloat {
+        let cardAdjustedWidth: CGFloat
+        if #available(iOS 17.0, *), Device.deviceType == .iphone {
+            cardAdjustedWidth = UIScreen.screenWidth - floatingCardHorizontalMargin * 2
+        } else {
+            cardAdjustedWidth = UIScreen.screenWidth
+        }
+
+        return max((cardAdjustedWidth - alertBlockWidth * 2) / 3, 0)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0){
             if Device.deviceType == .ipad {
                 Spacer()
             }
-            pageTitle
             AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
-                .padding(.top, 10)
-                .padding(.horizontal, UIScreen.baseLine)
+                .padding(.bottom, 10)
+                .padding(.horizontal, EEWDetailBlock.contentInset)
+            pageTitle
             alertInfo
                 .padding(.top, 10)
 //            EEWDetailBlock(eventManager: eventManager)
@@ -70,9 +87,13 @@ struct EEWDetailBlock: View {
             
             
 //                arrivalClockTimeBar.offset(x:UIScreen.baseLine)   TODO: Remove
-            Spacer()
+            if Device.deviceType == .ipad {
+                Spacer()
+            }
 //                testflightReminder.padding()
         }
+        .padding(.top, 8)
+        .padding(.bottom, 14)
         .onAppear {
             updateLocationName()
         }.onChange(of: [lonB, latB]) { _ in
@@ -137,19 +158,16 @@ struct EEWDetailBlock: View {
             }
             
         }
-        .padding(.horizontal, UIScreen.baseLine)
+        .padding(.horizontal, EEWDetailBlock.contentInset)
     }
     
     var alertInfo: some View {
-        Group {
-            HStack {
-                Spacer()
-                IntensityBlock(intensity: intensity)
-                Spacer()
-                TimeBlock(arrivalTime: arrivalTime)
-                Spacer()
-            }
+        HStack {
+            IntensityBlock(intensity: intensity)
+            Spacer()
+            TimeBlock(arrivalTime: arrivalTime)
         }
+        .padding(.horizontal, EEWDetailBlock.contentInset)
     }
     
     var arrivalClockTimeBar: some View {
