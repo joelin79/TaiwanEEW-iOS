@@ -29,7 +29,8 @@ struct AlertView: View {
     @State private var didRunStartupTasks = false
     /// Held here rather than inside the card so the map can frame around it.
     @State private var cardPosition: CardPosition = .middle
-    /// Reported by the card. The map only ever sees this number.
+    /// Reported by whichever card is running. The map only ever sees this number, not
+    /// which implementation produced it.
     @State private var cardObscuredHeight: CGFloat = 0
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
@@ -94,17 +95,41 @@ private extension AlertView {
                     .offset(x:UIScreen.baseLine/2)
             }.padding(.horizontal, UIScreen.baseLine)
             
-            SlideOverCard(slideDirection: .bottom,
-                          position: $cardPosition,
-                          onSettle: { cardObscuredHeight = $0 }) {
-                EEWDetailBlock(eventManager: eventManager)
-            }
+            alertCard
+        }
+        .task(id: [latB, lonB]) {
+            locationName = await EpicenterName.resolve(lat: latB, lon: lonB)
         }
         .analyticsScreen(name: "AlertView", extraParameters: [
             "watch_location" : Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName
         ])
     }
     
+    /// iOS 17 and up get the floating card; 15–16 keep the frozen SlideOverCard. Chosen
+    /// in one place so nothing else in this view has to branch.
+    @ViewBuilder
+    var alertCard: some View {
+        if #available(iOS 17.0, *) {
+            FloatingAlertCard(position: $cardPosition,
+                              onSettle: { cardObscuredHeight = $0 }) {
+                EEWDetailBlock(eventManager: eventManager)
+            } compact: {
+                CompactAlertBlock(intensity: intensity,
+                                  arrivalTime: arrivalTime,
+                                  magnitude: magnitude,
+                                  depth: depth,
+                                  locationName: locationName
+                                    ?? EpicenterName.oceanArea(lat: latB, lon: lonB))
+            }
+        } else {
+            SlideOverCard(slideDirection: .bottom,
+                          position: $cardPosition,
+                          onSettle: { cardObscuredHeight = $0 }) {
+                EEWDetailBlock(eventManager: eventManager)
+            }
+        }
+    }
+
     var iPadView: some View {
         ZStack (alignment: Alignment(horizontal: .center, vertical: .top)) {
             // iPad puts the detail panel beside the map, so nothing is covered and the
