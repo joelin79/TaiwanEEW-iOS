@@ -111,7 +111,7 @@ struct EEWDetailBlock: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 EEWDetailHeaderMagnitude(depth: depth, magnitude: magnitude)
                 Spacer(minLength: 8)
-                EEWDetailHeaderReport(title: titleText, titleMatchesTimeText: isNormalReport)
+                EEWDetailHeaderReport(report: report)
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -123,28 +123,8 @@ struct EEWDetailBlock: View {
         .padding(.horizontal, EEWDetailBlock.contentInset)
     }
 
-    private var isNormalReport: Bool {
-        status != "exercise"
-            && !(status == "test" && !TaiwanEEWApp.DEBUG)
-            && msgType != "system"
-            && msgType != "cancel"
-            && msgType != "error"
-    }
-
-    private var titleText: String {
-        if status == "exercise" {
-            return "演練 Drill"
-        } else if status == "test" && !TaiwanEEWApp.DEBUG {
-            return "測試中 Testing"
-        } else if msgType == "system" {
-            return "系統 System"
-        } else if msgType == "cancel" {
-            return "預警取消 Canceled"
-        } else if msgType == "error" {
-            return "預警錯誤 Error"
-        } else {
-            return "第 \(eqSeq) 報"
-        }
+    private var report: (title: String, badge: ReportBadge?) {
+        ReportPresentation.headerTitle(status: status, msgType: msgType, eqSeq: eqSeq)
     }
 
     var alertInfo: some View {
@@ -228,18 +208,26 @@ private struct EEWDetailHeaderLocation: View {
     }
 }
 
-private struct EEWDetailHeaderReport: View {
-    let title: String
-    let titleMatchesTimeText: Bool
+struct EEWDetailHeaderReport: View {
+    let report: (title: String, badge: ReportBadge?)
 
     var body: some View {
-        Text(title)
-            .foregroundStyle(titleMatchesTimeText ? Color("TimeText") : .primary)
-            .font(titleMatchesTimeText
+        Text(report.title)
+            .foregroundStyle(report.badge?.foreground ?? Color("TimeText"))
+            .font(report.badge == nil
                   ? .system(size: UIScreen.isZoomed ? 12 : 18)
-                  : .system(size: UIScreen.isZoomed ? 17 : 22).bold())
+                  : .system(size: UIScreen.isZoomed ? 12 : 18).bold())
             .lineLimit(1)
             .minimumScaleFactor(0.8)
+            // Padding only when there is something to pad against, so an ordinary report
+            // still sits on the same baseline as the magnitude opposite it.
+            .padding(.horizontal, report.badge == nil ? 0 : 8)
+            .padding(.vertical, report.badge == nil ? 0 : 3)
+            .background {
+                if let badge = report.badge {
+                    Capsule(style: .continuous).fill(badge.background)
+                }
+            }
     }
 }
 
@@ -313,4 +301,34 @@ private struct EEWDetailHeaderOriginTime: View {
                 .stroke(Color.blue, lineWidth: 1)
         )
     }
+}
+
+#Preview("Report titles") {
+    // Drives EEWDetailBlock.report directly, so this shows the real mapping. isDebugBuild
+    // is forced false because the Testing badge is suppressed in debug builds by design.
+    let cases: [(String, String?, String?)] = [
+        ("ordinary", "actual", "alert"),
+        ("drill", "exercise", "alert"),
+        ("testing", "test", "alert"),
+        ("system", "system", "alert"),
+        ("canceled", "actual", "cancel"),
+        ("error", "actual", "error"),
+        ("drill + cancel", "exercise", "cancel"),
+        ("test + error", "test", "error"),
+        ("system + cancel", "system", "cancel"),
+    ]
+
+    return VStack(alignment: .trailing, spacing: 12) {
+        ForEach(cases, id: \.0) { label, status, msgType in
+            HStack {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                EEWDetailHeaderReport(
+                    report: ReportPresentation.headerTitle(status: status, msgType: msgType,
+                                                           eqSeq: 3, isDebugBuild: false))
+            }
+        }
+    }
+    .padding()
+    .environment(\.locale, Locale(identifier: "zh-Hant"))
 }
