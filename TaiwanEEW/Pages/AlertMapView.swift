@@ -14,7 +14,6 @@ import MapKit
 import os.log
 
 struct AlertMapView: View {
-    let taiwan = CLLocationCoordinate2D(latitude: 23.69484955415681, longitude: 120.96082538424629)
     @ObservedObject var eventManager: EventDispatcher
     /// Points of the map's bottom edge the alert card covers, once it has settled.
     ///
