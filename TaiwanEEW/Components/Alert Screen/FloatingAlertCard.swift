@@ -62,14 +62,17 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     private static var bottomMargin: CGFloat { 10 }
     private static var cornerRadius: CGFloat { 44 }
 
-    /// Handle to the first row of content, and the last block down to the tab bar. Its own
-    /// value rather than AlertBlockMetrics.edgeInset: the vertical gaps sit against the
-    /// handle and the tab bar, which already carry their own visual weight, so they read
-    /// heavier than the same number does at the sides.
-    private static var contentGap: CGFloat { 16 }
+    /// The visual gap from the handle to the first row of content.
+    private static var handleContentGap: CGFloat { 8 }
     /// Handle, its own top margin, and the gap below it.
-    private static var grabberArea: CGFloat { 8 + 5 + contentGap }
-    private static var contentBottomPadding: CGFloat { contentGap }
+    private static var grabberArea: CGFloat { 8 + 5 + handleContentGap }
+    /// The last block down to the tab bar.
+    private static var contentBottomPadding: CGFloat { 16 }
+    /// The content stack is clipped while the card moves between detents. Giving the
+    /// measured content a little vertical slack keeps font leading and sub-point layout
+    /// rounding from shaving the first and last pixels of the visible blocks.
+    private static var contentClipAllowance: CGFloat { 6 }
+    private static var contentTopInset: CGFloat { 4 }
 
     /// Used only for the first layout pass, before the content has been measured. Wrong
     /// on any given device, but only ever visible for a single frame, and a wrong height
@@ -95,7 +98,8 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     /// Flighty arrangement — the card reaches the screen edge and the tab bar floats on
     /// top of it, instead of the card stopping short above the bar.
     private func cardHeight(_ position: CardPosition) -> CGFloat {
-        Self.grabberArea + contentHeight(position) + Self.contentBottomPadding + overhangExtra
+        Self.grabberArea + contentHeight(position) + Self.contentClipAllowance
+            + Self.contentBottomPadding + overhangExtra
     }
 
     /// How far past the safe area the card has to reach to touch the screen edge.
@@ -211,7 +215,7 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
             .fill(Color.secondary.opacity(0.5))
             .frame(width: 36, height: 5)
             .padding(.top, 8)
-            .padding(.bottom, Self.contentGap)
+            .padding(.bottom, Self.handleContentGap)
     }
 
     /// Both layouts stay mounted and trade places on opacity. An if/else here swaps the
@@ -239,6 +243,7 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
                 .background(heightReader(for: .bottom))
                 .opacity(showsExpanded ? 0 : 1)
         }
+        .padding(.top, Self.contentTopInset)
         .frame(height: contentAreaHeight, alignment: .top)
         .clipped()
     }
