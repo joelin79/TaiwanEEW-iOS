@@ -53,6 +53,8 @@
 // Intensity Block
 "intensity-string" = "Intensity";
 "intensity-sub-string" = "";
+"compact-intensity-prefix" = "Level";
+"compact-intensity-unit" = "";
 
 // Time Block
 "arrival-string" = "Arrival";

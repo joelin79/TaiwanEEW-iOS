@@ -54,6 +54,8 @@
 // Intensity Block
 "intensity-string" = "預估震度";
 "intensity-sub-string" = "級";
+"compact-intensity-prefix" = "預估";
+"compact-intensity-unit" = "級";
 
 // Time Block
 "arrival-string" = "抵達";

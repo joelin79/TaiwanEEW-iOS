@@ -10,6 +10,7 @@ import SwiftUI
 struct IntensityBlock: View {
     let cornerRad: CGFloat = 20
     var intensity: String
+    @Environment(\.colorScheme) private var colorScheme
     /// Sized by the caller so the pair can share out the card's width rather than each
     /// claiming a fixed 170pt and leaving whatever is left as the margin.
     var size: CGFloat = AlertBlockMetrics.defaultSize
@@ -43,7 +44,9 @@ struct IntensityBlock: View {
                     .font(.system(size: UIScreen.isZoomed ? 30 : 34).weight(.medium))
                 HStack(alignment: .bottom){
                     Text(intensity)
-                        .font(.system(size: UIScreen.isZoomed ? 75 : 80, weight: .bold, design: .monospaced)).foregroundColor(Color(intensity))
+                        .font(.system(size: UIScreen.isZoomed ? 75 : 80, weight: .bold, design: .monospaced))
+                        .foregroundColor(AlertIntensityTextColor.color(for: intensity,
+                                                                       colorScheme: colorScheme))
                     // TODO: Fix the subscript translation
 //                    if !"intensity-sub-string".isEmpty {
                         Text(String(localized:"intensity-sub-string"))

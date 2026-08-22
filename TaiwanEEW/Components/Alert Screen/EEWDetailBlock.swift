@@ -194,7 +194,7 @@ private struct EEWDetailHeaderLocation: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
-            Image(systemName: "scope")
+            Image(systemName: "target")
                 .font(.system(size: UIScreen.isZoomed ? 10 : 18))
             Text(locationName)
                 .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())

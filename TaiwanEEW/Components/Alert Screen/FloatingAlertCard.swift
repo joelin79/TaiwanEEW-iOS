@@ -195,10 +195,9 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                .fill(.ultraThickMaterial)
+                .fill(Color(.systemBackground))
                 // On the shape, not on the finished card: applied after the clip it is
-                // derived from the composited alpha mask of a material blur, recomputed
-                // on every frame the height changes.
+                // derived from the card's rounded outline, not from its clipped content.
                 .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10)
         )
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))

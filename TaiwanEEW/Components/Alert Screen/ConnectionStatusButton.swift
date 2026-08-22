@@ -28,6 +28,9 @@ struct ConnectionStatusButton: View {
         : Color(hue: 1.0, saturation: 0.0, brightness: 0.833)
         
     }
+    var panelFill: Color {
+        colorScheme == .light ? .white : Color("Pad")
+    }
     let fontSize = 12
     let todayStr = LocalizedStringKey("today-string").toString()
     var lastPingTime: Date
@@ -50,7 +53,7 @@ struct ConnectionStatusButton: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
-                .fill(Color("Pad"))
+                .fill(panelFill)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
                         .strokeBorder(Color("EqInfoBoarder"))

@@ -40,6 +40,27 @@ enum AlertBlockMetrics {
     }
 }
 
+enum AlertIntensityTextColor {
+    static func color(for intensity: String, colorScheme: ColorScheme) -> Color {
+        switch intensity {
+        case "1":
+            return colorScheme == .dark
+                ? Color(red: 0.72, green: 0.79, blue: 1.00)
+                : Color(red: 0.26, green: 0.34, blue: 0.62)
+        case "2":
+            return colorScheme == .dark
+                ? Color(red: 0.58, green: 0.76, blue: 1.00)
+                : Color(red: 0.18, green: 0.42, blue: 0.70)
+        case "4":
+            return colorScheme == .dark
+                ? Color(red: 1.00, green: 0.78, blue: 0.28)
+                : Color(red: 0.90, green: 0.48, blue: 0.00)
+        default:
+            return intensity.isEmpty ? Color.primary : Color(intensity)
+        }
+    }
+}
+
 /// The width the card gives its content, handed down rather than measured.
 ///
 /// Measuring from inside is circular here: the blocks cannot be compressed, so when the

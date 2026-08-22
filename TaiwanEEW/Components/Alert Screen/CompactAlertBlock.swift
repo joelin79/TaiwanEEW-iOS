@@ -22,6 +22,7 @@ struct CompactAlertBlock: View {
     var magnitude: Double
     var depth: Double
     var locationName: String
+    @Environment(\.colorScheme) private var colorScheme
 
     private var intensityValue: Int { EEWService.intensityStringToValue(str: intensity) }
 
@@ -33,7 +34,7 @@ struct CompactAlertBlock: View {
         if magnitude >= 7 { return .purple }
         if magnitude >= 6.5 { return .red }
         if magnitude > 5.5 { return .orange }
-        return Color("TimeText")
+        return .primary
     }
 
     /// Same threshold as IntensityBlock — red from 4 up, where shaking starts being
@@ -42,8 +43,8 @@ struct CompactAlertBlock: View {
         intensityValue >= 4 ? Color.red : Color("EqInfoBoarder")
     }
 
-    private var intensityColor: Color {
-        intensity.isEmpty ? Color.primary : Color(intensity)
+    private var compactIntensityColor: Color {
+        AlertIntensityTextColor.color(for: intensity, colorScheme: colorScheme)
     }
 
     /// The app stores intensities as "5-" / "5+", which is what the colour assets and
@@ -70,33 +71,30 @@ struct CompactAlertBlock: View {
         HStack(spacing: 8) {
             intensityPill
             context
-            Spacer(minLength: 8)
+            Spacer(minLength: 6)
             countdownPill
         }
         .frame(maxWidth: .infinity)
-        // Symmetric, and smaller than the UIScreen.baseLine the full-width layouts use:
-        // the card now supplies its own outer margin, so paying baseLine again here made
-        // the row wider than the card could hold. The pills are incompressible, so the
-        // excess pushed the card open until it touched both screen edges.
-        .padding(.horizontal, 12)
+        // Matches EEWDetailBlock so collapsed and expanded content sit on the same edges.
+        .padding(.horizontal, AlertBlockMetrics.edgeInset)
     }
 
     private var intensityPill: some View {
         StatPill(borderColor: intensityBorder) {
-            Text("intensity-string")
+            Text("compact-intensity-prefix")
                 .font(.system(size: PillMetrics.label).weight(.medium))
             Text(intensityParts.value)
-                .font(.system(size: PillMetrics.value, weight: .bold, design: .monospaced))
-                .foregroundColor(intensityColor)
+                .font(PillMetrics.intensityValueFont.monospaced())
+                .foregroundColor(compactIntensityColor)
             if let suffix = intensityParts.suffix {
                 // Set at the digit's size and colour so "5弱" reads as one value rather
-                // than a number with an annotation. It also replaces 級 rather than
-                // joining it — 「預估震度5弱級」 is not how the level is written.
+                // than a number with an annotation.
                 Text(suffix)
-                    .font(.system(size: PillMetrics.value, weight: .bold))
-                    .foregroundColor(intensityColor)
-            } else {
-                Text(String(localized: "intensity-sub-string"))
+                    .font(PillMetrics.intensityValueFont)
+                    .foregroundColor(compactIntensityColor)
+            }
+            if !String(localized: "compact-intensity-unit").isEmpty {
+                Text("compact-intensity-unit")
                     .font(.system(size: PillMetrics.unit, weight: .bold, design: .monospaced))
             }
         }
@@ -110,20 +108,20 @@ struct CompactAlertBlock: View {
     /// of context that survives still reads at a glance. Depth follows it in the muted
     /// treatment and with the same icon the full block uses.
     private var context: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(locationName)
-                .font(.system(size: 14).bold())
+                .font(.system(size: 20).bold())
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                .minimumScaleFactor(0.65)
             HStack(spacing: 3) {
                 Text("M\(String(format: "%.1f", magnitude))")
-                    .font(.system(size: 12, design: .monospaced).bold())
+                    .font(.system(size: 16, design: .monospaced).bold())
                     .foregroundStyle(magnitudeColor)
                 Image(systemName: "water.waves.and.arrow.down")
-                    .font(.system(size: 9))
+                    .font(.system(size: 12))
                     .foregroundStyle(Color("TimeText"))
                 Text("\(String(format: "%.1f", depth))km")
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.system(size: 16, design: .monospaced))
                     .foregroundStyle(Color("TimeText"))
             }
             // lineLimit alone stops the wrap; scaling rather than fixedSize leaves this
@@ -138,9 +136,12 @@ struct CompactAlertBlock: View {
 /// Display Zoom is what the rest of the alert screen keys its type off, so the compact
 /// block follows the same convention rather than introducing a second one.
 private enum PillMetrics {
-    static var label: CGFloat { UIScreen.isZoomed ? 10 : 12 }
-    static var value: CGFloat { UIScreen.isZoomed ? 21 : 24 }
-    static var unit: CGFloat { UIScreen.isZoomed ? 11 : 12 }
+    static var label: CGFloat { UIScreen.isZoomed ? 12 : 14 }
+    static var value: CGFloat { UIScreen.isZoomed ? 24 : 28 }
+    static var unit: CGFloat { UIScreen.isZoomed ? 12 : 14 }
+    static var pillHeight: CGFloat { UIScreen.isZoomed ? 43 : 48 }
+    static var valueFont: Font { .system(size: value, weight: .bold) }
+    static var intensityValueFont: Font { .system(size: value + 5, weight: .bold) }
 }
 
 /// The 170pt square blocks reduced to a bar-height pill: same fill, same continuous
@@ -149,7 +150,7 @@ private struct StatPill<Content: View>: View {
     let borderColor: Color
     @ViewBuilder var content: Content
 
-    /// Pinned to its ideal width so the labels never wrap — 預估震度 breaking to a second
+    /// Pinned to its ideal width so the labels never wrap — the prefix breaking to a second
     /// line changed the pill's height and made the row jump between reports. The epicenter
     /// column is the flexible one and absorbs the squeeze by scaling its name down.
     var body: some View {
@@ -158,14 +159,14 @@ private struct StatPill<Content: View>: View {
         }
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 9)
+        .frame(height: PillMetrics.pillHeight)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color("Pad"))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(borderColor, lineWidth: 2)
         )
     }
@@ -235,7 +236,7 @@ private struct CountdownPill: View {
                 // digits only, so the point sits tight while the number still stops
                 // jittering as it counts down.
                 Text(label)
-                    .font(.system(size: PillMetrics.value, weight: .bold))
+                    .font(PillMetrics.valueFont)
                     .monospacedDigit()
                 Text("seconds-string")
                     .font(.system(size: PillMetrics.unit, weight: .bold, design: .monospaced))
@@ -262,9 +263,9 @@ private struct CountdownPill: View {
 }
 
 #Preview {
-    CompactAlertBlock(intensity: "3",
-                      arrivalTime: Date().addingTimeInterval(5),
-                      magnitude: 6.5,
+    CompactAlertBlock(intensity: "1",
+                      arrivalTime: Date().addingTimeInterval(0),
+                      magnitude: 5.0,
                       depth: 5.2,
                       locationName: "宜蘭縣蘇澳鎮")
     CompactAlertBlock(intensity: "4",
@@ -272,7 +273,7 @@ private struct CountdownPill: View {
                       magnitude: 6.5,
                       depth: 15.2,
                       locationName: "宜蘭縣蘇澳鎮")
-    CompactAlertBlock(intensity: "5+",
+    CompactAlertBlock(intensity: "2",
                       arrivalTime: Date().addingTimeInterval(12),
                       magnitude: 7.0,
                       depth: 15.2,
