@@ -191,51 +191,75 @@ struct AlertView_Previews: PreviewProvider {
     }
 }
 
+/// The loud version of a special-case report, over the map. The card header shows the
+/// same thing quietly as a badge; both take their wording and colour from
+/// ReportPresentation so they cannot disagree.
 struct ErrorBanner: View {
     var msgType: String?
     var status: String?
-    
+
     var body: some View {
-        VStack {
-            if(msgType?.lowercased() == "cancel"){
-                Text("警報取消 \nCanceled")
-                    .font(.system(size: 40).bold())
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .background(Rectangle().frame(width: 190, height: 120).foregroundStyle(.brown))
-                    .frame(maxWidth: .infinity)
-            } else if (msgType?.lowercased() == "error"){
-                Text("錯誤報 \nError")
-                    .font(.system(size: 40).bold())
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .background(Rectangle().frame(width: 150, height: 120).foregroundStyle(.brown))
-                    .frame(maxWidth: .infinity)
+        let facets = ReportPresentation.facets(status: status, msgType: msgType)
+
+        VStack(spacing: 10) {
+            // Both are shown when both apply — a cancelled drill is two facts, and the
+            // message half is first because it is what changed.
+            if let message = facets.message {
+                SpecialCaseBanner(facet: message)
             }
-            
-            if(status?.lowercased() == "exercise"){
-                Text("演練 \nDrill")
-                    .font(.system(size: 50).bold())
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .background(Rectangle().frame(width: 120, height: 120).foregroundStyle(.pink))
-                    .frame(maxWidth: .infinity)
-            } else if (status?.lowercased() == "test" && !TaiwanEEWApp.DEBUG){
-                Text("測試 \nTest")
-                    .font(.system(size: 50).bold())
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .background(Rectangle().frame(width: 120, height: 120).foregroundStyle(.green))
-                    .frame(maxWidth: .infinity)
-            } else if (status?.lowercased() == "system"){
-                Text("系統 \nSystem")
-                    .font(.system(size: 50).bold())
-                    .foregroundStyle(.green)
-                    .multilineTextAlignment(.center)
-                    .background(Rectangle().frame(width: 120, height: 120).foregroundStyle(.pink))
-                    .frame(maxWidth: .infinity)
+            if let status = facets.status {
+                SpecialCaseBanner(facet: status)
             }
         }
         .padding(.top, 40)
     }
 }
+
+/// Sized by its content rather than by a fixed rectangle. The old version drew the text
+/// over a Rectangle of a hardcoded width per string — 190pt for 警報取消, 150 for 錯誤報 —
+/// so any longer or localized wording spilled outside its own background.
+private struct SpecialCaseBanner: View {
+    let facet: ReportFacet
+
+    /// Flashing is motion, and indefinite flashing is the kind of thing users turn Reduce
+    /// Motion on to escape. Honoured rather than overridden — the colour and the wording
+    /// already carry the meaning without it.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isLit = true
+
+    /// One cycle a second, hard cut, matching the epicenter marker and 已抵達 so that
+    /// everything on this screen that blinks does so together rather than beating.
+    private static let period: TimeInterval = 1.0
+    private static let tick: TimeInterval = 0.1
+    /// Softer than the 0.15 those two use: a small marker at 0.15 reads as a pulse, a
+    /// full-width banner at 0.15 strobes.
+    private static let dimOpacity: Double = 0.25
+
+    var body: some View {
+        Text(facet.label)
+            .font(.system(size: UIScreen.isZoomed ? 26 : 32).bold())
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .foregroundStyle(facet.badge.foreground)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(facet.badge.background)
+            )
+            .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.18), radius: 8, y: 2)
+            .opacity(isLit ? 1 : Self.dimOpacity)
+            .onReceive(Timer.publish(every: Self.tick, on: .main, in: .common).autoconnect()) { _ in
+                guard !reduceMotion else {
+                    isLit = true
+                    return
+                }
+                // Phase from absolute time rather than a toggle, so two banners shown at
+                // once flash in step instead of drifting apart.
+                let phase = Date().timeIntervalSinceReferenceDate
+                    .truncatingRemainder(dividingBy: Self.period)
+                isLit = phase < Self.period / 2
+            }
+    }
+}
+
