@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct AlertStatusBar : View {
     
@@ -18,18 +19,35 @@ struct AlertStatusBar : View {
     @State private var isAlert: Bool = false
     @State private var isMajor: Bool = false
     @State private var isUpdated: Bool = false     // used to indicate if arrivalTime is updated to non-default value (1970/1/1)
+    /// While an alert is live the label alternates with what to actually do about it.
+    @State private var showsSafetyAdvice: Bool = false
+
+    /// One blink is the opacity animation below: 0.1s each way either side of its 0.25s
+    /// delay. Swapping on a multiple of that keeps the text changing on a blink boundary
+    /// rather than mid-flash — so if startAnimation's timings change, this follows.
+    private static let blinkPeriod: TimeInterval = (0.25 + 0.1) * 2
+    private static let blinksPerMessage = 3
+    private var adviceTimer: Publishers.Autoconnect<Timer.TimerPublisher> {
+        Timer.publish(every: Self.blinkPeriod * Double(Self.blinksPerMessage),
+                      on: .main, in: .common).autoconnect()
+    }
     
     var strLocL = NSLocalizedString("loading-string", comment: "")
     var strLoc1 = NSLocalizedString( "alert-status-1-string", comment: "")
     var strLoc2 = NSLocalizedString( "alert-status-2-string", comment: "")
     var strLoc3 = NSLocalizedString( "alert-status-3-string", comment: "")
+    var strAdvice = NSLocalizedString("alert-safety-advice-string", comment: "")
     
     var body: some View {
-        RoundedRectangle(cornerRadius: cornerRad)
+        RoundedRectangle(cornerRadius: cornerRad, style: .continuous)
             .fill((isUpdated) ? (isAlert) ? (isMajor) ? Color("Warning") : Color("Caution") : Color("Safe") : Color.gray)
             .overlay(
-                RoundedRectangle(cornerRadius: cornerRad)
-                    .strokeBorder(((isUpdated) ? (isAlert) ? (isMajor) ? Color("WarningBoarder") : Color("CautionBoarder") : Color(.black) : Color.black))
+                RoundedRectangle(cornerRadius: cornerRad, style: .continuous)
+                    // SafeBoarder, not black. It pairs with the Safe fill the way the
+                    // other two pair with theirs, and existed unused while this branch
+                    // hardcoded black — which left the calm state quiet in fill and the
+                    // loudest thing on the card in outline.
+                    .strokeBorder(((isUpdated) ? (isAlert) ? (isMajor) ? Color("WarningBoarder") : Color("CautionBoarder") : Color("SafeBoarder") : Color.black))
             )
             // Flexible, not a fixed width. It was baseLine+340, and since baseLine is
             // (screenWidth-340)/3 with EEWDetailBlock padding baseLine on both sides, the
@@ -43,18 +61,32 @@ struct AlertStatusBar : View {
                         .foregroundStyle((isMajor) ? .white : .black)
                         .font(.system(size: 18).bold().monospaced())
                         
-                    StrokeText(text: (isUpdated) ? (isAlert) ? (isMajor) ? strLoc3 : strLoc2 : strLoc1 : strLocL, width: (isMajor) ? 0.75 : 0, color: .black)
+                    StrokeText(text: label, width: (isMajor) ? 0.75 : 0, color: .black)
                         .foregroundStyle((isMajor) ? .white : .black)
                         .font(.system(size: 18).bold().monospaced())
                 }
             )
             .opacity(opacity)
+            .onReceive(adviceTimer) { _ in
+                // Only while something is happening. Outside an alert the bar is a status
+                // line, and telling someone to take cover when nothing is coming would
+                // teach them to ignore it.
+                guard isAlert else { return }
+                showsSafetyAdvice.toggle()
+            }
             .onReceive(timer) { _ in
                 updateAlert()
             }
             .onAppear {
                 updateAlert()
             }
+    }
+
+    private var label: String {
+        guard isUpdated else { return strLocL }
+        guard isAlert else { return strLoc1 }
+        if showsSafetyAdvice { return strAdvice }
+        return isMajor ? strLoc3 : strLoc2
     }
 
     private func updateAlert() {
@@ -69,6 +101,9 @@ struct AlertStatusBar : View {
                 startAnimation()
             } else {
                 stopAnimation()
+                // Back to the status line, so a finished alert never leaves the advice
+                // frozen on screen.
+                showsSafetyAdvice = false
             }
         }
         

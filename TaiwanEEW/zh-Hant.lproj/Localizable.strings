@@ -49,6 +49,7 @@
 "alert-status-1-string" = "目前無發布地震資訊";
 "alert-status-2-string" = "地 震 通 報 發 表 中";
 "alert-status-3-string" = "緊 急 地 震 速 報";
+"alert-safety-advice-string" = "趴 下 、 掩 護 、 穩 住";
 
 // Intensity Block
 "intensity-string" = "預估震度";
