@@ -22,12 +22,17 @@ struct AlertMapView: View {
     /// compute their height completely differently, so the map is better off not knowing
     /// which one is running.
     var cardObscuredHeight: CGFloat = 0
+    /// Frame the whole island rather than the earthquake. Set while the card is collapsed.
+    /// A separate flag rather than something inferred from cardObscuredHeight, which is a
+    /// measurement and would make this depend on the card happening to be a certain size.
+    var showsWholeIsland: Bool = false
     @StateObject private var headingProvider = HeadingProvider()
 
     var body: some View {
         CustomMapView(eventManager: eventManager,
                       headingProvider: headingProvider,
-                      cardObscuredHeight: cardObscuredHeight)
+                      cardObscuredHeight: cardObscuredHeight,
+                      showsWholeIsland: showsWholeIsland)
             // The magnetometer runs only while the map is on screen — switching tabs or
             // backgrounding stops it rather than leaving it spinning for a cone nobody
             // is looking at.
@@ -44,6 +49,7 @@ private struct CustomMapView: UIViewRepresentable {
     @ObservedObject private var locationManager = LocationManager.shared
     @ObservedObject var headingProvider: HeadingProvider
     let cardObscuredHeight: CGFloat
+    let showsWholeIsland: Bool
     /// Draws the framing geometry over the map. Debug and TestFlight only — the toggle
     /// lives in Settings' diagnostics section and is not shown to App Store users.
     @AppStorage("showMapFramingDebug") private var showFramingDebug = false
@@ -134,8 +140,10 @@ private struct CustomMapView: UIViewRepresentable {
         // Dragging the card changes how much map is left, so both the area being framed
         // into and what fits inside it have to be worked out again. Keyed on the settled
         // position rather than the drag, so this runs once when the card lands.
-        if context.coordinator.lastCardObscuredHeight != cardObscuredHeight {
+        if context.coordinator.lastCardObscuredHeight != cardObscuredHeight
+            || context.coordinator.lastShowsWholeIsland != showsWholeIsland {
             context.coordinator.lastCardObscuredHeight = cardObscuredHeight
+            context.coordinator.lastShowsWholeIsland = showsWholeIsland
             setupRegionForMap(uiView)
         }
 
@@ -214,7 +222,7 @@ private struct CustomMapView: UIViewRepresentable {
     /// Given as explicit corners rather than a centre and a radius so the box is the shape
     /// of Taiwan rather than a square around it — a square wastes the difference on sea,
     /// and it is the longer side that decides the zoom.
-    private static let taiwanNorthEast = CLLocationCoordinate2D(latitude: 25.326903, longitude: 122.104184)
+    private static let taiwanNorthEast = CLLocationCoordinate2D(latitude: 25.4, longitude: 122.2)
     private static let taiwanSouthWest = CLLocationCoordinate2D(latitude: 21.893754, longitude: 119.377507)
 
     /// Fraction trimmed off each side of the island box before it is framed.
@@ -223,7 +231,7 @@ private struct CustomMapView: UIViewRepresentable {
     /// onto land. Set to 0 to frame exactly the corners as given.
     private static let taiwanFramingInset = 0.20
 
-    private static var taiwanRect: MKMapRect {
+    private static func taiwanRect(inset: Double = taiwanFramingInset) -> MKMapRect {
         let northEast = MKMapPoint(taiwanNorthEast)
         let southWest = MKMapPoint(taiwanSouthWest)
         // y grows southward in map points, so the corners cannot be assumed to be in order.
@@ -231,8 +239,8 @@ private struct CustomMapView: UIViewRepresentable {
                              y: min(northEast.y, southWest.y),
                              width: abs(northEast.x - southWest.x),
                              height: abs(northEast.y - southWest.y))
-        return full.insetBy(dx: full.width * taiwanFramingInset,
-                            dy: full.height * taiwanFramingInset)
+        guard inset != 0 else { return full }
+        return full.insetBy(dx: full.width * inset, dy: full.height * inset)
     }
     /// One point and no second reference — show its surroundings.
     private static let soloMetres: CLLocationDistance = 200_000
@@ -401,8 +409,19 @@ private struct CustomMapView: UIViewRepresentable {
         // Someone abroad gets the island instead. Fitting their position and the epicenter
         // together would stretch the box from wherever they are back to Taiwan, at a zoom
         // that shows neither end usefully.
+        // Collapsing the card is a request for the map, so it switches to the whole
+        // island regardless of where the earthquake is. Untrimmed, unlike the abroad
+        // case: there the inset pulls the view onto land, here the extra room the card
+        // gave back is the point.
+        if showsWholeIsland {
+            return Self.taiwanRect(inset: 0)
+        }
+
+        // Someone abroad gets the island instead. Fitting their position and the epicenter
+        // together would stretch the box from wherever they are back to Taiwan, at a zoom
+        // that shows neither end usefully.
         if let user, !isNearTaiwan(user) {
-            return Self.taiwanRect
+            return Self.taiwanRect()
         }
 
         switch (epicenter, user) {
@@ -413,7 +432,7 @@ private struct CustomMapView: UIViewRepresentable {
         case let (nil, user?):
             return mapRect(around: user, metres: Self.soloMetres)
         case (nil, nil):
-            return Self.taiwanRect
+            return Self.taiwanRect()
         }
     }
 
@@ -691,6 +710,8 @@ private struct CustomMapView: UIViewRepresentable {
         /// How much the card covered the last time the map was framed, so dragging it
         /// reframes into the space that just opened up or closed.
         var lastCardObscuredHeight: CGFloat?
+        /// Whether the last framing was the whole-island one.
+        var lastShowsWholeIsland: Bool?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         
