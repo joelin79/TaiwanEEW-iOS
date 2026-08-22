@@ -103,64 +103,50 @@ struct EEWDetailBlock: View {
     
     
     private var pageTitle: some View {
-        VStack(alignment: .leading, spacing: 0){
-            HStack(alignment: .lastTextBaseline){
-                var title: String {
-                    if(status == "exercise"){
-                        return "演練 Drill"
-                    } else if(status == "test" && !TaiwanEEWApp.DEBUG){
-                        return "測試中 Testing"
-                    } else if (msgType == "system") {
-                        return "系統 System"
-                    } else if(msgType == "cancel"){
-                        return "預警取消 Canceled"
-                    } else if(msgType == "error"){
-                        return "預警錯誤 Error"
-                    } else {
-                        return NSLocalizedString("地震速報", comment: "")     // localize "alert-title-string"
-                    }
-                }
-                Text(title).font(.system(size: UIScreen.isZoomed ? 23 : 28).bold())
-                    .frame(height: 25)
-                Text("/ 第\(eqSeq)報")
-                    .foregroundStyle(Color("TimeText"))
-                    .font(.system(size: UIScreen.isZoomed ? 12 : 18))
-                Spacer()
-                HStack(spacing: 0){
-                    Image(systemName: "water.waves.and.arrow.down")
-                        .font(.system(size: UIScreen.isZoomed ? 20 : 10))
-                        .foregroundStyle(Color("TimeText"))
-                    Text("\(String(format: "%.1f", depth))km")
-                        .font(.system(size: UIScreen.isZoomed ? 12 : 14).monospaced())
-                        .foregroundStyle(Color("TimeText"))
-                }.frame(height: 0)
-                HStack(spacing: 0){
-                    Text("M\(String(format: "%.1f", magnitude))").bold().foregroundStyle( magnitude >= 7 ? .purple : magnitude >= 6.5 ? .red : magnitude > 5.5 ? .orange : .primary)
-                        .font(.system(size: UIScreen.isZoomed ? 17 : 22).monospaced().bold())
-                }.frame(height: 0)
-                
-//                Spacer()
-//                LocationBlock(districtStr: Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName)
+        VStack(spacing: 0) {
+            // Baseline, not centre. The two sides are set at different sizes, so centring
+            // aligns their text boxes — and a text box is glyphs plus the font's leading,
+            // which differs with size. Matching baselines is what makes the text itself
+            // sit on one line.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                EEWDetailHeaderMagnitude(depth: depth, magnitude: magnitude)
+                Spacer(minLength: 8)
+                EEWDetailHeaderReport(title: titleText, titleMatchesTimeText: isNormalReport)
             }
-            
-            HStack(alignment: .firstTextBaseline){
-                Text("\(originTimeFormattedStr) 發生")
-//                    .offset(y:3)
-                    .foregroundStyle(Color("TimeText"))
-                    .font(.system(size: UIScreen.isZoomed ? 12 : 18))
-                Spacer()
-                HStack(spacing:2){
-                    Image(systemName: "waveform.path.ecg")
-                        .font(.system(size: UIScreen.isZoomed ? 13 : 21))
-                    Text(locationName ?? fetchOceanData(lat: latB, lon: lonB))
-                        .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
-                }
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                EEWDetailHeaderLocation(locationName: locationName ?? fetchOceanData(lat: latB, lon: lonB))
+                Spacer(minLength: 8)
+                EEWDetailHeaderOriginTime(originTimeText: "\(originTimeFormattedStr) 發生")
             }
-            
         }
         .padding(.horizontal, EEWDetailBlock.contentInset)
     }
-    
+
+    private var isNormalReport: Bool {
+        status != "exercise"
+            && !(status == "test" && !TaiwanEEWApp.DEBUG)
+            && msgType != "system"
+            && msgType != "cancel"
+            && msgType != "error"
+    }
+
+    private var titleText: String {
+        if status == "exercise" {
+            return "演練 Drill"
+        } else if status == "test" && !TaiwanEEWApp.DEBUG {
+            return "測試中 Testing"
+        } else if msgType == "system" {
+            return "系統 System"
+        } else if msgType == "cancel" {
+            return "預警取消 Canceled"
+        } else if msgType == "error" {
+            return "預警錯誤 Error"
+        } else {
+            return "第 \(eqSeq) 報"
+        }
+    }
+
     var alertInfo: some View {
         HStack {
             IntensityBlock(intensity: intensity)
@@ -194,6 +180,77 @@ struct EEWDetailBlock: View {
 
     func fetchOceanData(lat: Double, lon: Double) -> String {
         EpicenterName.oceanArea(lat: lat, lon: lon)
+    }
+}
+
+private struct EEWDetailHeaderMagnitude: View {
+    let depth: Double
+    let magnitude: Double
+
+    private var magnitudeColor: Color {
+        if magnitude >= 7 { return .purple }
+        if magnitude >= 6.5 { return .red }
+        if magnitude > 5.5 { return .orange }
+        return .primary
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("M\(String(format: "%.1f", magnitude))")
+                .bold()
+                .foregroundStyle(magnitudeColor)
+                .font(.system(size: UIScreen.isZoomed ? 17 : 22).monospaced().bold())
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+//                Image(systemName: "water.waves.and.arrow.down")
+//                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
+//                    .foregroundStyle(Color("TimeText"))
+                Text("\(String(format: "深度%.1f", depth))km")
+                    .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
+                    .foregroundStyle(Color("TimeText"))
+            }
+        }
+        .lineLimit(1)
+    }
+}
+
+private struct EEWDetailHeaderLocation: View {
+    let locationName: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 2) {
+            Image(systemName: "scope")
+                .font(.system(size: UIScreen.isZoomed ? 10 : 18))
+            Text(locationName)
+                .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+    }
+}
+
+private struct EEWDetailHeaderReport: View {
+    let title: String
+    let titleMatchesTimeText: Bool
+
+    var body: some View {
+        Text(title)
+            .foregroundStyle(titleMatchesTimeText ? Color("TimeText") : .primary)
+            .font(titleMatchesTimeText
+                  ? .system(size: UIScreen.isZoomed ? 12 : 18)
+                  : .system(size: UIScreen.isZoomed ? 17 : 22).bold())
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+    }
+}
+
+private struct EEWDetailHeaderOriginTime: View {
+    let originTimeText: String
+
+    var body: some View {
+        Text(originTimeText)
+            .foregroundStyle(Color("TimeText"))
+            .font(.system(size: UIScreen.isZoomed ? 12 : 18))
+            .lineLimit(1)
     }
 }
 
