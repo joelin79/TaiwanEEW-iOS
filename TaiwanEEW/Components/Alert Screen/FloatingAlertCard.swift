@@ -62,8 +62,14 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     private static var bottomMargin: CGFloat { 10 }
     private static var cornerRadius: CGFloat { 44 }
 
-    private static var grabberArea: CGFloat { 22 }
-    private static var contentBottomPadding: CGFloat { 14 }
+    /// Handle to the first row of content, and the last block down to the tab bar. Its own
+    /// value rather than AlertBlockMetrics.edgeInset: the vertical gaps sit against the
+    /// handle and the tab bar, which already carry their own visual weight, so they read
+    /// heavier than the same number does at the sides.
+    private static var contentGap: CGFloat { 16 }
+    /// Handle, its own top margin, and the gap below it.
+    private static var grabberArea: CGFloat { 8 + 5 + contentGap }
+    private static var contentBottomPadding: CGFloat { contentGap }
 
     /// Used only for the first layout pass, before the content has been measured. Wrong
     /// on any given device, but only ever visible for a single frame, and a wrong height
@@ -178,6 +184,9 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
         // Width and height both fixed here, ahead of the clip. Applying the width outside
         // the clipShape only relabels the size: the shape has already been cut at whatever
         // width an incompressible child forced, so the excess still draws over the margins.
+        // Stated, not measured. The content cannot work its own width out without the
+        // answer depending on what it decides to draw — see CardContentWidthKey.
+        .environment(\.cardContentWidth, width)
         .frame(width: width, height: currentHeight, alignment: .top)
         .contentShape(Rectangle())
         .background(
@@ -202,7 +211,7 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
             .fill(Color.secondary.opacity(0.5))
             .frame(width: 36, height: 5)
             .padding(.top, 8)
-            .padding(.bottom, 9)
+            .padding(.bottom, Self.contentGap)
     }
 
     /// Both layouts stay mounted and trade places on opacity. An if/else here swaps the

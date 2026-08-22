@@ -10,6 +10,8 @@ import SwiftUI
 struct TimeBlock: View {
     let cornerRad: CGFloat = 20
     var arrivalTime: Date
+    /// See IntensityBlock.size.
+    var size: CGFloat = AlertBlockMetrics.defaultSize
     
     @State private var text: String = ""
     func calcEstTime () -> Int {
@@ -22,14 +24,9 @@ struct TimeBlock: View {
             .clipped()
             .overlay(content)
             // Draw border
-            .overlay(RoundedRectangle(cornerRadius: cornerRad)
+            .overlay(RoundedRectangle(cornerRadius: cornerRad, style: .continuous)
                 .stroke(Color("EqInfoBoarder"), lineWidth: 2))
-            .if(UIScreen.isZoomed) { view in
-                view.frame(width: 140, height: 140)
-            }
-            .if(!UIScreen.isZoomed) { view in
-                view.frame(width: 170, height: 170)
-            }
+            .frame(width: size, height: size)
     }
     
     var content: some View {

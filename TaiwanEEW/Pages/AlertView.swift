@@ -164,6 +164,9 @@ private extension AlertView {
                                 EEWDetailBlock(eventManager: eventManager)
                                 Spacer()
                             }
+                            // The panel is a fixed 400pt, which matches neither the screen
+                            // nor the phone card.
+                            .environment(\.cardContentWidth, 400)
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .padding(.trailing, 20)

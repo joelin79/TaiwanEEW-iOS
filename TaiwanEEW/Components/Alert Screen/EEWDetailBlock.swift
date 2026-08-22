@@ -54,34 +54,34 @@ struct EEWDetailBlock: View {
         return dateFormatter.string(from: originTime)
     }
     
-    private static var alertBlockWidth: CGFloat { UIScreen.isZoomed ? 140 : 170 }
-    private static var floatingCardHorizontalMargin: CGFloat { 10 }
-
-    /// Matches the outer edges of the intensity and countdown blocks. The large blocks
-    /// sit inside a row with equal left, middle and right gaps, so the rows above use the
-    /// same edge inset instead of their old independent baseline padding.
-    static var contentInset: CGFloat {
-        let cardAdjustedWidth: CGFloat
-        if #available(iOS 17.0, *), Device.deviceType == .iphone {
-            cardAdjustedWidth = UIScreen.screenWidth - floatingCardHorizontalMargin * 2
-        } else {
-            cardAdjustedWidth = UIScreen.screenWidth
-        }
-
-        return max((cardAdjustedWidth - alertBlockWidth * 2) / 3, 0)
+    /// Handed down by whatever is presenting this — see CardContentWidthKey for why it
+    /// cannot be measured here. Falls back to the screen for the legacy full-width card,
+    /// which is the one case where the two agree.
+    @Environment(\.cardContentWidth) private var cardContentWidth
+    private var contentWidth: CGFloat {
+        cardContentWidth > 0 ? cardContentWidth : UIScreen.screenWidth
     }
+
+    private var blockSize: CGFloat { AlertBlockMetrics.blockSize(containerWidth: contentWidth) }
+
+    /// The blocks are centred in what is left after the fixed inset, so their outer edges
+    /// sit exactly one inset in. Every other row uses the same value, which is what keeps
+    /// the header, the status bar and the blocks on one pair of edges.
+    private var contentInset: CGFloat { AlertBlockMetrics.edgeInset }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0){
             if Device.deviceType == .ipad {
                 Spacer()
             }
-            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
-                .padding(.bottom, 10)
-                .padding(.horizontal, EEWDetailBlock.contentInset)
             pageTitle
-            alertInfo
+            // Below the earthquake's own details and above the local prediction, where it
+            // reads as the heading for the intensity and countdown rather than a banner
+            // over the whole card.
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
                 .padding(.top, 10)
+            alertInfo
+                .padding(.top, AlertBlockMetrics.blockGap)
 //            EEWDetailBlock(eventManager: eventManager)
 //                .padding(.bottom, 10)
             
@@ -92,16 +92,14 @@ struct EEWDetailBlock: View {
             }
 //                testflightReminder.padding()
         }
-        .padding(.top, 8)
-        .padding(.bottom, 14)
+        .padding(.horizontal, contentInset)
         .onAppear {
             updateLocationName()
         }.onChange(of: [lonB, latB]) { _ in
             updateLocationName()
         }
     }
-    
-    
+
     private var pageTitle: some View {
         VStack(spacing: 0) {
             // Baseline, not centre. The two sides are set at different sizes, so centring
@@ -120,7 +118,6 @@ struct EEWDetailBlock: View {
                 EEWDetailHeaderOriginTime(originTimeText: "\(originTimeFormattedStr) 發生")
             }
         }
-        .padding(.horizontal, EEWDetailBlock.contentInset)
     }
 
     private var report: (title: String, badge: ReportBadge?) {
@@ -128,12 +125,11 @@ struct EEWDetailBlock: View {
     }
 
     var alertInfo: some View {
-        HStack {
-            IntensityBlock(intensity: intensity)
-            Spacer()
-            TimeBlock(arrivalTime: arrivalTime)
+        HStack(spacing: AlertBlockMetrics.blockGap) {
+            IntensityBlock(intensity: intensity, size: blockSize)
+            TimeBlock(arrivalTime: arrivalTime, size: blockSize)
         }
-        .padding(.horizontal, EEWDetailBlock.contentInset)
+        .frame(maxWidth: .infinity)
     }
     
     var arrivalClockTimeBar: some View {
@@ -179,7 +175,7 @@ private struct EEWDetailHeaderMagnitude: View {
             Text("M\(String(format: "%.1f", magnitude))")
                 .bold()
                 .foregroundStyle(magnitudeColor)
-                .font(.system(size: UIScreen.isZoomed ? 17 : 22).monospaced().bold())
+                .font(.system(size: UIScreen.isZoomed ? 19 : 24).monospaced().bold())
             HStack(alignment: .firstTextBaseline, spacing: 0) {
 //                Image(systemName: "water.waves.and.arrow.down")
 //                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))

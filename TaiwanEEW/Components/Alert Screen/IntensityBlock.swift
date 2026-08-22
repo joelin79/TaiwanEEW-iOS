@@ -10,10 +10,14 @@ import SwiftUI
 struct IntensityBlock: View {
     let cornerRad: CGFloat = 20
     var intensity: String
+    /// Sized by the caller so the pair can share out the card's width rather than each
+    /// claiming a fixed 170pt and leaving whatever is left as the margin.
+    var size: CGFloat = AlertBlockMetrics.defaultSize
     var intensityValue: Int { EEWService.intensityStringToValue(str: intensity) }
-    
-    init(intensity: String){
+
+    init(intensity: String, size: CGFloat = AlertBlockMetrics.defaultSize){
         self.intensity = intensity
+        self.size = size
     }
     
     // Container
@@ -24,14 +28,9 @@ struct IntensityBlock: View {
                 .clipped()
                 .overlay(content)
                 // Draw border
-                .overlay(RoundedRectangle(cornerRadius: cornerRad)
+                .overlay(RoundedRectangle(cornerRadius: cornerRad, style: .continuous)
                     .stroke( intensityValue >= 4 ? .red : Color("EqInfoBoarder"), lineWidth: 2))
-                .if(UIScreen.isZoomed) { view in
-                    view.frame(width: 140, height: 140)
-                }
-                .if(!UIScreen.isZoomed) { view in
-                    view.frame(width: 170, height: 170)
-                }
+                .frame(width: size, height: size)
         }
         
     }
