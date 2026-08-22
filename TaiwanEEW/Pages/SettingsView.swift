@@ -456,7 +456,11 @@ struct SettingsView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 20, height: 20)
-                    Text("GitHub 開源專案").frame(maxWidth: .infinity, alignment: .leading)
+                    // 開源 means open source specifically, which this is not: LICENSE.md
+                    // is source-available and grants no rights beyond reading and
+                    // contributing back. 公開原始碼 states what is true — the source is
+                    // published — without claiming a licence the project does not have.
+                    Text("GitHub 公開原始碼").frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(.blue)
                 }
             }
