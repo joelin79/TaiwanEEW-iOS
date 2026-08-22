@@ -84,7 +84,7 @@ private extension AlertView {
         ZStack(alignment: Alignment(horizontal: .center, vertical: .top)){
             AlertMapView(eventManager: eventManager,
                          cardObscuredHeight: cardObscuredHeight,
-                         showsWholeIsland: cardPosition == .bottom)
+                         isCollapsed: cardPosition == .bottom)
                 .ignoresSafeArea()
             ErrorBanner(msgType: msgType, status: status)
             
@@ -137,7 +137,7 @@ private extension AlertView {
             // iPad puts the detail panel beside the map, so nothing is covered and the
             // framing has no card to work around.
             AlertMapView(eventManager: eventManager, cardObscuredHeight: 0,
-                         showsWholeIsland: false)
+                         isCollapsed: false)
                 .ignoresSafeArea()
             ErrorBanner(msgType: msgType, status: status)
             

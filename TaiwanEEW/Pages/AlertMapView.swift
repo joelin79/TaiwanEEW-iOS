@@ -21,17 +21,18 @@ struct AlertMapView: View {
     /// compute their height completely differently, so the map is better off not knowing
     /// which one is running.
     var cardObscuredHeight: CGFloat = 0
-    /// Frame the whole island rather than the earthquake. Set while the card is collapsed.
-    /// A separate flag rather than something inferred from cardObscuredHeight, which is a
-    /// measurement and would make this depend on the card happening to be a certain size.
-    var showsWholeIsland: Bool = false
+    /// Which job the map is doing: first-person while the card is expanded, island
+    /// overview while it is collapsed. Passed rather than inferred from
+    /// cardObscuredHeight, which is a measurement — keying behaviour off "the card is
+    /// currently under N points" would break when the compact layout changed height.
+    var isCollapsed: Bool = false
     @StateObject private var headingProvider = HeadingProvider()
 
     var body: some View {
         CustomMapView(eventManager: eventManager,
                       headingProvider: headingProvider,
                       cardObscuredHeight: cardObscuredHeight,
-                      showsWholeIsland: showsWholeIsland)
+                      isCollapsed: isCollapsed)
             // The magnetometer runs only while the map is on screen — switching tabs or
             // backgrounding stops it rather than leaving it spinning for a cone nobody
             // is looking at.
@@ -48,7 +49,9 @@ private struct CustomMapView: UIViewRepresentable {
     @ObservedObject private var locationManager = LocationManager.shared
     @ObservedObject var headingProvider: HeadingProvider
     let cardObscuredHeight: CGFloat
-    let showsWholeIsland: Bool
+    let isCollapsed: Bool
+    @AppStorage(AwayFramingPreference.storageKey) private var awayFraming = AwayFramingPreference.taiwan
+    @AppStorage(CollapsedFramingPreference.storageKey) private var collapsedFraming = CollapsedFramingPreference.taiwanOnly
     /// Draws the framing geometry over the map. Debug and TestFlight only — the toggle
     /// lives in Settings' diagnostics section and is not shown to App Store users.
     @AppStorage("showMapFramingDebug") private var showFramingDebug = false
@@ -140,9 +143,9 @@ private struct CustomMapView: UIViewRepresentable {
         // into and what fits inside it have to be worked out again. Keyed on the settled
         // position rather than the drag, so this runs once when the card lands.
         if context.coordinator.lastCardObscuredHeight != cardObscuredHeight
-            || context.coordinator.lastShowsWholeIsland != showsWholeIsland {
+            || context.coordinator.lastIsCollapsed != isCollapsed {
             context.coordinator.lastCardObscuredHeight = cardObscuredHeight
-            context.coordinator.lastShowsWholeIsland = showsWholeIsland
+            context.coordinator.lastIsCollapsed = isCollapsed
             setupRegionForMap(uiView)
         }
 
@@ -398,39 +401,44 @@ private struct CustomMapView: UIViewRepresentable {
                             right: horizontalMargin)
     }
 
-    /// The area worth showing: you and the epicenter, or whichever of the two exists.
+    /// Enough room around an offshore epicenter that its marker and wave circles are not
+    /// clipped by the edge of the fitted box.
+    private static let epicenterMarginMetres: CLLocationDistance = 25_000
+
+    /// What to show. See MapFraming for why the two card positions want different things.
     private func preferredMapRect() -> MKMapRect {
         let epicenter = eventManager.latB == 0
             ? nil
             : CLLocationCoordinate2D(latitude: eventManager.latB, longitude: eventManager.lonB)
-        let user = locationManager.currentLocation?.coordinate
 
-        // Someone abroad gets the island instead. Fitting their position and the epicenter
-        // together would stretch the box from wherever they are back to Taiwan, at a zoom
-        // that shows neither end usefully.
-        // Collapsing the card is a request for the map, so it switches to the whole
-        // island regardless of where the earthquake is. Untrimmed, unlike the abroad
-        // case: there the inset pulls the view onto land, here the extra room the card
-        // gave back is the point.
-        if showsWholeIsland {
-            return Self.taiwanRect(inset: 0)
+        guard !isCollapsed else {
+            return collapsedRect(epicenter: epicenter)
         }
+        return expandedRect(epicenter: epicenter)
+    }
 
-        // Someone abroad gets the island instead. Fitting their position and the epicenter
-        // together would stretch the box from wherever they are back to Taiwan, at a zoom
-        // that shows neither end usefully.
-        if let user, !isNearTaiwan(user) {
-            return Self.taiwanRect()
-        }
+    /// Island first, user position never considered. Collapsing the card is a request to
+    /// see the map, so it is untrimmed — the room the card gave back is the point.
+    private func collapsedRect(epicenter: CLLocationCoordinate2D?) -> MKMapRect {
+        let island = Self.taiwanRect(inset: 0)
+        guard collapsedFraming == .taiwanAndEpicenter, let epicenter else { return island }
+        return island.union(mapRect(around: epicenter, metres: Self.epicenterMarginMetres))
+    }
 
-        switch (epicenter, user) {
-        case let (epicenter?, user?):
+    /// First-person: where am I relative to this. Only when the user's position can
+    /// actually anchor that — otherwise it is their preference which of the two
+    /// non-personal views to show.
+    private func expandedRect(epicenter: CLLocationCoordinate2D?) -> MKMapRect {
+        if let user = locationManager.currentLocation?.coordinate, isNearTaiwan(user) {
+            guard let epicenter else { return Self.taiwanRect() }
             return mapRect(spanning: epicenter, and: user)
-        case let (epicenter?, nil):
+        }
+
+        switch awayFraming {
+        case .epicenter:
+            guard let epicenter else { return Self.taiwanRect() }
             return mapRect(around: epicenter, metres: Self.soloMetres)
-        case let (nil, user?):
-            return mapRect(around: user, metres: Self.soloMetres)
-        case (nil, nil):
+        case .taiwan:
             return Self.taiwanRect()
         }
     }
@@ -709,8 +717,8 @@ private struct CustomMapView: UIViewRepresentable {
         /// How much the card covered the last time the map was framed, so dragging it
         /// reframes into the space that just opened up or closed.
         var lastCardObscuredHeight: CGFloat?
-        /// Whether the last framing was the whole-island one.
-        var lastShowsWholeIsland: Bool?
+        /// Which mode the last framing was for.
+        var lastIsCollapsed: Bool?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         

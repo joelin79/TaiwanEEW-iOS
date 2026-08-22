@@ -18,6 +18,8 @@ struct SettingsView: View {
     @AppStorage("locationNarrationEnabled") var locationNarrationEnabled: Bool = false
     @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
     @AppStorage("showMapFramingDebug") var showMapFramingDebug: Bool = false
+    @AppStorage(AwayFramingPreference.storageKey) var awayFraming = AwayFramingPreference.taiwan
+    @AppStorage(CollapsedFramingPreference.storageKey) var collapsedFraming = CollapsedFramingPreference.taiwanOnly
     @State private var confirmingTestEEWData = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
@@ -51,6 +53,7 @@ struct SettingsView: View {
             autoLocationSection
             locationSelectionSection
             alertThresholdSection
+            mapFramingSection
             linksSection
             aboutSection
             reminderSection
@@ -387,6 +390,32 @@ struct SettingsView: View {
         }
     }
     
+    /// The alert card's two positions frame the map differently — expanded is
+    /// first-person, collapsed is an island overview — so each gets its own choice. The
+    /// expanded one only applies when the user's position cannot anchor the view, since
+    /// otherwise it always frames you together with the epicenter.
+    private var mapFramingSection: some View {
+        Section(
+            header:
+                HStack {
+                    Image(systemName: "map")
+                    Text("地圖取景")
+                },
+            footer: Text("展開時若已取得你在台灣的位置，一律同時顯示你與震央。"))
+        {
+            Picker("無法定位或不在台灣時", selection: $awayFraming) {
+                ForEach(AwayFramingPreference.allCases) { option in
+                    Text(option.label).tag(option)
+                }
+            }
+            Picker("收合卡片時", selection: $collapsedFraming) {
+                ForEach(CollapsedFramingPreference.allCases) { option in
+                    Text(option.label).tag(option)
+                }
+            }
+        }
+    }
+
     private var linksSection: some View {
         Section(
             header:
