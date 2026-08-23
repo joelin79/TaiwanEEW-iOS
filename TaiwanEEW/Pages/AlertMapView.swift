@@ -225,7 +225,7 @@ private struct CustomMapView: UIViewRepresentable {
     /// of Taiwan rather than a square around it — a square wastes the difference on sea,
     /// and it is the longer side that decides the zoom.
     private static let taiwanNorthEast = CLLocationCoordinate2D(latitude: 25.4, longitude: 122.2)
-    private static let taiwanSouthWest = CLLocationCoordinate2D(latitude: 21.893754, longitude: 119.377507)
+    private static let taiwanSouthWest = CLLocationCoordinate2D(latitude: 21.893754, longitude: 119.8)
 
     /// Fraction trimmed off each side of the island box before it is framed.
     ///
