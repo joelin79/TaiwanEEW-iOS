@@ -908,12 +908,13 @@ private struct CustomMapView: UIViewRepresentable {
             if let view = epicenterView {
                 let isBlinking = view.layer.animation(forKey: Self.blinkKey) != nil
                 if shouldBlink && !isBlinking {
-                    // 0.5s each way, so one full cycle a second.
-                    let blink = CABasicAnimation(keyPath: "opacity")
-                    blink.fromValue = 1.0
-                    blink.toValue = 0.15
-                    blink.duration = 0.5
-                    blink.autoreverses = true
+                    // A blink, not a fade: .discrete holds each value rather than
+                    // interpolating between them. Two values over a one second duration
+                    // gives 0.5s lit and 0.5s dim, the same cadence the eased version had.
+                    let blink = CAKeyframeAnimation(keyPath: "opacity")
+                    blink.values = [1.0, 0.15]
+                    blink.calculationMode = .discrete
+                    blink.duration = 1
                     blink.repeatCount = .infinity
                     view.layer.add(blink, forKey: Self.blinkKey)
                 } else if !shouldBlink && isBlinking {

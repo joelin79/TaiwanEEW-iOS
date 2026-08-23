@@ -200,9 +200,9 @@ private struct CountdownPill: View {
     /// alert stays live, this governs how long it demands attention.
     private static let flashWindow: TimeInterval = 15
 
-    /// One full cycle a second, matching the map's epicenter blink, so the two pieces of
-    /// attention-grabbing UI stay in step rather than beating against each other.
-    private static let flashPeriod: TimeInterval = 1.0
+    /// Phase comes from AlertBlink so this, the status bar, the banner and the epicenter
+    /// are lit and dim together. Only the depth of the dim is local — a small marker and a
+    /// full-width bar do not need the same amount.
     private static let dimOpacity: Double = 0.30
 
     private var remaining: Double { max(-Date().timeIntervalSince(arrivalTime), 0) }
@@ -262,9 +262,7 @@ private struct CountdownPill: View {
                 isLit = true
                 return
             }
-            // Lit for the first half of each period, dim for the second.
-            let phase = sinceArrival.truncatingRemainder(dividingBy: Self.flashPeriod)
-            isLit = phase < Self.flashPeriod / 2
+            isLit = AlertBlink.isLit(arrivalTime: arrivalTime)
         }
     }
 }

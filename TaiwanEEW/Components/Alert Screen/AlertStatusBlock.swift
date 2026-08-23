@@ -11,6 +11,9 @@ import Combine
 struct AlertStatusBar : View {
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// Fast enough that the blink lands on the same frame the countdown changes; the state
+    /// it writes is one Double, and only when the value actually differs.
+    let blinkTimer = Timer.publish(every: AlertBlink.tick, on: .main, in: .common).autoconnect()
     var arrivalTime: Date
     var intensity: String
     let cornerRad: CGFloat = 10
@@ -22,15 +25,9 @@ struct AlertStatusBar : View {
     /// While an alert is live the label alternates with what to actually do about it.
     @State private var showsSafetyAdvice: Bool = false
 
-    /// One blink is the opacity animation below: 0.1s each way either side of its 0.25s
-    /// delay. Swapping on a multiple of that keeps the text changing on a blink boundary
-    /// rather than mid-flash — so if startAnimation's timings change, this follows.
-    private static let blinkPeriod: TimeInterval = (0.25 + 0.1) * 2
+    private static let dimOpacity: Double = 0.5
     private static let blinksPerMessage = 3
-    private var adviceTimer: Publishers.Autoconnect<Timer.TimerPublisher> {
-        Timer.publish(every: Self.blinkPeriod * Double(Self.blinksPerMessage),
-                      on: .main, in: .common).autoconnect()
-    }
+
     
     var strLocL = NSLocalizedString("loading-string", comment: "")
     var strLoc1 = NSLocalizedString( "alert-status-1-string", comment: "")
@@ -67,12 +64,9 @@ struct AlertStatusBar : View {
                 }
             )
             .opacity(opacity)
-            .onReceive(adviceTimer) { _ in
-                // Only while something is happening. Outside an alert the bar is a status
-                // line, and telling someone to take cover when nothing is coming would
-                // teach them to ignore it.
-                guard isAlert else { return }
-                showsSafetyAdvice.toggle()
+
+            .onReceive(blinkTimer) { _ in
+                updateBlinkPhase()
             }
             .onReceive(timer) { _ in
                 updateAlert()
@@ -97,12 +91,9 @@ struct AlertStatusBar : View {
         let isInAlert = EarthquakeActivity.isActive(arrivalTime: arrivalTime)
         if isInAlert != isAlert {
             isAlert = isInAlert
-            if isAlert {
-                startAnimation()
-            } else {
-                stopAnimation()
+            if !isAlert {
                 // Back to the status line, so a finished alert never leaves the advice
-                // frozen on screen.
+                // frozen on screen. Opacity is restored by updateBlinkPhase.
                 showsSafetyAdvice = false
             }
         }
@@ -122,16 +113,28 @@ struct AlertStatusBar : View {
         }
     }
     
-    private func startAnimation() {
-        withAnimation(.easeInOut(duration: 0.1).delay(0.25).repeatForever()) {
-                opacity = 0.5
-            }
+    /// Derived from the time to arrival, not from a repeating animation. A repeatForever
+    /// animation starts whenever the alert starts and drifts against the countdown from
+    /// then on; taking the phase from the same quantity the countdown displays means the
+    /// two cannot disagree.
+    ///
+    /// Lit for the first half of each second so the bar brightens exactly as the number
+    /// changes: remaining decreases, so its fractional part wraps 0 -> 1 at each tick.
+    private func updateBlinkPhase() {
+        guard isAlert else {
+            if opacity != 1 { opacity = 1 }
+            return
         }
+        let next = AlertBlink.isLit(arrivalTime: arrivalTime) ? 1 : Self.dimOpacity
+        if opacity != next { opacity = next }
 
-    private func stopAnimation() {
-        withAnimation (.linear(duration: 0.1)){
-            opacity = 1.0
-        }
+        // Derived rather than toggled on its own timer, so the wording changes on a tick
+        // together with the blink instead of drifting against it. Only while something is
+        // happening: telling someone to take cover with nothing coming teaches them to
+        // ignore it.
+        let advice = isAlert && AlertBlink.showsAlternate(arrivalTime: arrivalTime,
+                                                          everyBlinks: Self.blinksPerMessage)
+        if showsSafetyAdvice != advice { showsSafetyAdvice = advice }
     }
     
 }

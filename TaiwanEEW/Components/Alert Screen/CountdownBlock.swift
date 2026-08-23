@@ -13,10 +13,17 @@ struct TimeBlock: View {
     /// See IntensityBlock.size.
     var size: CGFloat = AlertBlockMetrics.defaultSize
     
-    @State private var text: String = ""
-    func calcEstTime () -> Int {
-        return -Int(Date().timeIntervalSince(arrivalTime))
-    }
+    /// Sampled at AlertBlink.tick rather than once a second. The value was always derived
+    /// from the arrival time, but checking it only once a second meant the digit changed
+    /// wherever the timer happened to start — on this view appearing — so it drifted
+    /// against the collapsed card's countdown and against the status bar's blink. Sampling
+    /// finely means it flips on the real boundary, which is what everything else uses.
+    @State private var tick: Double?
+
+    /// Falls back to a live reading so the first frame is right rather than blank.
+    private var remaining: Double { max(-Date().timeIntervalSince(arrivalTime), 0) }
+    private var value: Double { tick ?? remaining }
+
     
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRad, style: .continuous)
@@ -34,12 +41,13 @@ struct TimeBlock: View {
             Text("arrival-string")
                 .font(.system(size: UIScreen.isZoomed ? 30 : 34).weight(.medium))
             HStack(alignment: .bottom){
-                Text( (calcEstTime()>0) ? String(text) : "0")
-                    .font(.system(size: (calcEstTime()>99) ? 45 : UIScreen.isZoomed ? 75 : 80, weight: .bold, design: .monospaced))
+                Text(String(Int(value)))
+                    .font(.system(size: value > 99 ? 45 : UIScreen.isZoomed ? 75 : 80, weight: .bold, design: .monospaced))
+                    .monospacedDigit()
                     .onReceive(
-                        Timer.publish(every: 1, on: .main, in: .common).autoconnect(),
+                        Timer.publish(every: AlertBlink.tick, on: .main, in: .common).autoconnect(),
                         perform: { _ in
-                            self.text = String(calcEstTime())
+                            tick = remaining
                         }
                     )
                 Text("seconds-string")

@@ -86,7 +86,7 @@ private extension AlertView {
                          cardObscuredHeight: cardObscuredHeight,
                          isCollapsed: cardPosition == .bottom)
                 .ignoresSafeArea()
-            ErrorBanner(msgType: msgType, status: status)
+            ErrorBanner(msgType: msgType, status: status, arrivalTime: arrivalTime)
             
             HStack(alignment: .top){
                 Legend(maxIntensityValue: maxIntesityValue)
@@ -139,7 +139,7 @@ private extension AlertView {
             AlertMapView(eventManager: eventManager, cardObscuredHeight: 0,
                          isCollapsed: false)
                 .ignoresSafeArea()
-            ErrorBanner(msgType: msgType, status: status)
+            ErrorBanner(msgType: msgType, status: status, arrivalTime: arrivalTime)
             
             HStack (alignment: .top) {
                 VStack(alignment: .leading, spacing: 10){
@@ -203,6 +203,8 @@ struct AlertView_Previews: PreviewProvider {
 struct ErrorBanner: View {
     var msgType: String?
     var status: String?
+    /// Only so the flash can share AlertBlink's phase with everything else on screen.
+    var arrivalTime: Date = .distantPast
 
     var body: some View {
         let facets = ReportPresentation.facets(status: status, msgType: msgType)
@@ -211,10 +213,10 @@ struct ErrorBanner: View {
             // Both are shown when both apply — a cancelled drill is two facts, and the
             // message half is first because it is what changed.
             if let message = facets.message {
-                SpecialCaseBanner(facet: message)
+                SpecialCaseBanner(facet: message, arrivalTime: arrivalTime)
             }
             if let status = facets.status {
-                SpecialCaseBanner(facet: status)
+                SpecialCaseBanner(facet: status, arrivalTime: arrivalTime)
             }
         }
         .padding(.top, 40)
@@ -226,6 +228,7 @@ struct ErrorBanner: View {
 /// so any longer or localized wording spilled outside its own background.
 private struct SpecialCaseBanner: View {
     let facet: ReportFacet
+    let arrivalTime: Date
 
     /// Flashing is motion, and indefinite flashing is the kind of thing users turn Reduce
     /// Motion on to escape. Honoured rather than overridden — the colour and the wording
@@ -233,10 +236,7 @@ private struct SpecialCaseBanner: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isLit = true
 
-    /// One cycle a second, hard cut, matching the epicenter marker and 已抵達 so that
-    /// everything on this screen that blinks does so together rather than beating.
-    private static let period: TimeInterval = 1.0
-    private static let tick: TimeInterval = 0.1
+
     /// Softer than the 0.15 those two use: a small marker at 0.15 reads as a pulse, a
     /// full-width banner at 0.15 strobes.
     private static let dimOpacity: Double = 0.25
@@ -255,16 +255,12 @@ private struct SpecialCaseBanner: View {
             )
             .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.18), radius: 8, y: 2)
             .opacity(isLit ? 1 : Self.dimOpacity)
-            .onReceive(Timer.publish(every: Self.tick, on: .main, in: .common).autoconnect()) { _ in
+            .onReceive(Timer.publish(every: AlertBlink.tick, on: .main, in: .common).autoconnect()) { _ in
                 guard !reduceMotion else {
                     isLit = true
                     return
                 }
-                // Phase from absolute time rather than a toggle, so two banners shown at
-                // once flash in step instead of drifting apart.
-                let phase = Date().timeIntervalSinceReferenceDate
-                    .truncatingRemainder(dividingBy: Self.period)
-                isLit = phase < Self.period / 2
+                isLit = AlertBlink.isLit(arrivalTime: arrivalTime)
             }
     }
 }
