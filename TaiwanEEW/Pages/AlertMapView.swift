@@ -761,12 +761,9 @@ private struct CustomMapView: UIViewRepresentable {
             // Outlines every tick: repainting two shape layers is a composite, not a redraw.
             redrawWaveOutlines(on: mapView)
 
-            // The fill only when its edge has actually moved on screen, because this one
-            // does go through the tile renderer.
-            if fill.hasMovedEnoughToRedraw() {
-                fill.markDrawn()
-                mapView.renderer(for: fill)?.setNeedsDisplay(fill.invalidationRect)
-            }
+            // Match the outline cadence so the translucent fill stays glued to the border.
+            fill.markDrawn()
+            mapView.renderer(for: fill)?.setNeedsDisplay(fill.invalidationRect)
         }
         
         func endUpdateCircleRadii() {
@@ -810,7 +807,7 @@ private struct CustomMapView: UIViewRepresentable {
 
             let fill = WaveFillOverlay(center: epicenter)
             fillOverlay = fill
-            mapView.addOverlay(fill, level: .aboveRoads)
+            mapView.insertOverlay(fill, at: 0, level: .aboveRoads)
 
             let outlines = WaveFrontLayerView(frame: mapView.bounds)
             outlines.autoresizingMask = [.flexibleWidth, .flexibleHeight]

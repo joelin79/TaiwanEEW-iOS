@@ -13,13 +13,24 @@
 //  composite, which is what per-frame animation actually wants.
 //
 //  The fills stay overlays because they have to be beneath the district polygons, and
-//  nothing outside MapKit's own rendering can be. They are far more forgiving — one
-//  translucent disc at five to ten percent — and are throttled so they only redraw when
-//  the edge has moved far enough on screen to see.
+//  nothing outside MapKit's own rendering can be. They redraw at the same cadence as the
+//  outlines so the translucent disc stays aligned with the visible border.
 //
 
 import MapKit
 import UIKit
+
+private enum WaveFrontPalette {
+    /// Golden amber avoids the map's sea blues and gives the faster P wave a warm warning
+    /// character without going as red as the stronger hazard colours.
+    static let pStroke = UIColor(red: 0.96, green: 0.50, blue: 0.02, alpha: 1)
+    /// Magenta keeps the stronger S wave urgent without reusing the yellow-orange-red
+    /// hazard ramp or the purple used by intensity 7.
+    static let sStroke = UIColor(red: 0.86, green: 0.00, blue: 0.46, alpha: 1)
+
+    static let pFill = pStroke.withAlphaComponent(0.07)
+    static let sFill = sStroke.withAlphaComponent(0.11)
+}
 
 // MARK: - Fills (below the districts)
 
@@ -75,9 +86,9 @@ final class WaveFillRenderer: MKOverlayRenderer {
 
         // The S disc is drawn over the P disc, so the area both waves have reached reads as
         // the stronger of the two rather than the sum of two washes.
-        drawDisc(radius: fill.pRadius, colour: UIColor.yellow.withAlphaComponent(0.05),
+        drawDisc(radius: fill.pRadius, colour: WaveFrontPalette.pFill,
                  centre: fill.coordinate, in: context)
-        drawDisc(radius: fill.sRadius, colour: UIColor.red.withAlphaComponent(0.10),
+        drawDisc(radius: fill.sRadius, colour: WaveFrontPalette.sFill,
                  centre: fill.coordinate, in: context)
     }
 
@@ -104,14 +115,13 @@ final class WaveFillRenderer: MKOverlayRenderer {
 /// Everything here is in screen space, so it has to be recomputed whenever the map moves as
 /// well as whenever the fronts grow — see the coordinator's regionDidChange.
 final class WaveFrontLayerView: UIView {
-    /// Colours chosen to sit in the gaps the intensity ramp leaves in hue space. That ramp
-    /// occupies 0-46° (red through orange to yellow), 115° (green), 218-222° (the blues)
-    /// and 268° (purple). Teal at 183° and magenta at 319° fall in the two wide gaps, and
-    /// are 134° apart from each other so the fronts never read as the same line.
-    private static let pColour = UIColor(red: 0.00, green: 0.62, blue: 0.65, alpha: 1)
-    private static let sColour = UIColor(red: 0.90, green: 0.00, blue: 0.62, alpha: 1)
+    private static let pColour = WaveFrontPalette.pStroke
+    private static let sColour = WaveFrontPalette.sStroke
+    private static let outlineColour = UIColor.white.withAlphaComponent(0.92)
 
+    private let pOutlineLayer = CAShapeLayer()
     private let pLayer = CAShapeLayer()
+    private let sOutlineLayer = CAShapeLayer()
     private let sLayer = CAShapeLayer()
 
     override init(frame: CGRect) {
@@ -119,6 +129,13 @@ final class WaveFrontLayerView: UIView {
         backgroundColor = .clear
         // Purely a drawing surface laid over the map; every touch belongs to the map.
         isUserInteractionEnabled = false
+
+        for shape in [pOutlineLayer, sOutlineLayer] {
+            shape.fillColor = UIColor.clear.cgColor
+            shape.strokeColor = Self.outlineColour.cgColor
+            shape.lineWidth = 5
+            layer.addSublayer(shape)
+        }
 
         for (shape, colour) in [(pLayer, Self.pColour), (sLayer, Self.sColour)] {
             shape.fillColor = UIColor.clear.cgColor
@@ -154,7 +171,9 @@ final class WaveFrontLayerView: UIView {
         // drawn circle trails the real front instead of tracking it.
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        pOutlineLayer.path = p
         pLayer.path = p
+        sOutlineLayer.path = s
         sLayer.path = s
         CATransaction.commit()
     }
