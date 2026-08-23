@@ -20,6 +20,19 @@
 
 import SwiftUI
 
+/// What the header shows opposite the magnitude: an optional coloured prefix, the text
+/// itself, and a badge when the report is out of the ordinary.
+struct ReportTitle {
+    let prefix: String?
+    let text: String
+    let badge: ReportBadge?
+
+    /// Orange-red, deliberately outside the intensity ramp. This labels the kind of
+    /// message, not how hard it will shake, and the ramp already owns 0–46° for severity.
+    /// Warm enough to read as an alert without claiming a level.
+    static let prefixColor = Color(red: 0.90, green: 0.31, blue: 0.16)
+}
+
 /// The colours a special-case label is drawn in. Foreground is carried with background
 /// rather than assumed white: Caution is amber and needs dark text on it.
 struct ReportBadge {
@@ -58,7 +71,7 @@ enum ReportPresentation {
     static func headerTitle(status: String?,
                             msgType: String?,
                             eqSeq: Int,
-                            isDebugBuild: Bool = TaiwanEEWApp.DEBUG) -> (title: String, badge: ReportBadge?) {
+                            isDebugBuild: Bool = TaiwanEEWApp.DEBUG) -> ReportTitle {
         let facets = facets(status: status, msgType: msgType, isDebugBuild: isDebugBuild)
 
         switch (facets.status, facets.message) {
@@ -66,13 +79,20 @@ enum ReportPresentation {
             // Both true at once, so both are shown. The colour follows status: whether the
             // message is real is the fact that must never be misread, and a cancelled
             // drill is still a drill.
-            return ("\(statusFacet.short)・\(messageFacet.short)", statusFacet.badge)
+            return ReportTitle(prefix: nil,
+                               text: "\(statusFacet.short)・\(messageFacet.short)",
+                               badge: statusFacet.badge)
         case let (statusFacet?, nil):
-            return (statusFacet.label, statusFacet.badge)
+            return ReportTitle(prefix: nil, text: statusFacet.label, badge: statusFacet.badge)
         case let (nil, messageFacet?):
-            return (messageFacet.label, messageFacet.badge)
+            return ReportTitle(prefix: nil, text: messageFacet.label, badge: messageFacet.badge)
         case (nil, nil):
-            return ("第 \(eqSeq) 報", nil)
+            // Only the ordinary report carries the prefix. The special cases already say
+            // what kind of message they are, and saying 預警 in front of 預警取消 would be
+            // both redundant and contradictory.
+            return ReportTitle(prefix: String(localized: "report-prefix-string"),
+                               text: "第 \(eqSeq) 報",
+                               badge: nil)
         }
     }
 
@@ -147,7 +167,7 @@ enum ReportPresentation {
                     ErrorBanner(msgType: msgType, status: status)
                         .padding(.top, -40)
                     Text(ReportPresentation.headerTitle(status: status, msgType: msgType,
-                                                        eqSeq: 3, isDebugBuild: false).title)
+                                                        eqSeq: 3, isDebugBuild: false).text)
                         .font(.system(size: 18).bold())
                 }
             }

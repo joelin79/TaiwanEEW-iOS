@@ -50,6 +50,7 @@
 "alert-status-2-string" = "地 震 情 報";
 "alert-status-3-string" = "緊 急 地 震 速 報";
 "alert-safety-advice-string" = "まず低く、頭を守り、動かない";
+"report-prefix-string" = "速報";
 
 // Intensity Block
 "intensity-string" = "推定震度";

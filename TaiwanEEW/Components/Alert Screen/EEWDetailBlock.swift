@@ -120,7 +120,7 @@ struct EEWDetailBlock: View {
         }
     }
 
-    private var report: (title: String, badge: ReportBadge?) {
+    private var report: ReportTitle {
         ReportPresentation.headerTitle(status: status, msgType: msgType, eqSeq: eqSeq)
     }
 
@@ -205,14 +205,23 @@ private struct EEWDetailHeaderLocation: View {
 }
 
 struct EEWDetailHeaderReport: View {
-    let report: (title: String, badge: ReportBadge?)
+    let report: ReportTitle
+
+    private var font: Font {
+        .system(size: UIScreen.isZoomed ? 12 : 18)
+    }
 
     var body: some View {
-        Text(report.title)
-            .foregroundStyle(report.badge?.foreground ?? Color("TimeText"))
-            .font(report.badge == nil
-                  ? .system(size: UIScreen.isZoomed ? 12 : 18)
-                  : .system(size: UIScreen.isZoomed ? 12 : 18).bold())
+        HStack(spacing: 4) {
+            if let prefix = report.prefix {
+                Text(prefix)
+                    .font(font.bold())
+                    .foregroundStyle(ReportTitle.prefixColor)
+            }
+            Text(report.text)
+                .foregroundStyle(report.badge?.foreground ?? Color("TimeText"))
+                .font(report.badge == nil ? font : font.bold())
+        }
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             // Padding only when there is something to pad against, so an ordinary report

@@ -49,6 +49,7 @@
 "alert-status-2-string" = "Earthquake Warning";
 "alert-status-3-string" = "Earthquake Alert";
 "alert-safety-advice-string" = "Drop, Cover, Hold On";
+"report-prefix-string" = "Alert";
 
 // Intensity Block
 "intensity-string" = "Intensity";
