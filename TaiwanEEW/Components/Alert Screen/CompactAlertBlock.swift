@@ -68,13 +68,21 @@ struct CompactAlertBlock: View {
     /// intensity. maxWidth .infinity is what makes that true — without it the row sizes
     /// to its content and the Spacer has nothing to push against.
     var body: some View {
-        HStack(spacing: 8) {
-            intensityPill
-            context
-            Spacer(minLength: 6)
-            countdownPill
+        VStack(spacing: AlertBlockMetrics.blockGap) {
+            // The same bar the expanded card shows, above the row for the same reason it
+            // sits above the blocks there. Collapsing should not cost the one line that
+            // says whether anything is happening at all — and while an alert is live this
+            // is what carries 趴下、掩護、穩住, which is the last thing to drop.
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
+
+            HStack(spacing: 8) {
+                intensityPill
+                context
+                Spacer(minLength: 6)
+                countdownPill
+            }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
         // Matches EEWDetailBlock so collapsed and expanded content sit on the same edges.
         .padding(.horizontal, AlertBlockMetrics.edgeInset)
     }
@@ -193,8 +201,7 @@ private struct CountdownPill: View {
     private static let flashWindow: TimeInterval = 15
 
     /// One full cycle a second, matching the map's epicenter blink, so the two pieces of
-    /// attention-grabbing UI stay in step rather than beating against each other. The map
-    /// eases between its two values; this one cuts.
+    /// attention-grabbing UI stay in step rather than beating against each other.
     private static let flashPeriod: TimeInterval = 1.0
     private static let dimOpacity: Double = 0.30
 
