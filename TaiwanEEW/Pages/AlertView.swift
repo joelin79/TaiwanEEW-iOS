@@ -4,6 +4,10 @@
 //
 //  Created by Joe Lin on 2022/7/5.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this part 新增字串的英文及日文翻譯
+///
+
 
 import SwiftUI
 import XMLCoder
@@ -155,14 +159,14 @@ struct ErrorBanner: View {
     var body: some View {
         VStack {
             if(msgType?.lowercased() == "cancel"){
-                Text("警報取消 \nCanceled")
+                Text("alert-canceled")
                     .font(.system(size: 40).bold())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .background(Rectangle().frame(width: 190, height: 120).foregroundStyle(.brown))
                     .frame(maxWidth: .infinity)
             } else if (msgType?.lowercased() == "error"){
-                Text("錯誤報 \nError")
+                Text("alert-false")
                     .font(.system(size: 40).bold())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
@@ -171,21 +175,21 @@ struct ErrorBanner: View {
             }
             
             if(status?.lowercased() == "exercise"){
-                Text("演練 \nDrill")
+                Text("alert-drill")
                     .font(.system(size: 50).bold())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .background(Rectangle().frame(width: 120, height: 120).foregroundStyle(.pink))
                     .frame(maxWidth: .infinity)
             } else if (status?.lowercased() == "test" && !TaiwanEEWApp.DEBUG){
-                Text("測試 \nTest")
+                Text("alert-test")
                     .font(.system(size: 50).bold())
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .background(Rectangle().frame(width: 120, height: 120).foregroundStyle(.green))
                     .frame(maxWidth: .infinity)
             } else if (status?.lowercased() == "system"){
-                Text("系統 \nSystem")
+                Text("alert-sys")
                     .font(.system(size: 50).bold())
                     .foregroundStyle(.green)
                     .multilineTextAlignment(.center)

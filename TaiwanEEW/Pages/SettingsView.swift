@@ -4,6 +4,9 @@
 //
 //  Created by Joe Lin on 2022/7/8.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added most missing localizations for this tab, including the cities ones 新增大部分字串的英文及日文翻譯，包括縣市城鎮的翻譯
+///
 
 import SwiftUI
 import UserNotifications
@@ -88,14 +91,14 @@ struct SettingsView: View {
     /// degrades delivery in a way the user would not otherwise see until an earthquake.
     private func notificationIssues(_ s: UNNotificationSettings) -> [String] {
         guard isNotificationAllowed(s) else {
-            return ["通知權限已關閉，將無法接收地震預警"]
+            return ["notification-issue-unallowed".localized]
         }
         var issues: [String] = []
         if s.criticalAlertSetting == .disabled {
-            issues.append("「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響")
+            issues.append("notification-issue-critical".localized)
         }
         if s.timeSensitiveSetting == .disabled {
-            issues.append("「時效性通知」已關閉：通知可能不會即時顯示")
+            issues.append("notification-issue-time-sensitive".localized)
         }
         return issues
     }
@@ -105,9 +108,9 @@ struct SettingsView: View {
     /// "啟用" would read as a contradiction.
     private func notificationHeadline(_ s: UNNotificationSettings) -> String {
         switch s.authorizationStatus {
-        case .denied:        return "通知權限已關閉"
-        case .notDetermined: return "尚未取得通知權限"
-        default:             return notificationIssues(s).isEmpty ? "已取得通知權限" : "通知權限不完整"
+        case .denied:        return "notification-issue-unallowed-headline".localized
+        case .notDetermined: return "notification-issue-notsetup".localized
+        default:             return notificationIssues(s).isEmpty ? "notification-perm-ok".localized : "notification-perm-incomplete".localized
         }
     }
 
@@ -147,22 +150,22 @@ struct SettingsView: View {
 
     private var autoLocationHeadline: String {
         switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return "自動定位運作中"
-        case .authorizedWhenInUse: return "自動定位僅前景可用"
-        case .denied, .restricted: return "自動定位無法運作"
-        case .notDetermined:       return "尚未取得位置權限"
-        @unknown default:          return "自動定位狀態不明"
+        case .authorizedAlways:    return "autoloc-ok".localized
+        case .authorizedWhenInUse: return "autoloc-issue-fore-only".localized
+        case .denied, .restricted: return "autoloc-issue-denied".localized
+        case .notDetermined:       return "autoloc-issue-notsetup".localized
+        @unknown default:          return "autoloc-issue-unknown".localized
         }
     }
 
     private var autoLocationStatusDetail: String {
         switch locationManager.authorizationStatus {
-        case .authorizedAlways:    return "背景更新已啟用"
-        case .authorizedWhenInUse: return "僅在開啟App時更新，需要「一律允許」才能在背景自動切換區域"
-        case .denied:              return "位置權限已關閉，無法取得您的位置"
-        case .restricted:          return "位置權限受到限制，無法取得您的位置"
-        case .notDetermined:       return "尚未授予位置權限，無法取得您的位置"
-        @unknown default:          return "無法判斷位置權限狀態"
+        case .authorizedAlways:    return "autoloc-ok-always".localized
+        case .authorizedWhenInUse: return "autoloc-foreground-only-detail".localized
+        case .denied:              return "autoloc-denied-detail".localized
+        case .restricted:          return "autoloc-restricted-detail".localized
+        case .notDetermined:       return "autoloc-notsetup-detail".localized
+        @unknown default:          return "autoloc-unknown-detail".localized
         }
     }
 
@@ -283,11 +286,11 @@ struct SettingsView: View {
                     .font(.system(size: 32))
                 Spacer()
                 VStack(alignment: .leading) {
-                    Text("應援台灣地震速報")
+                    Text("donate-eew-string")
                         .font(.title3.bold())
                         .opacity(0.9)
 
-                    Text("您可以透過小額贊助減輕開發者花費負擔，\n讓應用程式永續經營！")
+                    Text("donate-eew-detail-string")
                         .font(.caption)
                         .opacity(0.9)
                 }
@@ -308,11 +311,11 @@ struct SettingsView: View {
             header:
                 HStack{
                     Image(systemName: "location.fill")
-                    Text("自動定位")
+                    Text("autoloc")
                 },
-            footer: Text("啟用後將自動根據您的位置選擇最近的地震通知區域(距離最近的震度參考點未必在您所在的區域界內)。需要「永遠」位置權限以啟用背景更新。"))
+            footer: Text("autoloc-footer"))
         {
-            Toggle("啟用自動定位", isOn: $locationManager.isAutoLocationEnabled)
+            Toggle("autoloc-enable-toggle", isOn: $locationManager.isAutoLocationEnabled)
                 .onChange(of: locationManager.isAutoLocationEnabled) { isEnabled in
                     if isEnabled {
                         locationManager.updateLocationManually()
@@ -331,16 +334,16 @@ struct SettingsView: View {
                             let districtName = Location.cities[cityIndex].district[districtIndex].districtName
                             let distanceKm = String(format: "%.1f", distance / 1000)
                             HStack {
-                                Text("最近震度參考點：\(districtName)")
+                                Text("最近震度參考點：\(districtName)") // localized as Text objects utilize catalog automatically
                                     .font(.caption)
-                                Text("(\(distanceKm) 公里)")
+                                Text("(\(distanceKm) 公里)") // again, localized automatically and implicitly; set up the interpolated keys in string catalog as %lf
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
                         } else if canFetchLocation {
                             // Only claim we are working on it when permission actually allows it;
                             // otherwise the status line below explains what is blocking.
-                            Text("正在取得位置...")
+                            Text("loc-acquire")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -358,19 +361,19 @@ struct SettingsView: View {
                 // user where the problem is actually fixable instead.
                 switch locationManager.authorizationStatus {
                 case .denied, .restricted:
-                    Button("前往設定開啟位置權限") {
+                    Button("open-app-settings-for-loc-denied".localized) {
                         openAppSettings()
                     }
                     .foregroundColor(.blue)
                 case .authorizedWhenInUse:
-                    Button("前往設定選擇「一律允許」") {
+                    Button("open-app-settings-for-loc-fore".localized) {
                         openAppSettings()
                     }
                     .foregroundColor(.blue)
                 case .notDetermined:
                     // updateLocationManually() requests permission in this state rather
                     // than refreshing, so label it for what it actually does.
-                    Button("允許位置權限") {
+                    Button("open-app-settings-for-loc-notsetup".localized) {
                         locationManager.updateLocationManually()
                     }
                     .foregroundColor(.blue)
@@ -394,7 +397,7 @@ struct SettingsView: View {
                     Image(systemName: "mappin.circle.fill")
                     Text("alerts-pref-string")
                 },
-            footer: isAutoLocationActive ? Text("自動定位運作中，無法手動選擇地區") : Text("notice1-string"))
+            footer: isAutoLocationActive ? Text("auto-cant-manual-footer") : Text("notice1-string"))
         {
             if isAutoLocationActive {
                 HStack {
@@ -411,35 +414,35 @@ struct SettingsView: View {
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("北部")
+                            Text("north-region")
                         }
                         Section {
                             ForEach(6..<11, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("中部")
+                            Text("central-region")
                         }
                         Section {
                             ForEach(11..<16, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("南部")
+                            Text("south-region")
                         }
                         Section {
                             ForEach(16..<19, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("東部")
+                            Text("east-region")
                         }
                         Section {
                             ForEach(19..<Location.cities.count, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("離島")
+                            Text("island-regions")
                         }
                     }
                     .onChange(of: subscribedCityIndex) { value in
@@ -508,7 +511,7 @@ struct SettingsView: View {
                         .foregroundStyle(.red)
                     // Reads as a fix-this action while something is wrong, and as a plain
                     // settings shortcut once everything is in order.
-                    Text(notificationNeedsAttention ? "修正強制警報設定" : "強制警報設定")
+                    Text(notificationNeedsAttention ? "critnotif-fix" : "critnotif-set")
                         .foregroundStyle(.blue)
                 }
             }
@@ -527,7 +530,7 @@ struct SettingsView: View {
             header:
                 HStack{
                     Image(systemName: "questionmark.bubble.fill")
-                    Text("產品公告／意見回饋")
+                    Text("feedback-header")
                 })
         {
             Link(destination: AppLinks.discord){
@@ -537,9 +540,9 @@ struct SettingsView: View {
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                         
-                    Text("Discord 官方社群").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("discord").frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(.blue)
-                    Text("意見回饋主要管道")
+                    Text("discord-detail")
                         .font(.caption)
                         .foregroundStyle(.gray)
                 }
@@ -551,7 +554,7 @@ struct SettingsView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                        Text("Threads 官方帳號").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("threads").frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundStyle(.blue)
                     }
                 }
@@ -577,7 +580,7 @@ struct SettingsView: View {
                     .padding(.bottom, 5)
                 Text("版本 \(appVersion ?? "n/a") (\(buildNumber ?? "n/a"))")
                     .font(.system(size: 18).monospaced())
-                Text("林子祐製作、版權所有 ")
+                Text("林子祐製作、版權所有")
                     .font(.system(size: 18))
                 HStack{
                     Text("中央氣象署合作對象")
@@ -612,7 +615,7 @@ struct SettingsView: View {
                 HStack{
                     Image(systemName: "globe")
                         .foregroundStyle(.indigo)
-                    Text("語言、位置權限設定")
+                    Text("lang-loc-settings")
                         .foregroundStyle(.blue)
                 }
             }
@@ -661,7 +664,7 @@ struct SettingsView: View {
                     .foregroundStyle(.gray)
                     .multilineTextAlignment(.trailing)
                     .opacity(copiedItem == title ? 0 : 1)
-                Text("已複製")
+                Text("copied")
                     .foregroundStyle(.green)
                     .opacity(copiedItem == title ? 1 : 0)
             }
@@ -691,7 +694,7 @@ struct SettingsView: View {
                     Form {
                         formContent
                     }
-                    .navigationTitle("設定 Settings")
+                    .navigationTitle("tab-set-header".localized)
                     .toolbarBackground(Color(.clear), for: .navigationBar)
                     .modifier(NavigationModifier(selectedCityIndex: $subscribedCityIndex, selectedDistrictIndex: $subscribedDistrictIndex, locationManager: locationManager))
                 }
@@ -701,7 +704,7 @@ struct SettingsView: View {
                     Form {
                         formContent
                     }
-                    .navigationTitle("設定 Settings")
+                    .navigationTitle("tab-set-header".localized)
                     .modifier(NavigationModifier(selectedCityIndex: $subscribedCityIndex, selectedDistrictIndex: $subscribedDistrictIndex, locationManager: locationManager))
                 }
             }
@@ -735,8 +738,8 @@ struct NavigationModifier: ViewModifier {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView().environment(\.locale, Locale.init(identifier: "zh-Hant"))
-        //SettingsView().environment(\.locale, Locale.init(identifier: "en"))
+//        SettingsView().environment(\.locale, Locale.init(identifier: "zh-Hant"))
+        SettingsView().environment(\.locale, Locale.init(identifier: "en"))
         //SettingsView().environment(\.locale, Locale.init(identifier: "ja"))
     }
 }

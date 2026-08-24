@@ -4,6 +4,9 @@
 //
 //  Created by 林子祐 on 2024/7/5.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this part 新增字串的英文及日文翻譯
+///
 
 import SwiftUI
 import XMLCoder
@@ -86,17 +89,17 @@ struct EEWDetailBlock: View {
             HStack(alignment: .lastTextBaseline){
                 var title: String {
                     if(status == "exercise"){
-                        return "演練 Drill"
+                        return "alert-drill".localized
                     } else if(status == "test" && !TaiwanEEWApp.DEBUG){
-                        return "測試中 Testing"
+                        return "alert-test".localized
                     } else if (msgType == "system") {
-                        return "系統 System"
+                        return "alert-sys".localized
                     } else if(msgType == "cancel"){
-                        return "預警取消 Canceled"
+                        return "alert-canceled".localized
                     } else if(msgType == "error"){
-                        return "預警錯誤 Error"
+                        return "alert-false".localized
                     } else {
-                        return NSLocalizedString("地震速報", comment: "")     // localize "alert-title-string"
+                        return "alert-title-string".localized   // localize "alert-title-string"
                     }
                 }
                 Text(title).font(.system(size: UIScreen.isZoomed ? 23 : 28).bold())
@@ -123,7 +126,7 @@ struct EEWDetailBlock: View {
             }
             
             HStack(alignment: .firstTextBaseline){
-                Text("\(originTimeFormattedStr) 發生")
+                Text("\(originTimeFormattedStr) 發生") // translated!
 //                    .offset(y:3)
                     .foregroundStyle(Color("TimeText"))
                     .font(.system(size: UIScreen.isZoomed ? 12 : 18))
@@ -196,21 +199,21 @@ struct EEWDetailBlock: View {
     
     func fetchOceanData(lat: Double, lon: Double)-> String {
         if(lat >= 24.31343 && lon >= 121.76857){
-            return "東北部海域"
+            return "NE-sea".localized
         }
         if(lat >= 23.43494 && lat <= 24.31343 && lon >= 121){
-            return "東部海域"
+            return "E-sea".localized
         }
         if(lat >= 22.24595 && lat <= 23.43494 && lon >= 120.79958){
-            return "東南部海域"
+            return "SE-sea".localized
         }
         if(lat >= 24.73429 && lon <= 121.76857){
-            return "北部海域"
+            return "N-sea".localized
         }
         if(lat >= 23.53352 && lat <= 24.73429 && lon <= 121){
-            return "中部海域"
+            return "C-sea".localized
         }
-        return "南部海域"
+        return "S-sea".localized
     }
 }
 
