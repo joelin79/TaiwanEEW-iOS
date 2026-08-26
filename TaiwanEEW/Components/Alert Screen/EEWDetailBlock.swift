@@ -23,6 +23,7 @@ struct EEWDetailBlock: View {
     var msgType: String? {eventManager.event.last?.msgType.lowercased()}
     
     @State private var locationName: String? = nil
+    @State private var clockTick = Date()
     var maxInt: String {eventManager.maxIntensity}
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
@@ -40,12 +41,37 @@ struct EEWDetailBlock: View {
     }()
     
     var originTimeFormattedStr: String {
+        originTimeFormattedStr(now: clockTick)
+    }
+
+    private func originTimeFormattedStr(now: Date) -> String {
+        let elapsed = now.timeIntervalSince(originTime)
+        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, now: now),
+           elapsed >= 0,
+           elapsed < 120 {
+            let totalSeconds = Int(elapsed.rounded(.down))
+            let minutes = totalSeconds / 60
+            let seconds = totalSeconds % 60
+            if minutes == 0 {
+                return "\(seconds) 秒前"
+            }
+            return "\(minutes) 分 \(seconds) 秒前"
+        }
+
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 8 * 3600)
-        
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let eventYear = Calendar.current.component(.year, from: originTime)
-        
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = dateFormatter.timeZone
+
+        if calendar.isDate(originTime, inSameDayAs: now) {
+            dateFormatter.dateFormat = " HH:mm:ss"
+            return String(localized: "today-string") + dateFormatter.string(from: originTime)
+        }
+
+        let currentYear = calendar.component(.year, from: now)
+        let eventYear = calendar.component(.year, from: originTime)
+
         if currentYear == eventYear {
             dateFormatter.dateFormat = "MM/dd HH:mm:ss"
         } else {
@@ -97,6 +123,9 @@ struct EEWDetailBlock: View {
             updateLocationName()
         }.onChange(of: [lonB, latB]) { _ in
             updateLocationName()
+        }
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now in
+            clockTick = now
         }
     }
 

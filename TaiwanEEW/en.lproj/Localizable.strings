@@ -59,6 +59,7 @@
 
 // Time Block
 "arrival-string" = "Arrival";
+"countdown-string" = "Countdown";
 "seconds-string" = "sec";
 
 // Event Info Block

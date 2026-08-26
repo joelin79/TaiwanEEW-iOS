@@ -60,6 +60,7 @@
 
 // Time Block
 "arrival-string" = "抵達";
+"countdown-string" = "倒數";
 "seconds-string" = "秒";
 
 // Event Info Block

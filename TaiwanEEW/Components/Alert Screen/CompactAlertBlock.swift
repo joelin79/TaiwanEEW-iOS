@@ -89,8 +89,6 @@ struct CompactAlertBlock: View {
 
     private var intensityPill: some View {
         StatPill(borderColor: intensityBorder) {
-            Text("compact-intensity-prefix")
-                .font(.system(size: PillMetrics.label).weight(.medium))
             Text(intensityParts.value)
                 .font(PillMetrics.intensityValueFont.monospaced())
                 .foregroundColor(compactIntensityColor)
@@ -232,10 +230,10 @@ private struct CountdownPill: View {
             if hasArrived {
                 // Set at the digit's size so the pill keeps the same height, and it comes
                 // out narrower than the counting state rather than wider.
-                Text("已抵達")
+                Text("抵達")
                     .font(.system(size: PillMetrics.value, weight: .bold))
             } else {
-                Text("arrival-string")
+                Text("countdown-string")
                     .font(.system(size: PillMetrics.label).weight(.medium))
                 // monospacedDigit rather than design: .monospaced. The monospaced *design*
                 // gives the decimal point a full digit-width advance, which left it

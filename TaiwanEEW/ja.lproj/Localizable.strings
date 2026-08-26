@@ -60,6 +60,7 @@
 
 // Time Block
 "arrival-string" = "到着";
+"countdown-string" = "カウント";
 "seconds-string" = "秒";
 
 // Event Info Block
