@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		43CF0A8D30334AD600893C20 /* U District, Seattle.gpx in Resources */ = {isa = PBXBuildFile; fileRef = 43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */; };
 		B421FE742C88AFEA0096A776 /* XMLCoder in Frameworks */ = {isa = PBXBuildFile; productRef = B421FE732C88AFEA0096A776 /* XMLCoder */; };
 		B4BE165C2C63C61B00C12E80 /* AWSCognitoAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165B2C63C61B00C12E80 /* AWSCognitoAuth */; };
 		B4BE165E2C63C61B00C12E80 /* AWSCognitoIdentityProvider in Frameworks */ = {isa = PBXBuildFile; productRef = B4BE165D2C63C61B00C12E80 /* AWSCognitoIdentityProvider */; };
@@ -61,6 +60,7 @@
 /* Begin PBXFileReference section */
 		431167743036C83800493ECA /* Broadview, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Broadview, Seattle.gpx"; sourceTree = "<group>"; };
 		4367F7D83018523F00E034CF /* TaiwanEEWTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TaiwanEEWTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		43B27CA2303FE75F00C2EF61 /* Greenlake, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "Greenlake, Seattle.gpx"; sourceTree = "<group>"; };
 		43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "U District, Seattle.gpx"; sourceTree = "<group>"; };
 		B40038EC28743FAB0095D49F /* TaiwanEEW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TaiwanEEW.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C0A1F160C0A1F160C0A1F160 /* Config/Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Local.xcconfig; sourceTree = "<group>"; };
@@ -169,6 +169,7 @@
 			children = (
 				431167743036C83800493ECA /* Broadview, Seattle.gpx */,
 				43CF0A8C30334AD600893C20 /* U District, Seattle.gpx */,
+				43B27CA2303FE75F00C2EF61 /* Greenlake, Seattle.gpx */,
 				C7F707F72E6A70E5004D34D0 /* TaiwanEEW */,
 				C73F779B2EFFE5430008B936 /* TaiwanEEWServiceExtension */,
 				4367F7D93018523F00E034CF /* TaiwanEEWTests */,
@@ -338,7 +339,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43CF0A8D30334AD600893C20 /* U District, Seattle.gpx in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -570,7 +570,7 @@
 				CODE_SIGN_ENTITLEMENTS = TaiwanEEW/TaiwanEEW.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"TaiwanEEW/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -614,7 +614,7 @@
 				CODE_SIGN_ENTITLEMENTS = TaiwanEEW/TaiwanEEW.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"TaiwanEEW/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -658,7 +658,7 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -694,7 +694,7 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
