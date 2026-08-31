@@ -49,13 +49,18 @@
 "alert-status-1-string" = "目前無發布地震資訊";
 "alert-status-2-string" = "地 震 通 報 發 表 中";
 "alert-status-3-string" = "緊 急 地 震 速 報";
+"alert-safety-advice-string" = "趴 下 、 掩 護 、 穩 住";
+"report-prefix-string" = "預警";
 
 // Intensity Block
 "intensity-string" = "預估震度";
 "intensity-sub-string" = "級";
+"compact-intensity-prefix" = "預估";
+"compact-intensity-unit" = "級";
 
 // Time Block
 "arrival-string" = "抵達";
+"countdown-string" = "倒數";
 "seconds-string" = "秒";
 
 // Event Info Block
@@ -112,3 +117,46 @@
 "nav-history-string" = "歷史";
 "nav-donate-string" = "贊助";
 "nav-settings-string" = "設定";
+
+// MARK: - Onboarding
+"onboarding-title-string" = "開始設定";
+"onboarding-continue-string" = "開始使用";
+"onboarding-decline-string" = "不使用自動定位";
+"auto-location-string" = "自動定位";
+"auto-location-desc-string" = "自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。";
+"manual-region-title-string" = "選擇通知區域";
+"manual-region-desc-string" = "無法取得位置權限，請手動選擇您所在的區域。可稍後至「設定」重新開啟位置權限，改用自動定位。";
+"city-string" = "縣市";
+"district-string" = "地區";
+
+// MARK: - Permission status (shared by Settings and onboarding)
+"fix-critical-alert-settings-string" = "修正強制警報設定";
+"critical-alert-settings-string" = "強制警報設定";
+"nearest-reference-point-string" = "最近震度參考點：%@ (%@ 公里)";
+"locating-string" = "正在取得位置...";
+"open-location-settings-string" = "前往設定開啟位置權限";
+"choose-always-allow-string" = "前往設定選擇「一律允許」";
+"allow-location-string" = "允許位置權限";
+
+// MARK: - Notification permission
+"notif-checking-string" = "正在檢查通知權限...";
+"notif-denied-string" = "通知權限已關閉";
+"notif-notdetermined-string" = "尚未取得通知權限";
+"notif-allowed-string" = "已取得通知權限";
+"notif-incomplete-string" = "通知權限不完整";
+"notif-denied-issue-string" = "通知權限已關閉，將無法接收地震預警";
+"notif-critical-off-string" = "「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響";
+"notif-timesensitive-off-string" = "「時效性通知」已關閉：通知可能不會即時顯示";
+
+// MARK: - Location permission
+"loc-always-string" = "自動定位運作中";
+"loc-wheninuse-string" = "自動定位僅前景可用";
+"loc-denied-string" = "自動定位無法運作";
+"loc-notdetermined-string" = "尚未取得位置權限";
+"loc-unknown-string" = "自動定位狀態不明";
+"loc-always-detail-string" = "背景更新已啟用";
+"loc-wheninuse-detail-string" = "僅在開啟App時更新，需要「一律允許」才能在背景自動切換區域";
+"loc-denied-detail-string" = "位置權限已關閉，無法取得您的位置";
+"loc-restricted-detail-string" = "位置權限受到限制，無法取得您的位置";
+"loc-notdetermined-detail-string" = "尚未授予位置權限，無法取得您的位置";
+"loc-unknown-detail-string" = "無法判斷位置權限狀態";

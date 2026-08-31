@@ -9,70 +9,70 @@ import SwiftUI
 
 struct Legend: View {
     let maxIntensityValue: Int
-    func legendHeight() -> CGFloat {
-        let totalBlock = 20 * maxIntensityValue
-        let maxLable = 10
-        let totalSpacing = 5 * (maxIntensityValue - 1)
-        let padding = 5
-        return CGFloat(totalBlock + maxLable + totalSpacing + padding)
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var panelFill: Color {
+        colorScheme == .light ? .white : Color("Pad")
+    }
+
+    private var displayedIntensities: [Int] {
+        Array((1...min(max(maxIntensityValue, 1), 9)).reversed())
     }
     
     var body: some View {
-        ZStack(alignment: Alignment(horizontal: .center, vertical: .center)){
-            RoundedRectangle(cornerRadius: 6)
-                .frame(width: 28, height: legendHeight() + 3)      // +3 pixels for stroke
-                .foregroundStyle(Color("EqInfoBoarder"))
-            RoundedRectangle(cornerRadius: 5)
-                .frame(width: 25, height: legendHeight())
-                .foregroundStyle(Color("Pad"))
-            VStack(alignment: .center, spacing: 0){
-                Text("Max")
-                    .frame(height: 7, alignment: .center)
-                    .font(.system(size: 9).monospaced().bold())
-                    .padding(.bottom, 3)
-                VStack(alignment: .center, spacing: 5){
-                    ForEach((0...maxIntensityValue).reversed(), id: \.self) { intensity in
-                        if intensity != 0 {
-                            shindoBox(shindo: intensity)
-                        }
-                    }
+        HStack(alignment: .center, spacing: 5) {
+            VStack(spacing: 2) {
+                ForEach(displayedIntensities, id: \.self) { intensity in
+                    LegendColorSwatch(intensity: intensity)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(displayedIntensities, id: \.self) { intensity in
+                    LegendTickLabel(intensity: intensity)
                 }
             }
         }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(panelFill)
+                .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.14), radius: 4, y: 1)
+        )
     }
 }
 
-struct shindoBox: View {
-    let shindo: String
-    
-    init(shindo: Int){
-        self.shindo = EEWService.intensityValueToString(int: shindo)
+private struct LegendColorSwatch: View {
+    let intensity: Int
+
+    private var shindo: String {
+        EEWService.intensityValueToString(int: intensity)
     }
-    
+
     var body: some View {
-        ZStack{
-            RoundedRectangle(cornerRadius: 3)
-                .frame(width: 20, height: 20)
-                .foregroundStyle(Color(shindo))
-            if (Int(shindo.prefix(1))! == 5 || Int(shindo.prefix(1))! == 6) {
-                HStack(alignment: .center ,spacing: 0){
-                    Text(shindo.prefix(1))
-                    Text(shindo.suffix(1).replacingOccurrences(of: "-", with: "–"))
-                        .offset(y: -2)
-                        
-                }
-                .font(.system(size: 12).bold())
-                .foregroundStyle(.white)
-            } else {
-                Text(shindo)
-                    .font(.system(size: 12).bold())
-                    .foregroundStyle(Int(shindo.prefix(1))!>4 ? .white : .black)
-            }
-                
-        }
+        RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(Color(shindo))
+            .frame(width: 8, height: 14)
+    }
+}
+
+private struct LegendTickLabel: View {
+    let intensity: Int
+
+    private var label: String {
+        EEWService.intensityValueToString(int: intensity)
+            .replacingOccurrences(of: "-", with: "–")
+    }
+
+    var body: some View {
+        Text(label)
+            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+            .foregroundStyle(Color.primary)
+            .frame(height: 14, alignment: .center)
     }
 }
 
 #Preview {
-    Legend(maxIntensityValue: 3)
+    Legend(maxIntensityValue: 9)
 }

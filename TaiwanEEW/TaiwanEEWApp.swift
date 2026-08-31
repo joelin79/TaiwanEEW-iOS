@@ -10,7 +10,6 @@
 import SwiftUI
 import AWSSNS
 import Firebase
-import FirebaseAppCheck
 import RevenueCat
 import UserNotifications
 import BackgroundTasks
@@ -31,7 +30,22 @@ struct TaiwanEEWApp: App {
     @AppStorage("subscribedCityIndex") var subscribedCityIndex: Int = 0
     @AppStorage("subscribedDistrictIndex") var subscribedDistrictIndex: Int = 0
     @AppStorage("isFirstLaunch") var isFirstLaunch: Bool = true
+    // Gates district subscription until the user has actually chosen a region. Existing
+    // installs are migrated to true on launch (see AppDelegate) so upgrades never see
+    // onboarding and never lose their subscription.
+    @AppStorage("hasCompletedOnboarding") var hasCompletedOnboarding: Bool = false
     @AppStorage("notifyThreshold") var notifyThreshold: NotifyThreshold = .eg3
+    // Declared here, though only Settings writes it, so flipping the switch re-evaluates
+    // this body and builds an EventDispatcher pointed at the other collection. The
+    // Firestore listener is attached in that object's initialiser and cannot be moved
+    // afterwards, so a fresh dispatcher is how the feed changes over.
+    @AppStorage("useTestEEWData") var useTestEEWData: Bool = false
+    @State private var didRunMainAppStartup = false
+    // Owned here rather than built inside the body. It used to be constructed inline,
+    // which meant a new one — and a new pair of Firestore listeners that were never
+    // detached — every time this body re-evaluated, which scenePhase alone causes on every
+    // trip to the background.
+    @StateObject private var eventManager = EventDispatcher()
     
     init() {
         Purchases.configure(withAPIKey: AppConfig.revenueCatKey)
@@ -40,83 +54,160 @@ struct TaiwanEEWApp: App {
     var body: some Scene {
         WindowGroup {
             let _ = logger.info("[Init] isFirstLaunch is currently \(isFirstLaunch)")
-            if isFirstLaunch {
-                FirstLaunchView(onDismiss: {
-                    withAnimation {
-                        isFirstLaunch = false
-                    }
-                })
-            } else {
-                TabView {
-                    AlertView(eventManager: EventDispatcher(subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex), subscribedCityIndex: $subscribedCityIndex, subscribedDistrictIndex: $subscribedDistrictIndex, notifyThreshold: $notifyThreshold)
-                        .tabItem {
-                            Label(LocalizedStringKey("nav-alert-string"), systemImage: "exclamationmark.triangle")    // TODO: localization
-                        }
-                    
-                    if TaiwanEEWApp.DEBUG {
-                        HistoryView(viewModel: EarthquakeViewModel())
-                            .tabItem {
-                                Label(LocalizedStringKey("nav-history-string"), systemImage: "chart.bar.doc.horizontal")
-                            }
-                    }
-                    
-                    // Second entry point to donations; the Settings screen still presents
-                    // this same view modally, which is why it takes the dismiss controls
-                    // away here rather than showing a close button with nothing to close.
-                    DonateView(showsDismissControls: false)
-                        .tabItem {
-                            Label(LocalizedStringKey("nav-donate-string"), systemImage: "heart")
-                        }
+            mainTabView(startupEnabled: !isShowingOnboarding)
+                .fullScreenCover(isPresented: onboardingPresentation) {
+                    OnboardingFlowView(
+                        isFirstLaunch: $isFirstLaunch,
+                        onDone: completeOnboarding
+                    )
+                    .interactiveDismissDisabled()
+                }
+                // The dispatcher no longer learns about these by being rebuilt, so it has
+                // to be told. Miss either of these and the intensity maths keeps using the
+                // old district, or the feed keeps reading the old collection — both silent.
+                .onChange(of: subscribedCityIndex) { _ in syncDispatcherDistrict() }
+                .onChange(of: subscribedDistrictIndex) { _ in syncDispatcherDistrict() }
+                .onChange(of: useTestEEWData) { _ in eventManager.restartEventListener() }
+        }
+    }
 
-                    SettingsView(
-                        onHistoryRangeChanged: { newValue in
-                            historyRange = newValue
-                        }, onSubscribedLocChanged: { newValue in
-                            subscribedCityIndex = newValue[0]
-                            subscribedDistrictIndex = newValue[1]
-                            NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
-                        }, onNotifyThresholdChanged: { newValue in
-                            notifyThreshold = newValue
-                            NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
-                        })
-                    .tabItem {
-                        Label(LocalizedStringKey("nav-settings-string"), systemImage: "gear")
-                    }
-                }
-                .onAppear {
-                    // correct the transparency bug for Tab bars
-                    let tabBarAppearance = UITabBarAppearance()
-                    tabBarAppearance.configureWithDefaultBackground()
-                    UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-                    // correct the transparency bug for Navigation bars
-//                    let navigationBarAppearance = UINavigationBarAppearance()
-//                    navigationBarAppearance.configureWithOpaqueBackground()
-//                    UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
-                    
-                    // Validate and recover subscription state
-                    NotificationManager.AWSManager.validateSubscriptionState()
-                    
-                    // Initialize location manager and set up auto-location callback
-                    let locationManager = LocationManager.shared
-                    locationManager.onLocationChanged = { cityIndex, districtIndex in
-                        // Handle auto-location changes through the coordinated path
-                        // This ensures @AppStorage is updated and prevents double subscriptions
-                        DispatchQueue.main.async {
-                            subscribedCityIndex = cityIndex
-                            subscribedDistrictIndex = districtIndex
-                            NotificationManager.setNotifyMode(
-                                cityIndex: cityIndex, 
-                                districtIndex: districtIndex, 
-                                threshold: notifyThreshold
-                            )
-                        }
-                    }
-                }
+    fileprivate static let pageTransition: Animation = .easeInOut(duration: 0.35)
+
+    private var isShowingOnboarding: Bool {
+        isFirstLaunch || !hasCompletedOnboarding
+    }
+
+    private var onboardingPresentation: Binding<Bool> {
+        Binding(
+            get: { isShowingOnboarding },
+            set: { isPresented in
+                guard !isPresented, hasCompletedOnboarding else { return }
+                isFirstLaunch = false
             }
+        )
+    }
+
+    private func syncDispatcherDistrict() {
+        eventManager.updateDistrict(cityIndex: subscribedCityIndex,
+                                    districtIndex: subscribedDistrictIndex)
+    }
+
+    private func completeOnboarding() {
+        isFirstLaunch = false
+        hasCompletedOnboarding = true
+    }
+
+    private func runMainAppStartupIfNeeded(startupEnabled: Bool) {
+        guard startupEnabled, !didRunMainAppStartup else { return }
+        didRunMainAppStartup = true
+
+        // correct the transparency bug for Tab bars
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithDefaultBackground()
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        // correct the transparency bug for Navigation bars
+//            let navigationBarAppearance = UINavigationBarAppearance()
+//            navigationBarAppearance.configureWithOpaqueBackground()
+//            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+
+        // Validate and recover subscription state
+        NotificationManager.AWSManager.validateSubscriptionState()
+
+        // Initialize location manager and set up auto-location callback
+        let locationManager = LocationManager.shared
+        locationManager.onLocationChanged = { cityIndex, districtIndex in
+            // Handle auto-location changes through the coordinated path
+            // This ensures @AppStorage is updated and prevents double subscriptions
+            DispatchQueue.main.async {
+                subscribedCityIndex = cityIndex
+                subscribedDistrictIndex = districtIndex
+                NotificationManager.setNotifyMode(
+                    cityIndex: cityIndex,
+                    districtIndex: districtIndex,
+                    threshold: notifyThreshold
+                )
+            }
+        }
+    }
+
+    private func mainTabView(startupEnabled: Bool) -> some View {
+        TabView {
+            AlertView(
+                eventManager: eventManager,
+                subscribedCityIndex: $subscribedCityIndex,
+                subscribedDistrictIndex: $subscribedDistrictIndex,
+                notifyThreshold: $notifyThreshold,
+                startupEnabled: startupEnabled
+            )
+                .tabItem {
+                    Label(LocalizedStringKey("nav-alert-string"), systemImage: "exclamationmark.triangle")    // TODO: localization
+                }
+
+            if TaiwanEEWApp.DEBUG {
+                HistoryView(viewModel: EarthquakeViewModel())
+                    .tabItem {
+                        Label(LocalizedStringKey("nav-history-string"), systemImage: "chart.bar.doc.horizontal")
+                    }
+            }
+
+            // Second entry point to donations; the Settings screen still presents
+            // this same view modally, which is why it takes the dismiss controls
+            // away here rather than showing a close button with nothing to close.
+            DonateView(showsDismissControls: false)
+                .tabItem {
+                    Label(LocalizedStringKey("nav-donate-string"), systemImage: "heart")
+                }
+
+            SettingsView(
+                onHistoryRangeChanged: { newValue in
+                    historyRange = newValue
+                }, onSubscribedLocChanged: { newValue in
+                    subscribedCityIndex = newValue[0]
+                    subscribedDistrictIndex = newValue[1]
+                    NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
+                }, onNotifyThresholdChanged: { newValue in
+                    notifyThreshold = newValue
+                    NotificationManager.setNotifyMode(cityIndex: subscribedCityIndex, districtIndex: subscribedDistrictIndex, threshold: notifyThreshold)
+                })
+            .tabItem {
+                Label(LocalizedStringKey("nav-settings-string"), systemImage: "gear")
+            }
+        }
+        .onAppear {
+            runMainAppStartupIfNeeded(startupEnabled: startupEnabled)
+        }
+        .onChange(of: startupEnabled) { value in
+            runMainAppStartupIfNeeded(startupEnabled: value)
         }
     }
     
     
+}
+
+private struct OnboardingFlowView: View {
+    @Binding var isFirstLaunch: Bool
+    let onDone: () -> Void
+
+    var body: some View {
+        ZStack {
+            if isFirstLaunch {
+                FirstLaunchView(onDismiss: {
+                    withAnimation(TaiwanEEWApp.pageTransition) {
+                        isFirstLaunch = false
+                    }
+                })
+                .transition(.asymmetric(insertion: .identity,
+                                        removal: .move(edge: .leading)))
+                .zIndex(2)
+            } else {
+                OnboardingPermissionsView(onDone: onDone)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                            removal: .identity))
+                    .zIndex(1)
+            }
+        }
+        .background(Color(.background))
+    }
 }
 
 // MARK: Notification Handling -
@@ -135,14 +226,35 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // MARK: - Did Finish Launching
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         UIApplication.shared.applicationIconBadgeNumber = 0
-        
+
+        // Onboarding targets anyone whose alert region is not already tracking them: brand
+        // new installs, and upgraders still on a hand-picked district who would otherwise
+        // have to discover auto-location in Settings on their own. Users already running
+        // auto-location have nothing to gain from it and are marked done.
+        //
+        // Writing the flag on the very first run also means a user who quits partway
+        // through onboarding finds it already present (as false) on relaunch, so they
+        // resume onboarding instead of being mistaken for someone who finished.
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "hasCompletedOnboarding") == nil {
+            defaults.set(defaults.bool(forKey: "autoLocationEnabled"), forKey: "hasCompletedOnboarding")
+        }
+
         // Register BGTasks as early as possible (before returning from didFinishLaunching)
         LocationManager.registerBackgroundTasks()
 
-        // Install App Check before configuring Firebase so every Firebase request carries an
-        // attestation token. Registered but unenforced in the console for now — see
-        // AppCheckProviderFactory for the enforcement rollout plan.
-        AppCheck.setAppCheckProviderFactory(TaiwanEEWAppCheckProviderFactory())
+        // App Check was installed here and has been removed. Firestore will not issue its
+        // first request until App Check has produced a token, and on this app that took
+        // about five seconds on every cold launch, in Release as well as Debug — the token
+        // was never being cached, which matches the Installations checkin failures in the
+        // logs. So it was not merely slow, it was failing, and had it ever been enforced it
+        // would have cut every client off from Firestore entirely.
+        //
+        // Against that: it was unenforced, so it protected nothing, and what it would have
+        // protected is quota abuse of a public earthquake feed. Five seconds of no live
+        // data, right when someone opens the app because they felt something, is not worth
+        // that. Firestore rules still deny writes and cap list reads; a billing alert
+        // covers runaway usage.
 
         // Configure Firebase and FCM (to disable FCM notification (fuck FCM lmao
         FirebaseApp.configure()
@@ -158,11 +270,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // For iOS 10 display notification (sent via APNS)
         UNUserNotificationCenter.current().delegate = self
-        // Notification Authorization
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound, .criticalAlert]
-        UNUserNotificationCenter.current().requestAuthorization(
-        options: authOptions,
-        completionHandler: {_, _ in })
+        // Notification Authorization.
+        // Onboarding owns the first ask so the prompt appears in context, next to the
+        // explanation, instead of firing before any UI is on screen. Requesting here too
+        // would consume the one-time prompt and leave the onboarding toggle unable to ask.
+        if defaults.bool(forKey: "hasCompletedOnboarding") {
+            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound, .criticalAlert]
+            UNUserNotificationCenter.current().requestAuthorization(
+                options: authOptions,
+                completionHandler: {_, _ in })
+        }
         
         // Setup AWS Cognito credentials
         let credentialsProvider = AWSCognitoCredentialsProvider(
@@ -330,4 +447,3 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
     }
   }
 }
-

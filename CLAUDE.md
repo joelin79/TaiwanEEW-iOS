@@ -18,12 +18,46 @@ Companion backend (separate private repo): `TaiwanEEW-Server-Java`, production r
 
 ## Current Status
 
-Last updated: 2026-08-03
+Last updated: 2026-08-29
 
 - **This is the public, source-available repo** (`joelin79/TaiwanEEW-iOS`). Development happens here. The old `joelin79/TaiwanEEW` is an archived private record of the pre-open-source history. See LICENSE.md — everything committed here is public; never commit secrets or exploit detail.
-- **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed. Next: 2.1.1.
+- **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed.
+- **In progress:** 2.2.0 on `feature/v2.2.0/onboarding`, currently build 4, TestFlight only. `ver2_2_0` SNS topic already created.
 - **Branching:** trunk-based — see the Branching & Naming section below.
 - **Installed base is long-tailed** — users remain on 2.0.4 through 2.0.8. Never assume only the newest client is live; see Compatibility Rules below.
+
+> **Picking this up?** Read `git log --oneline -25` before touching the alert screen. Most
+> of 2.2.0 is a rework of it — map framing, the floating card, the status bar, blink
+> timing — and the commit bodies carry the reasoning, including several bugs that look
+> like tidy code. `NOTES.private.md` (gitignored) holds the live task list and any
+> machine-local blockers.
+
+**A green build means very little in this codebase.** Every layout, gesture and timing bug
+in the 2.2.0 cycle compiled cleanly: a drag gesture measured in a coordinate space its own
+view was moving, a width measurement inflated by the content it was measuring, padding
+applied outside views that already fill their width. Confirm visual changes on a device.
+
+### 2.2.0 so far
+
+Onboarding; the map's user dot, heading cone and wave fronts; Firebase App Check removed
+(see Hardening); map framing split into expanded and collapsed modes with two Settings
+preferences; a new `FloatingAlertCard` for iOS 17+ with `SlideOverCard` frozen for 15–16;
+the alert card's blocks sized to the card rather than the screen; special-case reports
+(drill, test, system, cancel, error) unified in `ReportPresentation`; and `AlertBlink`,
+which puts both countdowns and every blink except the epicenter's on one clock derived
+from the arrival time.
+
+### Known gaps in 2.2.0
+
+- **Epicenter blink stops intermittently** — open, cause not identified. Phase-syncing and
+  self-healing attempts were tried and reverted; it is the original `CABasicAnimation` with
+  `calculationMode = .discrete` added. Identify *when* it drops out before changing it again.
+- **Localization is half-done on the alert screen** and deliberately deferred as one pass:
+  `第 N 報`, 弱/強, 已抵達 and `EpicenterName` are hardcoded Chinese, so English currently
+  reads "Alert 第 3 報". SettingsView's own sections are inline Chinese too.
+- **Dynamic Type is not supported on the alert card, and that is load-bearing.** Fixed font
+  sizes are the only reason content-sized card detents are safe; adopting Dynamic Type
+  requires scroll-on-overflow.
 
 2.1.0 was a large release: it merged ~16 months of unshipped trunk work (auto-location, notification service extension, NotificationManager rewrite) with the 2.0.6–2.0.8 hot-release line that shipped RevenueCat IAP.
 
@@ -59,7 +93,8 @@ Last updated: 2026-08-03
   `TaiwanEEW/GoogleService-Info.plist.example` → `TaiwanEEW/GoogleService-Info.plist`,
   then fill in your own team ID, Firebase, AWS and RevenueCat values. Both real files are
   gitignored. `AppConfig` reads the injected values at runtime and fails loudly if any is missing.
-- App and extension **must** share the same marketing version and build number, or App Store validation rejects the upload. Xcode's Version/Build fields only write the selected target — bump both.
+- App and extension **must** share the same marketing version and build number, or App Store validation rejects the upload. Xcode's Version/Build fields only write the selected target — bump both. The test target keeps its own number.
+- **Build numbers restart at 1 for each marketing version** (2.2.0 build 1, 2, 3…), rather than counting up forever.
 
 ## Architecture Overview
 
@@ -275,7 +310,7 @@ Next release (2.1.1) and ongoing cleanup, roughly in priority order.
 
 ### Hardening
 
-- Firebase App Check — integrate unenforced, monitor verified traffic, enforce only after adoption (enforcing early breaks every client in the field)
+- ~~Firebase App Check~~ — **tried and removed in 2.2.0. Do not reinstate without solving the latency first.** Firestore withholds its first request until App Check yields a token, and on this app that cost about five seconds on *every* cold launch, in Release as well as Debug. The token was never cached, which matches the Installations checkin failures in the logs — so it was failing rather than merely slow, and enforcing it would have cut every client off from Firestore. Weighed against that it protected nothing (it was unenforced) and what it would have protected is quota abuse of a public earthquake feed. Five seconds without live data, at the moment someone opens the app because they felt something, is not a trade worth making. Firestore rules still deny writes and cap list reads; a billing alert covers runaway usage.
 - Add a billing budget alert; tighten the SNS topic subscribe policy (currently allows subscribe from any principal)
 - (Done) Firebase read/write rules locked, Cognito unauthenticated role scoped to the minimum SNS actions
 

@@ -28,6 +28,9 @@ struct ConnectionStatusButton: View {
         : Color(hue: 1.0, saturation: 0.0, brightness: 0.833)
         
     }
+    var panelFill: Color {
+        colorScheme == .light ? .white : Color("Pad")
+    }
     let fontSize = 12
     let todayStr = LocalizedStringKey("today-string").toString()
     var lastPingTime: Date
@@ -50,12 +53,15 @@ struct ConnectionStatusButton: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
-                .fill(Color("Pad"))
+                .fill(panelFill)
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
                         .strokeBorder(Color("EqInfoBoarder"))
                 )
-                .clipped()
+                // Same as the legend opposite it — both float over the map and need the
+                // same lift off it. clipped() is gone with it: a Shape never draws outside
+                // its own bounds, but the clip would have cut the shadow away.
+                .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.14), radius: 4, y: 1)
             VStack (alignment: .trailing) {
                 if !monitor.isConnected {
                     negativeConnection

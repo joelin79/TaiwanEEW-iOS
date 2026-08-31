@@ -13,8 +13,6 @@ import SwiftUI
 import os.log
 
 class EventDispatcher: ObservableObject{
-    @Binding var subscribedCityIndex: Int
-    @Binding var subscribedDistrictIndex: Int
     @Published private(set) var ping: [Ping] = []
     @Published private(set) var lastPingTime: Date = Date(timeIntervalSince1970: 0)
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "EventDispatcher")
@@ -41,12 +39,64 @@ class EventDispatcher: ObservableObject{
     
     let db = Firestore.firestore()
     
-    init(subscribedCityIndex: Binding<Int>, subscribedDistrictIndex: Binding<Int>) {
-        self._subscribedCityIndex = subscribedCityIndex
-        self._subscribedDistrictIndex = subscribedDistrictIndex
-        self.lonA = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].lon
-        self.latA = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].lat
-        self.si = Location.cities[subscribedCityIndex.wrappedValue].district[subscribedDistrictIndex.wrappedValue].si
+    private var eewListener: ListenerRegistration?
+    private var pingListener: ListenerRegistration?
+
+    /// - Parameter startListening: previews pass false so opening a canvas does not attach
+    ///   live Firestore listeners. Defaults to true so the feed can never be left off by
+    ///   forgetting to start it — silence is this object's worst failure mode.
+    init(cityIndex: Int, districtIndex: Int, startListening: Bool = true) {
+        let coordinates = Self.coordinates(cityIndex: cityIndex, districtIndex: districtIndex)
+        self.lonA = coordinates.lon
+        self.latA = coordinates.lat
+        self.si = coordinates.si
+        if startListening {
+            getEvents()
+        }
+    }
+
+    /// Reads the subscribed district straight from UserDefaults, so the app can own one
+    /// long-lived dispatcher without threading bindings through its initialiser.
+    convenience init() {
+        let defaults = UserDefaults.standard
+        self.init(cityIndex: defaults.integer(forKey: "subscribedCityIndex"),
+                  districtIndex: defaults.integer(forKey: "subscribedDistrictIndex"))
+    }
+
+    deinit {
+        eewListener?.remove()
+        pingListener?.remove()
+    }
+
+    /// Falls back to the first district rather than trapping. An index pair that no longer
+    /// resolves — stale defaults, or a district removed from the table — would otherwise
+    /// crash on launch, and a wrong region is recoverable where a crash is not.
+    private static func coordinates(cityIndex: Int, districtIndex: Int) -> (lon: Double, lat: Double, si: Double) {
+        let city = Location.cities.indices.contains(cityIndex) ? Location.cities[cityIndex] : Location.cities[0]
+        let district = city.district.indices.contains(districtIndex) ? city.district[districtIndex] : city.district[0]
+        return (district.lon, district.lat, district.si)
+    }
+
+    /// Repoints the intensity maths at a new district.
+    ///
+    /// Previously this happened by the whole object being rebuilt, which is what made the
+    /// leaked listeners hard to spot: the rebuild was load-bearing rather than incidental.
+    func updateDistrict(cityIndex: Int, districtIndex: Int) {
+        let coordinates = Self.coordinates(cityIndex: cityIndex, districtIndex: districtIndex)
+        guard coordinates.lon != lonA || coordinates.lat != latA || coordinates.si != si else { return }
+        lonA = coordinates.lon
+        latA = coordinates.lat
+        si = coordinates.si
+        logger.info("District changed - recomputing against the new reference point")
+        // The event on screen was computed for the old district, so redo it now rather
+        // than waiting for a document that may not arrive for weeks.
+        applyLatestEvent()
+    }
+
+    /// Reattaches the earthquake listener, for when the collection underneath it changes.
+    func restartEventListener() {
+        eewListener?.remove()
+        eewListener = nil
         getEvents()
     }
     
@@ -103,12 +153,58 @@ class EventDispatcher: ObservableObject{
         }
     }
     
+    /// Which collection the alert feed reads from.
+    ///
+    /// Debug and TestFlight builds can point it at a separate collection so a drill can be
+    /// staged without writing anything into the live one. The diagnostics check is not
+    /// only about hiding the toggle: UserDefaults survives replacing a TestFlight install
+    /// with an App Store one, so without it a tester who left the switch on could end up
+    /// with a release build quietly watching test data and showing no real earthquakes.
+    static var eewCollectionName: String {
+        guard LocationManager.isDiagnosticsAvailable else { return "EEW" }
+        return UserDefaults.standard.bool(forKey: "useTestEEWData") ? "EEW-test" : "EEW"
+    }
+
+    /// Recomputes everything derived from the newest event against the current district.
+    ///
+    /// Called both when a document arrives and when the district changes. Arrival time and
+    /// local intensity are measured from the subscribed district's reference point, so
+    /// moving that point invalidates them just as surely as a new document does — without
+    /// this, a district change would show the previous district's numbers until the next
+    /// document happened to arrive.
+    private func applyLatestEvent() {
+        guard let e = event.last,
+              let arrival = Calendar.current.date(
+                byAdding: .second,
+                value: Int(EEWService.sTime(focalDepth: e.depth, dist: EEWService.dist(latA: latA, lonA: lonA, latB: e.epicenterLat, lonB: e.epicenterLon))),
+                to: e.originTime)
+        else { return }
+
+        arrivalTime = arrival
+        publishedTime = e.sent
+        intensity = EEWService.pgaToIntensity(pga: EEWService.pga(ML: e.magnitudeValue, depth: e.depth, dist: EEWService.dist(latA: latA, lonA: lonA, latB: e.epicenterLat, lonB: e.epicenterLon), Si: si, Padj: e.pgaAdj))
+        eqSeq = e.msgNo
+        magnitude = e.magnitudeValue
+        depth = e.depth
+        originTime = e.originTime
+        lonB = e.epicenterLon
+        latB = e.epicenterLat
+        pgaAdj = e.pgaAdj
+        (maxIntensity, maxIntensityValue) = findMaxIntensity(e: e)
+    }
+
     func getEvents(){
-        
+
         // listening the collection of the selected location
         // TODO: limit data read numbers
-        db.collection("EEW").order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { querySnapshot, error in
-            
+        let collectionName = Self.eewCollectionName
+        logger.info("Listening to EEW collection: \(collectionName)")
+        // Held so it can be detached. Combined with the weak capture below this is what
+        // lets the object deallocate at all: Firestore retains the closure, so a strong
+        // self here kept every dispatcher alive for the life of the process.
+        eewListener = db.collection(collectionName).order(by: "sent", descending: true).limit(to: 1).addSnapshotListener { [weak self] querySnapshot, error in
+            guard let self else { return }
+
             // fetch documents into the "documents" array
             guard let documents = querySnapshot?.documents else {
                 self.logger.error("Error fetching EEW documents: \(String(describing: error))")
@@ -127,26 +223,8 @@ class EventDispatcher: ObservableObject{
             
             // sort Event by `sent` (sent time)
             self.event.sort { $0.sent < $1.sent }
-            
-            // set variables
-            if let e = self.event.last,
-                let arrivalTime = Calendar.current.date(
-                    byAdding: .second,
-                    value: Int(EEWService.sTime(focalDepth: e.depth, dist: EEWService.dist(latA: self.latA, lonA: self.lonA, latB: e.epicenterLat, lonB: e.epicenterLon))),
-                    to: e.originTime)
-            {
-                self.arrivalTime = arrivalTime
-                self.publishedTime = e.sent
-                self.intensity = EEWService.pgaToIntensity(pga: EEWService.pga(ML: e.magnitudeValue, depth: e.depth, dist: EEWService.dist(latA: self.latA, lonA: self.lonA, latB: e.epicenterLat, lonB: e.epicenterLon), Si: self.si, Padj: e.pgaAdj))
-                self.eqSeq = e.msgNo
-                self.magnitude = e.magnitudeValue
-                self.depth = e.depth
-                self.originTime = e.originTime
-                self.lonB = e.epicenterLon
-                self.latB = e.epicenterLat
-                self.pgaAdj = e.pgaAdj
-                (self.maxIntensity, self.maxIntensityValue) = self.findMaxIntensity(e: e)
-            }
+
+            self.applyLatestEvent()
         }
         
         getPings()
@@ -155,11 +233,13 @@ class EventDispatcher: ObservableObject{
     func getPings(){
         
         // listening the collection of the selected location
-        db.collection("ping")
+        pingListener?.remove()
+        pingListener = db.collection("ping")
             .order(by: "pingTime", descending: true)
             .limit(to: 2)
-            .addSnapshotListener { querySnapshot, error in
-            
+            .addSnapshotListener { [weak self] querySnapshot, error in
+            guard let self else { return }
+
             // fetch documents into the "documents" array
             guard let documents = querySnapshot?.documents else {
                 self.logger.error("Error fetching Ping documents: \(String(describing: error))")

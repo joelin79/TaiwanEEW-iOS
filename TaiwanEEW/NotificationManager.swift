@@ -272,6 +272,18 @@ struct NotificationManager {
                 subscribedEndpointArn = liveEndpointArn
             }
 
+            // Until the user has picked a region in onboarding, do not subscribe to any
+            // district. UserDefaults returns 0/0 for unset indices, which is a real
+            // district (the first in the list) — subscribing to it would silently send a
+            // brand-new user another region's earthquake alerts. The version topic is
+            // still handled below so announcements work from first launch.
+            guard UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") else {
+                logger.info("Onboarding incomplete - skipping district subscription")
+                await cleanupOldVersionTopics()
+                await subscribeToVersionTopic()
+                return
+            }
+
             // Get current app settings
             let cityIndex = UserDefaults.standard.integer(forKey: "subscribedCityIndex")
             let districtIndex = UserDefaults.standard.integer(forKey: "subscribedDistrictIndex")

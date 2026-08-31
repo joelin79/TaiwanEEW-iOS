@@ -12,4 +12,5 @@ enum AppLinks {
     static let ecPayMonthly          = URL(string: "https://p.ecpay.com.tw/E56C4E4?_gl=1*notl2g*_gcl_au*NzQ0NDI0ODU2LjE3MjU2MjI1ODI.")!
     static let discord               = URL(string: "https://discord.com/invite/JfEsU3mx3U")!
     static let threads               = URL(string: "https://www.threads.net/@taiwan.eew")!
+    static let github                = URL(string: "https://github.com/joelin79/TaiwanEEW-iOS")!
 }

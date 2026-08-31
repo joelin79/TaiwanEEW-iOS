@@ -49,13 +49,18 @@
 "alert-status-1-string" = "地震情報はありません";
 "alert-status-2-string" = "地 震 情 報";
 "alert-status-3-string" = "緊 急 地 震 速 報";
+"alert-safety-advice-string" = "まず低く、頭を守り、動かない";
+"report-prefix-string" = "速報";
 
 // Intensity Block
 "intensity-string" = "推定震度";
 "intensity-sub-string" = "級";
+"compact-intensity-prefix" = "推定";
+"compact-intensity-unit" = "級";
 
 // Time Block
 "arrival-string" = "到着";
+"countdown-string" = "カウント";
 "seconds-string" = "秒";
 
 // Event Info Block
@@ -112,3 +117,46 @@
 "nav-history-string" = "予測履歴";
 "nav-donate-string" = "支援";
 "nav-settings-string" = "アラーム設定";
+
+// MARK: - Onboarding
+"onboarding-title-string" = "設定を開始";
+"onboarding-continue-string" = "使ってみる";
+"onboarding-decline-string" = "自動位置情報を使わない";
+"auto-location-string" = "自動位置情報";
+"auto-location-desc-string" = "現在地から最寄りの通知地域を自動で選び、移動しても自動的に更新します。あとから「設定」で変更できます。";
+"manual-region-title-string" = "通知地域を選択";
+"manual-region-desc-string" = "位置情報の許可が得られないため、お住まいの地域を手動で選択してください。あとから「設定」で位置情報を許可すると、自動位置情報に切り替えられます。";
+"city-string" = "県・市";
+"district-string" = "地区";
+
+// MARK: - Permission status (shared by Settings and onboarding)
+"fix-critical-alert-settings-string" = "重大な通知の設定を修正";
+"critical-alert-settings-string" = "重大な通知の設定";
+"nearest-reference-point-string" = "最寄りの震度参照地点：%@（%@ km）";
+"locating-string" = "位置情報を取得中...";
+"open-location-settings-string" = "設定で位置情報を許可";
+"choose-always-allow-string" = "設定で「常に許可」を選択";
+"allow-location-string" = "位置情報を許可";
+
+// MARK: - Notification permission
+"notif-checking-string" = "通知の許可を確認中...";
+"notif-denied-string" = "通知がオフです";
+"notif-notdetermined-string" = "通知が未設定です";
+"notif-allowed-string" = "通知は許可されています";
+"notif-incomplete-string" = "通知の設定が不完全です";
+"notif-denied-issue-string" = "通知がオフのため、地震速報を受け取れません";
+"notif-critical-off-string" = "「重大な通知」がオフです：強い地震の通知がマナーモードや集中モードの影響を受け、音が鳴らないことがあります";
+"notif-timesensitive-off-string" = "「即時通知」がオフです：通知がすぐに表示されないことがあります";
+
+// MARK: - Location permission
+"loc-always-string" = "自動位置情報は動作中";
+"loc-wheninuse-string" = "自動位置情報はフォアグラウンドのみ";
+"loc-denied-string" = "自動位置情報は利用できません";
+"loc-notdetermined-string" = "位置情報が未設定です";
+"loc-unknown-string" = "自動位置情報の状態は不明です";
+"loc-always-detail-string" = "バックグラウンド更新が有効です";
+"loc-wheninuse-detail-string" = "アプリを開いている間のみ更新します。バックグラウンドで地域を自動的に切り替えるには「常に許可」が必要です。";
+"loc-denied-detail-string" = "位置情報がオフのため、現在地を取得できません";
+"loc-restricted-detail-string" = "位置情報が制限されているため、現在地を取得できません";
+"loc-notdetermined-detail-string" = "位置情報が許可されていないため、現在地を取得できません";
+"loc-unknown-detail-string" = "位置情報の状態を判定できません";

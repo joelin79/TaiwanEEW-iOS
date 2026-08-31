@@ -48,13 +48,18 @@
 "alert-status-1-string" = "No Alerts Issued";
 "alert-status-2-string" = "Earthquake Warning";
 "alert-status-3-string" = "Earthquake Alert";
+"alert-safety-advice-string" = "Drop, Cover, Hold On";
+"report-prefix-string" = "Alert";
 
 // Intensity Block
 "intensity-string" = "Intensity";
 "intensity-sub-string" = "";
+"compact-intensity-prefix" = "Level";
+"compact-intensity-unit" = "";
 
 // Time Block
 "arrival-string" = "Arrival";
+"countdown-string" = "Countdown";
 "seconds-string" = "sec";
 
 // Event Info Block
@@ -111,3 +116,46 @@
 "nav-history-string" = "History";
 "nav-donate-string" = "Support";
 "nav-settings-string" = "Settings";
+
+// MARK: - Onboarding
+"onboarding-title-string" = "Set Up";
+"onboarding-continue-string" = "Get Started";
+"onboarding-decline-string" = "Continue Without Auto Location";
+"auto-location-string" = "Auto Location";
+"auto-location-desc-string" = "Automatically picks the nearest alert region from your location and keeps it updated as you move. You can change this later in Settings.";
+"manual-region-title-string" = "Choose Alert Region";
+"manual-region-desc-string" = "Location permission is unavailable, so please choose your region by hand. You can re-enable location permission in Settings later and switch to auto location.";
+"city-string" = "City";
+"district-string" = "District";
+
+// MARK: - Permission status (shared by Settings and onboarding)
+"fix-critical-alert-settings-string" = "Fix Emergency Alert Settings";
+"critical-alert-settings-string" = "Emergency Alert Settings";
+"nearest-reference-point-string" = "Nearest reference point: %@ (%@ km)";
+"locating-string" = "Getting your location...";
+"open-location-settings-string" = "Open Settings to Allow Location";
+"choose-always-allow-string" = "Open Settings and Choose \"Always\"";
+"allow-location-string" = "Allow Location Access";
+
+// MARK: - Notification permission
+"notif-checking-string" = "Checking notification permission...";
+"notif-denied-string" = "Notifications Are Off";
+"notif-notdetermined-string" = "Notification Permission Not Set";
+"notif-allowed-string" = "Notifications Allowed";
+"notif-incomplete-string" = "Notification Permission Incomplete";
+"notif-denied-issue-string" = "Notifications are off, so earthquake warnings cannot reach you";
+"notif-critical-off-string" = "\"Critical Alerts\" is off: strong-quake warnings are subject to Silent and Focus modes and may not make a sound";
+"notif-timesensitive-off-string" = "\"Time Sensitive\" is off: notifications may not appear immediately";
+
+// MARK: - Location permission
+"loc-always-string" = "Auto Location Is Working";
+"loc-wheninuse-string" = "Auto Location Works Only in Foreground";
+"loc-denied-string" = "Auto Location Cannot Work";
+"loc-notdetermined-string" = "Location Permission Not Set";
+"loc-unknown-string" = "Auto Location Status Unknown";
+"loc-always-detail-string" = "Background updates are enabled";
+"loc-wheninuse-detail-string" = "Updates only while the app is open. \"Always\" is required to switch regions in the background.";
+"loc-denied-detail-string" = "Location permission is off, so your location cannot be read";
+"loc-restricted-detail-string" = "Location permission is restricted, so your location cannot be read";
+"loc-notdetermined-detail-string" = "Location permission has not been granted, so your location cannot be read";
+"loc-unknown-detail-string" = "Location permission status cannot be determined";

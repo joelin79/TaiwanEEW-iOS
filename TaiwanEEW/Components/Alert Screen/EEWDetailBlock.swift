@@ -23,6 +23,7 @@ struct EEWDetailBlock: View {
     var msgType: String? {eventManager.event.last?.msgType.lowercased()}
     
     @State private var locationName: String? = nil
+    @State private var clockTick = Date()
     var maxInt: String {eventManager.maxIntensity}
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
@@ -40,12 +41,37 @@ struct EEWDetailBlock: View {
     }()
     
     var originTimeFormattedStr: String {
+        originTimeFormattedStr(now: clockTick)
+    }
+
+    private func originTimeFormattedStr(now: Date) -> String {
+        let elapsed = now.timeIntervalSince(originTime)
+        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, now: now),
+           elapsed >= 0,
+           elapsed < 120 {
+            let totalSeconds = Int(elapsed.rounded(.down))
+            let minutes = totalSeconds / 60
+            let seconds = totalSeconds % 60
+            if minutes == 0 {
+                return "\(seconds) 秒前"
+            }
+            return "\(minutes) 分 \(seconds) 秒前"
+        }
+
         let dateFormatter = DateFormatter()
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 8 * 3600)
-        
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let eventYear = Calendar.current.component(.year, from: originTime)
-        
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = dateFormatter.timeZone
+
+        if calendar.isDate(originTime, inSameDayAs: now) {
+            dateFormatter.dateFormat = " HH:mm:ss"
+            return String(localized: "today-string") + dateFormatter.string(from: originTime)
+        }
+
+        let currentYear = calendar.component(.year, from: now)
+        let eventYear = calendar.component(.year, from: originTime)
+
         if currentYear == eventYear {
             dateFormatter.dateFormat = "MM/dd HH:mm:ss"
         } else {
@@ -54,102 +80,85 @@ struct EEWDetailBlock: View {
         return dateFormatter.string(from: originTime)
     }
     
+    /// Handed down by whatever is presenting this — see CardContentWidthKey for why it
+    /// cannot be measured here. Falls back to the screen for the legacy full-width card,
+    /// which is the one case where the two agree.
+    @Environment(\.cardContentWidth) private var cardContentWidth
+    private var contentWidth: CGFloat {
+        cardContentWidth > 0 ? cardContentWidth : UIScreen.screenWidth
+    }
+
+    private var blockSize: CGFloat { AlertBlockMetrics.blockSize(containerWidth: contentWidth) }
+
+    /// The blocks are centred in what is left after the fixed inset, so their outer edges
+    /// sit exactly one inset in. Every other row uses the same value, which is what keeps
+    /// the header, the status bar and the blocks on one pair of edges.
+    private var contentInset: CGFloat { AlertBlockMetrics.edgeInset }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0){
             if Device.deviceType == .ipad {
                 Spacer()
             }
             pageTitle
+            // Below the earthquake's own details and above the local prediction, where it
+            // reads as the heading for the intensity and countdown rather than a banner
+            // over the whole card.
             AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
                 .padding(.top, 10)
-                .padding(.horizontal, UIScreen.baseLine)
             alertInfo
-                .padding(.top, 10)
+                .padding(.top, AlertBlockMetrics.blockGap)
 //            EEWDetailBlock(eventManager: eventManager)
 //                .padding(.bottom, 10)
             
             
 //                arrivalClockTimeBar.offset(x:UIScreen.baseLine)   TODO: Remove
-            Spacer()
+            if Device.deviceType == .ipad {
+                Spacer()
+            }
 //                testflightReminder.padding()
         }
+        .padding(.horizontal, contentInset)
         .onAppear {
             updateLocationName()
         }.onChange(of: [lonB, latB]) { _ in
             updateLocationName()
         }
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { now in
+            clockTick = now
+        }
     }
-    
-    
+
     private var pageTitle: some View {
-        VStack(alignment: .leading, spacing: 0){
-            HStack(alignment: .lastTextBaseline){
-                var title: String {
-                    if(status == "exercise"){
-                        return "演練 Drill"
-                    } else if(status == "test" && !TaiwanEEWApp.DEBUG){
-                        return "測試中 Testing"
-                    } else if (msgType == "system") {
-                        return "系統 System"
-                    } else if(msgType == "cancel"){
-                        return "預警取消 Canceled"
-                    } else if(msgType == "error"){
-                        return "預警錯誤 Error"
-                    } else {
-                        return NSLocalizedString("地震速報", comment: "")     // localize "alert-title-string"
-                    }
-                }
-                Text(title).font(.system(size: UIScreen.isZoomed ? 23 : 28).bold())
-                    .frame(height: 25)
-                Text("/ 第\(eqSeq)報")
-                    .foregroundStyle(Color("TimeText"))
-                    .font(.system(size: UIScreen.isZoomed ? 12 : 18))
-                Spacer()
-                HStack(spacing: 0){
-                    Image(systemName: "water.waves.and.arrow.down")
-                        .font(.system(size: UIScreen.isZoomed ? 20 : 10))
-                        .foregroundStyle(Color("TimeText"))
-                    Text("\(String(format: "%.1f", depth))km")
-                        .font(.system(size: UIScreen.isZoomed ? 12 : 14).monospaced())
-                        .foregroundStyle(Color("TimeText"))
-                }.frame(height: 0)
-                HStack(spacing: 0){
-                    Text("M\(String(format: "%.1f", magnitude))").bold().foregroundStyle( magnitude >= 7 ? .purple : magnitude >= 6.5 ? .red : magnitude > 5.5 ? .orange : .primary)
-                        .font(.system(size: UIScreen.isZoomed ? 17 : 22).monospaced().bold())
-                }.frame(height: 0)
-                
-//                Spacer()
-//                LocationBlock(districtStr: Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName)
+        VStack(spacing: 0) {
+            // Baseline, not centre. The two sides are set at different sizes, so centring
+            // aligns their text boxes — and a text box is glyphs plus the font's leading,
+            // which differs with size. Matching baselines is what makes the text itself
+            // sit on one line.
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                EEWDetailHeaderMagnitude(depth: depth, magnitude: magnitude)
+                Spacer(minLength: 8)
+                EEWDetailHeaderReport(report: report)
             }
-            
-            HStack(alignment: .firstTextBaseline){
-                Text("\(originTimeFormattedStr) 發生")
-//                    .offset(y:3)
-                    .foregroundStyle(Color("TimeText"))
-                    .font(.system(size: UIScreen.isZoomed ? 12 : 18))
-                Spacer()
-                HStack(spacing:2){
-                    Image(systemName: "waveform.path.ecg")
-                        .font(.system(size: UIScreen.isZoomed ? 13 : 21))
-                    Text(locationName ?? fetchOceanData(lat: latB, lon: lonB))
-                        .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
-                }
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                EEWDetailHeaderLocation(locationName: locationName ?? fetchOceanData(lat: latB, lon: lonB))
+                Spacer(minLength: 8)
+                EEWDetailHeaderOriginTime(originTimeText: "\(originTimeFormattedStr) 發生")
             }
-            
         }
-        .padding(.horizontal, UIScreen.baseLine)
     }
-    
+
+    private var report: ReportTitle {
+        ReportPresentation.headerTitle(status: status, msgType: msgType, eqSeq: eqSeq)
+    }
+
     var alertInfo: some View {
-        Group {
-            HStack {
-                Spacer()
-                IntensityBlock(intensity: intensity)
-                Spacer()
-                TimeBlock(arrivalTime: arrivalTime)
-                Spacer()
-            }
+        HStack(spacing: AlertBlockMetrics.blockGap) {
+            IntensityBlock(intensity: intensity, size: blockSize)
+            TimeBlock(arrivalTime: arrivalTime, size: blockSize)
         }
+        .frame(maxWidth: .infinity)
     }
     
     var arrivalClockTimeBar: some View {
@@ -171,46 +180,99 @@ struct EEWDetailBlock: View {
     }
     
     func fetchLocationName(lat: Double, lon: Double) async -> String? {
-        let geoCoder = CLGeocoder()
-        let twLocale = Locale(identifier: "zh-Hant")
-        
-        // TODO: temporary Manderin placeholder for all languages before next localization update.
-        let location = CLLocation(latitude: lat, longitude: lon)
-        
-        do {
-            let placemarks = try await geoCoder.reverseGeocodeLocation(location, preferredLocale: twLocale)
-            if let placemark = placemarks.first,
-               let locality = placemark.administrativeArea,
-               let subLocality = placemark.locality {
-                return "\(locality)\(subLocality)"
-            } else {
-                return fetchOceanData(lat: lat, lon: lon)
-            }
-        } catch {
-            logger.error("Geocoding error: \(error.localizedDescription)")
-            return fetchOceanData(lat: lat, lon: lon)
-        }
-        
-
+        await EpicenterName.resolve(lat: lat, lon: lon)
     }
-    
-    func fetchOceanData(lat: Double, lon: Double)-> String {
-        if(lat >= 24.31343 && lon >= 121.76857){
-            return "東北部海域"
+
+    func fetchOceanData(lat: Double, lon: Double) -> String {
+        EpicenterName.oceanArea(lat: lat, lon: lon)
+    }
+}
+
+private struct EEWDetailHeaderMagnitude: View {
+    let depth: Double
+    let magnitude: Double
+
+    private var magnitudeColor: Color {
+        if magnitude >= 7 { return .purple }
+        if magnitude >= 6.5 { return .red }
+        if magnitude > 5.5 { return .orange }
+        return .primary
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("M\(String(format: "%.1f", magnitude))")
+                .bold()
+                .foregroundStyle(magnitudeColor)
+                .font(.system(size: UIScreen.isZoomed ? 19 : 24).monospaced().bold())
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+//                Image(systemName: "water.waves.and.arrow.down")
+//                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
+//                    .foregroundStyle(Color("TimeText"))
+                Text("\(String(format: "深度%.1f", depth))km")
+                    .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
+                    .foregroundStyle(Color("TimeText"))
+            }
         }
-        if(lat >= 23.43494 && lat <= 24.31343 && lon >= 121){
-            return "東部海域"
+        .lineLimit(1)
+    }
+}
+
+private struct EEWDetailHeaderLocation: View {
+    let locationName: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 2) {
+            Image(systemName: "target")
+                .font(.system(size: UIScreen.isZoomed ? 10 : 18))
+            Text(locationName)
+                .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
         }
-        if(lat >= 22.24595 && lat <= 23.43494 && lon >= 120.79958){
-            return "東南部海域"
+        .lineLimit(1)
+        .minimumScaleFactor(0.75)
+    }
+}
+
+struct EEWDetailHeaderReport: View {
+    let report: ReportTitle
+
+    private var font: Font {
+        .system(size: UIScreen.isZoomed ? 12 : 18)
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if let prefix = report.prefix {
+                Text(prefix)
+                    .font(font.bold())
+                    .foregroundStyle(ReportTitle.prefixColor)
+            }
+            Text(report.text)
+                .foregroundStyle(report.badge?.foreground ?? Color("TimeText"))
+                .font(report.badge == nil ? font : font.bold())
         }
-        if(lat >= 24.73429 && lon <= 121.76857){
-            return "北部海域"
-        }
-        if(lat >= 23.53352 && lat <= 24.73429 && lon <= 121){
-            return "中部海域"
-        }
-        return "南部海域"
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            // Padding only when there is something to pad against, so an ordinary report
+            // still sits on the same baseline as the magnitude opposite it.
+            .padding(.horizontal, report.badge == nil ? 0 : 8)
+            .padding(.vertical, report.badge == nil ? 0 : 3)
+            .background {
+                if let badge = report.badge {
+                    Capsule(style: .continuous).fill(badge.background)
+                }
+            }
+    }
+}
+
+private struct EEWDetailHeaderOriginTime: View {
+    let originTimeText: String
+
+    var body: some View {
+        Text(originTimeText)
+            .foregroundStyle(Color("TimeText"))
+            .font(.system(size: UIScreen.isZoomed ? 12 : 18))
+            .lineLimit(1)
     }
 }
 
@@ -259,12 +321,12 @@ struct EEWDetailBlock: View {
 #Preview {
     VStack {
         // Preview with default values
-//        EEWDetailBlock(eventManager: EventDispatcher(subscribedCityIndex: .constant(0), subscribedDistrictIndex: .constant(0)))
+//        EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
         
         // iPad Component
         VStack {
             Spacer()
-            EEWDetailBlock(eventManager: EventDispatcher(subscribedCityIndex: .constant(0), subscribedDistrictIndex: .constant(0)))
+            EEWDetailBlock(eventManager: EventDispatcher(cityIndex: 0, districtIndex: 0, startListening: false))
             Spacer()
         }
         .frame(width: 400, height: 310)
@@ -273,4 +335,34 @@ struct EEWDetailBlock: View {
                 .stroke(Color.blue, lineWidth: 1)
         )
     }
+}
+
+#Preview("Report titles") {
+    // Drives EEWDetailBlock.report directly, so this shows the real mapping. isDebugBuild
+    // is forced false because the Testing badge is suppressed in debug builds by design.
+    let cases: [(String, String?, String?)] = [
+        ("ordinary", "actual", "alert"),
+        ("drill", "exercise", "alert"),
+        ("testing", "test", "alert"),
+        ("system", "system", "alert"),
+        ("canceled", "actual", "cancel"),
+        ("error", "actual", "error"),
+        ("drill + cancel", "exercise", "cancel"),
+        ("test + error", "test", "error"),
+        ("system + cancel", "system", "cancel"),
+    ]
+
+    return VStack(alignment: .trailing, spacing: 12) {
+        ForEach(cases, id: \.0) { label, status, msgType in
+            HStack {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                EEWDetailHeaderReport(
+                    report: ReportPresentation.headerTitle(status: status, msgType: msgType,
+                                                           eqSeq: 3, isDebugBuild: false))
+            }
+        }
+    }
+    .padding()
+    .environment(\.locale, Locale(identifier: "zh-Hant"))
 }

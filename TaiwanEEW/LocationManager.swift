@@ -31,10 +31,12 @@ class LocationManager: NSObject, ObservableObject {
         TaiwanEEWApp.DEBUG || isTestFlightBuild
     }
 
-    /// Defaults to on so testers see narration without hunting for the toggle first.
+    /// Beta narration notifications are disabled and hidden for now, but the plumbing stays
+    /// in place so we can turn the diagnostic back on for future testing.
     private var isLocationNarrationEnabled: Bool {
-        guard UserDefaults.standard.object(forKey: "locationNarrationEnabled") != nil else { return true }
-        return UserDefaults.standard.bool(forKey: "locationNarrationEnabled")
+        false
+        // guard UserDefaults.standard.object(forKey: "locationNarrationEnabled") != nil else { return false }
+        // return UserDefaults.standard.bool(forKey: "locationNarrationEnabled")
     }
 
     /// iOS only offers the When-In-Use -> Always upgrade prompt once per permission grant,
