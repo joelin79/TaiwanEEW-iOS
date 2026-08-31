@@ -641,6 +641,11 @@ struct SettingsView: View {
         Section{
             copyableRow(title: "APNs", value: UserDefaults.standard.string(forKey: "deviceTokenForSNS") ?? "nil")
             copyableRow(title: "ARN", value: UserDefaults.standard.string(forKey: "endpointArnSuffixForSNS") ?? "nil")
+            // Which APNs environment this build was signed for, and therefore which SNS
+            // platform application the endpoint was created against. Shown because a
+            // mismatch here delivers nothing and reports no error anywhere.
+            copyableRow(title: "APNs env",
+                        value: "\(AppConfig.apsEnvironment) → \(AppConfig.isAPNsSandbox ? "APNS_SANDBOX" : "APNS")")
             // App Store storefront the device is on. Explains IAP currency: a device on the
             // US storefront (or signed into a US sandbox account) shows USD even in Taiwan.
             copyableRow(title: "Storefront", value: storefrontCountry)
