@@ -20,6 +20,11 @@ struct SettingsView: View {
     @AppStorage("showMapFramingDebug") var showMapFramingDebug: Bool = false
     @AppStorage(AwayFramingPreference.storageKey) var awayFraming = AwayFramingPreference.taiwan
     @AppStorage(CollapsedFramingPreference.storageKey) var collapsedFraming = CollapsedFramingPreference.taiwanOnly
+    // Written to the shared App Group suite, not standard defaults: the notification service
+    // extension runs in its own container and this is the only way it can read the choice.
+    @AppStorage(DrillAlertPreference.storageKey,
+                store: UserDefaults(suiteName: DrillAlertPreference.suiteName))
+    var drillAlertsMuted: Bool = false
     @State private var confirmingTestEEWData = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
@@ -53,6 +58,7 @@ struct SettingsView: View {
             autoLocationSection
             locationSelectionSection
             alertThresholdSection
+            drillAlertSection
             mapFramingSection
             linksSection
             aboutSection
@@ -390,6 +396,24 @@ struct SettingsView: View {
         }
     }
     
+    /// CWA publishes drills, system messages and tests to the same topics as real warnings,
+    /// and at intensity >= 3 they arrive as critical alerts — bypassing the mute switch and
+    /// Focus exactly as a real earthquake does. That is how the annual drill wakes people
+    /// sleeping off a night shift. Its own section rather than a row in the threshold section
+    /// above, because the footer has to say plainly that the notification still arrives.
+    private var drillAlertSection: some View {
+        Section(
+            header:
+                HStack {
+                    Image(systemName: "bell.badge.slash")
+                    Text("演練通知")
+                },
+            footer: Text("開啟後,演練、系統與測試通知不會發出聲音,也不會亮起螢幕,但仍會顯示在通知中心。真實地震預警不受影響。"))
+        {
+            Toggle("靜音演練與測試通知", isOn: $drillAlertsMuted)
+        }
+    }
+
     /// The alert card's two positions frame the map differently — expanded is
     /// first-person, collapsed is an island overview — so each gets its own choice. The
     /// expanded one only applies when the user's position cannot anchor the view, since
