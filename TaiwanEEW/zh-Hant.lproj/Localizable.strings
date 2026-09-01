@@ -33,6 +33,9 @@
 "notify-pref-string" = "通知設定";
 "notify-threshold-string" = "預警震度";
 "notify-force-string" = "3級或以上強震預警一律使用有聲強制警報推播。\n若欲關閉強制警報，可至「強制警報設定」中關閉「重要提示」選項。";
+"drill-pref-string" = "演練通知";
+"drill-enable-string" = "啟用演練通知";
+"drill-pref-footer-string" = "關閉後，演練、系統與測試通知不會發出聲音，也不會亮起螢幕，但仍會顯示在通知中心。真實地震預警不受影響。";
 
 "about-title-string" = "關於本程式";
 "version-string" = "版本";

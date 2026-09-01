@@ -482,16 +482,16 @@ struct SettingsView: View {
             header:
                 HStack {
                     Image(systemName: "bell.badge")
-                    Text("演練通知")
+                    Text("drill-pref-string")
                 },
-            footer: Text("關閉後,演練、系統與測試通知不會發出聲音,也不會亮起螢幕,但仍會顯示在通知中心。真實地震預警不受影響。"))
+            footer: Text("drill-pref-footer-string"))
         {
             // Reads as "on = you get drills", which is the way round a user thinks about it.
             // The stored key stays inverted (drillAlertsMuted, default false) on purpose:
             // UserDefaults.bool returns false for a missing key, so storing "enabled" would
             // make an unreadable App Group silence drills, and the whole design depends on
             // every failure being loud rather than quiet.
-            Toggle("啟用演練通知", isOn: Binding(
+            Toggle("drill-enable-string", isOn: Binding(
                 get: { !drillAlertsMuted },
                 set: { drillAlertsMuted = !$0 }
             ))

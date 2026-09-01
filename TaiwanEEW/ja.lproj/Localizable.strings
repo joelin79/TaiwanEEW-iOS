@@ -33,6 +33,9 @@
 "notify-pref-string" = "プッシュ通知";
 "notify-threshold-string" = "警報";
 "notify-force-string" = "3級またはそれ以上の強震の場合、必ず音声付きの強制警報を配信します。";
+"drill-pref-string" = "訓練通知";
+"drill-enable-string" = "訓練通知を有効にする";
+"drill-pref-footer-string" = "オフにすると、訓練・システム・テストの通知は音が鳴らず、画面も点灯しませんが、通知センターには表示されます。実際の地震警報には影響しません。";
 
 "about-title-string" = "アプリ情報";
 "version-string" = "バージョン";

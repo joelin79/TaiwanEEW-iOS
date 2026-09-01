@@ -32,6 +32,9 @@
 "notify-pref-string" = "Notification Settings";
 "notify-threshold-string" = "Alert";
 "notify-force-string" = "Early earthquake warnings of intensity 3 or above will be force alarmed with sound.";
+"drill-pref-string" = "Drill Alerts";
+"drill-enable-string" = "Enable drill alerts";
+"drill-pref-footer-string" = "When off, drill, system and test alerts make no sound and do not wake the screen, but still appear in Notification Center. Real earthquake warnings are unaffected.";
 
 "about-title-string" = "About this app";
 "version-string" = "Version";
