@@ -16,6 +16,8 @@ struct DonateView: View {
     /// Presented modally from Settings the view needs its own close and cancel controls;
     /// as a tab there is nothing to dismiss, so they are hidden.
     var showsDismissControls: Bool = true
+    // Only the description used this, and that is unconditionally scrollable now. Kept
+    // because the layout still has fixed-size pieces that may want it back.
     let smallDevice = UIScreen.screenHeight <= 667
     @State private var showDonationSheet = false
 
@@ -124,11 +126,16 @@ struct DonateView: View {
 
                 title
 
-                if(smallDevice || UIScreen.isZoomed){
-                    ScrollView{
-                        description
-                    }
-                } else {
+                // Always scrollable. This used to be conditional on smallDevice ||
+                // UIScreen.isZoomed, a threshold calibrated when the copy only existed in
+                // Chinese. The English translation is roughly four times longer — 608
+                // characters against 155 — so on a full-size phone it had nowhere to go
+                // between the 100pt icon above and the coins and buttons below, and was
+                // silently truncated with an ellipsis mid-sentence.
+                //
+                // The ScrollView is invisible when the content already fits, so the
+                // Chinese layout is unchanged.
+                ScrollView {
                     description
                 }
 
