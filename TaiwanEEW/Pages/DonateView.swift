@@ -16,8 +16,9 @@ struct DonateView: View {
     /// Presented modally from Settings the view needs its own close and cancel controls;
     /// as a tab there is nothing to dismiss, so they are hidden.
     var showsDismissControls: Bool = true
-    // Only the description used this, and that is unconditionally scrollable now. Kept
-    // because the layout still has fixed-size pieces that may want it back.
+    // Only the description used this, and it now decides by measuring rather than by
+    // guessing from screen height. Kept because the layout still has fixed-size pieces
+    // that may want it back.
     let smallDevice = UIScreen.screenHeight <= 667
     @State private var showDonationSheet = false
 
@@ -126,17 +127,30 @@ struct DonateView: View {
 
                 title
 
-                // Always scrollable. This used to be conditional on smallDevice ||
-                // UIScreen.isZoomed, a threshold calibrated when the copy only existed in
-                // Chinese. The English translation is roughly four times longer — 608
-                // characters against 155 — so on a full-size phone it had nowhere to go
-                // between the 100pt icon above and the coins and buttons below, and was
-                // silently truncated with an ellipsis mid-sentence.
+                // Scrolls only when the text does not fit, which is the actual condition.
                 //
-                // The ScrollView is invisible when the content already fits, so the
-                // Chinese layout is unchanged.
-                ScrollView {
-                    description
+                // This was originally gated on smallDevice || UIScreen.isZoomed, a proxy
+                // calibrated when the copy existed only in Chinese. The English translation
+                // is about four times longer — 608 characters against 155 — so on a
+                // full-size phone it was truncated mid-sentence.
+                //
+                // An unconditional ScrollView fixes that but breaks the other direction: a
+                // ScrollView is greedy, taking all the height it is offered, so with the
+                // short Chinese copy it swallowed the space the Spacers below use to
+                // distribute the coins and buttons, leaving a gap under the text.
+                //
+                // ViewThatFits picks the first child that fits, so Chinese gets the plain
+                // self-sizing VStack and the Spacers behave as before, while English and
+                // Japanese fall through to the scrolling version.
+                if #available(iOS 16.0, *) {
+                    ViewThatFits(in: .vertical) {
+                        description
+                        ScrollView { description }
+                    }
+                } else {
+                    // ViewThatFits is iOS 16+. Below that, prefer scrolling: a slightly
+                    // loose layout beats a sentence cut in half.
+                    ScrollView { description }
                 }
 
                 Spacer()
