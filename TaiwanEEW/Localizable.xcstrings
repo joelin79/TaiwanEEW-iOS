@@ -158,7 +158,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "警報取消"
+            "value" : "預警取消"
           }
         }
       }
@@ -198,13 +198,59 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "エラーレポート"
+            "value" : "誤報"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "錯誤報"
+            "value" : "預警錯誤"
+          }
+        }
+      }
+    },
+    "alert-canceled-short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canceled"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "alert-false-short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "誤報"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錯誤"
           }
         }
       }
@@ -484,6 +530,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "啟用後將自動根據您的位置選擇最近的地震通知區域（距離最近的震度參考點未必在您所在的區域界內）。需要「永遠」位置權限以啟用背景更新。"
+          }
+        }
+      }
+    },
+    "autoloc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動定位"
+          }
+        }
+      }
+    },
+    "autoloc-enable-toggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable auto-location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報を有効にする"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟用自動定位"
           }
         }
       }
@@ -1207,7 +1299,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estern Seas"
+            "value" : "Eastern Seas"
           }
         },
         "ja" : {
