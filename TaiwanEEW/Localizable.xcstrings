@@ -47,8 +47,21 @@
         }
       }
     },
+    "%@" : {
+
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
     "%@ publish-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -93,8 +106,16 @@
         }
       }
     },
+    "%@km" : {
+
+    },
+    "%lld" : {
+
+    },
+    "8" : {
+
+    },
     "about-title-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -118,7 +139,6 @@
     },
     "active-string" : {
       "comment" : "Active Status Indicator",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -159,6 +179,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預警取消"
+          }
+        }
+      }
+    },
+    "alert-canceled-short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canceled"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
           }
         }
       }
@@ -209,29 +252,6 @@
         }
       }
     },
-    "alert-canceled-short" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canceled"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "解除"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "取消"
-          }
-        }
-      }
-    },
     "alert-false-short" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -255,8 +275,29 @@
         }
       }
     },
+    "alert-safety-advice-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop, Cover, Hold On"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まず低く、頭を守り、動かない"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "趴 下 、 掩 護 、 穩 住"
+          }
+        }
+      }
+    },
     "alert-status-1-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -279,7 +320,6 @@
       }
     },
     "alert-status-2-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -302,7 +342,6 @@
       }
     },
     "alert-status-3-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -372,7 +411,7 @@
     },
     "alert-title-string" : {
       "comment" : "Alert Page",
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -396,7 +435,6 @@
     },
     "alerts-pref-string" : {
       "comment" : "Settings Page",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -419,7 +457,6 @@
       }
     },
     "all-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -441,9 +478,31 @@
         }
       }
     },
+    "allow-location-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Location Access"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報を許可"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許位置權限"
+          }
+        }
+      }
+    },
     "arrival-string" : {
       "comment" : "Time Block",
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -488,48 +547,46 @@
         }
       }
     },
-    "autoloc-denied-detail" : {
-      "extractionState" : "manual",
+    "auto-location-desc-string" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Location access is denied, we cannot determine your location."
+            "value" : "Automatically picks the nearest alert region from your location and keeps it updated as you move. You can change this later in Settings."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "位置情報の権限が無効になっているため、お客様の位置情報を取得できません"
+            "value" : "現在地から最寄りの通知地域を自動で選び、移動しても自動的に更新します。あとから「設定」で変更できます。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "位置權限已關閉，無法取得您的位置"
+            "value" : "自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。"
           }
         }
       }
     },
-    "autoloc-footer" : {
-      "extractionState" : "manual",
+    "auto-location-string" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When on, your alert district is chosen automatically from your location. The nearest intensity reference point is not necessarily inside the district you are in. Background updates require the “Always” location permission."
+            "value" : "Auto Location"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "オンにすると、現在地から最も近い地震通知地域が自動的に選択されます。最も近い震度参照点が、必ずしも現在いる地域内にあるとは限りません。バックグラウンド更新には「常に許可」の位置情報権限が必要です。"
+            "value" : "自動位置情報"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "啟用後將自動根據您的位置選擇最近的地震通知區域（距離最近的震度參考點未必在您所在的區域界內）。需要「永遠」位置權限以啟用背景更新。"
+            "value" : "自動定位"
           }
         }
       }
@@ -557,6 +614,29 @@
         }
       }
     },
+    "autoloc-denied-detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location access is denied, we cannot determine your location."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報の権限が無効になっているため、お客様の位置情報を取得できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置權限已關閉，無法取得您的位置"
+          }
+        }
+      }
+    },
     "autoloc-enable-toggle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -576,6 +656,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "啟用自動定位"
+          }
+        }
+      }
+    },
+    "autoloc-footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When on, your alert district is chosen automatically from your location. The nearest intensity reference point is not necessarily inside the district you are in. Background updates require the “Always” location permission."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンにすると、現在地から最も近い地震通知地域が自動的に選択されます。最も近い震度参照点が、必ずしも現在いる地域内にあるとは限りません。バックグラウンド更新には「常に許可」の位置情報権限が必要です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟用後將自動根據您的位置選擇最近的地震通知區域（距離最近的震度參考點未必在您所在的區域界內）。需要「永遠」位置權限以啟用背景更新。"
           }
         }
       }
@@ -880,7 +983,7 @@
       }
     },
     "changhua-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -903,7 +1006,7 @@
       }
     },
     "chiayi-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -925,8 +1028,97 @@
         }
       }
     },
+    "choose-always-allow-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings and Choose \"Always\""
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定で「常に許可」を選択"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往設定選擇「一律允許」"
+          }
+        }
+      }
+    },
+    "city-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "City"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "県・市"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縣市"
+          }
+        }
+      }
+    },
+    "compact-intensity-prefix" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "推定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預估"
+          }
+        }
+      }
+    },
+    "compact-intensity-unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "級"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "級"
+          }
+        }
+      }
+    },
     "connected-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -967,6 +1159,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已複製"
+          }
+        }
+      }
+    },
+    "countdown-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Countdown"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カウント"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒數"
+          }
+        }
+      }
+    },
+    "critical-alert-settings-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emergency Alert Settings"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重大な通知の設定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "強制警報設定"
           }
         }
       }
@@ -1064,7 +1300,6 @@
       }
     },
     "dismiss-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1087,7 +1322,6 @@
       }
     },
     "district-pref-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1105,6 +1339,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "鄉鎮市區"
+          }
+        }
+      }
+    },
+    "district-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "District"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地区"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地區"
           }
         }
       }
@@ -1293,6 +1549,72 @@
         }
       }
     },
+    "drill-enable-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable drill alerts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訓練通知を有効にする"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟用演練通知"
+          }
+        }
+      }
+    },
+    "drill-pref-footer-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When off, drill, system and test alerts make no sound and do not wake the screen, but still appear in Notification Center. Real earthquake warnings are unaffected."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフにすると、訓練・システム・テストの通知は音が鳴らず、画面も点灯しませんが、通知センターには表示されます。実際の地震警報には影響しません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉後，演練、系統與測試通知不會發出聲音，也不會亮起螢幕，但仍會顯示在通知中心。真實地震預警不受影響。"
+          }
+        }
+      }
+    },
+    "drill-pref-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drill Alerts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訓練通知"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "演練通知"
+          }
+        }
+      }
+    },
     "E-sea" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1340,7 +1662,6 @@
       }
     },
     "eg0-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1363,7 +1684,6 @@
       }
     },
     "eg1-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1386,7 +1706,6 @@
       }
     },
     "eg2-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1409,7 +1728,6 @@
       }
     },
     "eg3-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1432,7 +1750,6 @@
       }
     },
     "eg4-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1455,7 +1772,6 @@
       }
     },
     "est-arrival-time-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1478,7 +1794,6 @@
       }
     },
     "est-countdown-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1502,7 +1817,6 @@
     },
     "est-intensity-string" : {
       "comment" : "Event Info Block",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1547,8 +1861,36 @@
         }
       }
     },
+    "fix-critical-alert-settings-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fix Emergency Alert Settings"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重大な通知の設定を修正"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修正強制警報設定"
+          }
+        }
+      }
+    },
+    "GitHub 公開原始碼" : {
+
+    },
+    "Hello, World!" : {
+
+    },
     "history-pref-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1571,7 +1913,7 @@
       }
     },
     "history-time-range-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1595,7 +1937,7 @@
     },
     "history-title-string" : {
       "comment" : "History Rage",
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1618,7 +1960,7 @@
       }
     },
     "hsinchu-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1641,7 +1983,7 @@
       }
     },
     "hualien-city-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1664,7 +2006,7 @@
       }
     },
     "hualien-yuli-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1686,8 +2028,17 @@
         }
       }
     },
+    "id:%@ time:%@ sec:%lld int:%@" : {
+      "localizations" : {
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "id:%1$@ time:%2$@ sec:%3$lld int:%4$@"
+          }
+        }
+      }
+    },
     "information-title-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1711,7 +2062,6 @@
     },
     "intensity-string" : {
       "comment" : "Intensity Block",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1734,7 +2084,6 @@
       }
     },
     "intensity-sub-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1757,7 +2106,6 @@
       }
     },
     "internet-err-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1803,7 +2151,7 @@
       }
     },
     "kaohsiung-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1827,7 +2175,7 @@
     },
     "keelung-string" : {
       "comment" : "Locations",
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1872,9 +2220,34 @@
         }
       }
     },
+    "Loading" : {
+
+    },
+    "loading-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "loading..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込み中..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "載入中..."
+          }
+        }
+      }
+    },
     "loading-string " : {
       "comment" : "Status",
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1919,8 +2292,277 @@
         }
       }
     },
+    "loc-always-detail-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background updates are enabled"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バックグラウンド更新が有効です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景更新已啟用"
+          }
+        }
+      }
+    },
+    "loc-always-string" : {
+      "comment" : "Auto-location is fully working",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Location Is Working"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報は動作中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動定位運作中"
+          }
+        }
+      }
+    },
+    "loc-denied-detail-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permission is off, so your location cannot be read"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報がオフのため、現在地を取得できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置權限已關閉，無法取得您的位置"
+          }
+        }
+      }
+    },
+    "loc-denied-string" : {
+      "comment" : "Auto-location cannot work at all",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Location Cannot Work"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報は利用できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動定位無法運作"
+          }
+        }
+      }
+    },
+    "loc-notdetermined-detail-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permission has not been granted, so your location cannot be read"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報が許可されていないため、現在地を取得できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未授予位置權限，無法取得您的位置"
+          }
+        }
+      }
+    },
+    "loc-notdetermined-string" : {
+      "comment" : "Location permission has not been asked for yet",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location Permission Not Set"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報が未設定です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未取得位置權限"
+          }
+        }
+      }
+    },
+    "loc-restricted-detail-string" : {
+      "comment" : "Restricted by parental controls or MDM, not by the user",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permission is restricted, so your location cannot be read"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報が制限されているため、現在地を取得できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置權限受到限制，無法取得您的位置"
+          }
+        }
+      }
+    },
+    "loc-unknown-detail-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permission status cannot be determined"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報の状態を判定できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法判斷位置權限狀態"
+          }
+        }
+      }
+    },
+    "loc-unknown-string" : {
+      "comment" : "Unrecognised future authorization state",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Location Status Unknown"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報の状態は不明です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動定位狀態不明"
+          }
+        }
+      }
+    },
+    "loc-wheninuse-detail-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates only while the app is open. \"Always\" is required to switch regions in the background."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを開いている間のみ更新します。バックグラウンドで地域を自動的に切り替えるには「常に許可」が必要です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在開啟App時更新，需要「一律允許」才能在背景自動切換區域"
+          }
+        }
+      }
+    },
+    "loc-wheninuse-string" : {
+      "comment" : "Auto-location works only in the foreground",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto Location Works Only in Foreground"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報はフォアグラウンドのみ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動定位僅前景可用"
+          }
+        }
+      }
+    },
+    "locating-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting your location..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報を取得中..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在取得位置..."
+          }
+        }
+      }
+    },
     "location-pref-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1942,8 +2584,60 @@
         }
       }
     },
+    "M%@" : {
+
+    },
+    "Magnitude" : {
+
+    },
+    "manual-region-desc-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location permission is unavailable, so please choose your region by hand. You can re-enable location permission in Settings later and switch to auto location."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報の許可が得られないため、お住まいの地域を手動で選択してください。あとから「設定」で位置情報を許可すると、自動位置情報に切り替えられます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法取得位置權限，請手動選擇您所在的區域。可稍後至「設定」重新開啟位置權限，改用自動定位。"
+          }
+        }
+      }
+    },
+    "manual-region-title-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Alert Region"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知地域を選択"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇通知區域"
+          }
+        }
+      }
+    },
+    "Max Intensity" : {
+
+    },
     "mechanics-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1967,7 +2661,6 @@
     },
     "mechanics-title-string" : {
       "comment" : "About",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1990,7 +2683,7 @@
       }
     },
     "miaoli-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2013,7 +2706,6 @@
       }
     },
     "month-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2059,7 +2751,7 @@
       }
     },
     "nantou-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2082,7 +2774,6 @@
       }
     },
     "nav-alert-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2105,7 +2796,6 @@
       }
     },
     "nav-donate-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2128,7 +2818,6 @@
       }
     },
     "nav-history-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2151,7 +2840,6 @@
       }
     },
     "nav-settings-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2196,6 +2884,29 @@
         }
       }
     },
+    "nearest-reference-point-string" : {
+      "comment" : "District name, then distance in km",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearest reference point: %@ (%@ km)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最寄りの震度参照地点：%@（%@ km）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近震度參考點：%@ (%@ 公里)"
+          }
+        }
+      }
+    },
     "north-region" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2221,7 +2932,6 @@
     },
     "notice1-string" : {
       "comment" : "notices",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2239,6 +2949,188 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "通知與監測將顯示選取地點的預估震度與抵達時間。"
+          }
+        }
+      }
+    },
+    "notif-allowed-string" : {
+      "comment" : "Allowed with every sub-permission on",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications Allowed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知は許可されています"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取得通知權限"
+          }
+        }
+      }
+    },
+    "notif-checking-string" : {
+      "comment" : "The async read has not returned yet",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking notification permission..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知の許可を確認中..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在檢查通知權限..."
+          }
+        }
+      }
+    },
+    "notif-critical-off-string" : {
+      "comment" : "Critical alerts off: warnings obey Silent and Focus",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Critical Alerts\" is off: strong-quake warnings are subject to Silent and Focus modes and may not make a sound"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「重大な通知」がオフです：強い地震の通知がマナーモードや集中モードの影響を受け、音が鳴らないことがあります"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響"
+          }
+        }
+      }
+    },
+    "notif-denied-issue-string" : {
+      "comment" : "Notifications refused outright",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off, so earthquake warnings cannot reach you"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知がオフのため、地震速報を受け取れません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知權限已關閉，將無法接收地震預警"
+          }
+        }
+      }
+    },
+    "notif-denied-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications Are Off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知がオフです"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知權限已關閉"
+          }
+        }
+      }
+    },
+    "notif-incomplete-string" : {
+      "comment" : "Allowed but a sub-permission is off",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Permission Incomplete"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知の設定が不完全です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知權限不完整"
+          }
+        }
+      }
+    },
+    "notif-notdetermined-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Permission Not Set"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知が未設定です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未取得通知權限"
+          }
+        }
+      }
+    },
+    "notif-timesensitive-off-string" : {
+      "comment" : "Time-sensitive off: warnings may be delayed",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Time Sensitive\" is off: notifications may not appear immediately"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「即時通知」がオフです：通知がすぐに表示されないことがあります"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「時效性通知」已關閉：通知可能不會即時顯示"
           }
         }
       }
@@ -2405,7 +3297,6 @@
       }
     },
     "notify-force-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2427,77 +3318,7 @@
         }
       }
     },
-    "drill-enable-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable drill alerts"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "訓練通知を有効にする"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "啟用演練通知"
-          }
-        }
-      }
-    },
-    "drill-pref-footer-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When off, drill, system and test alerts make no sound and do not wake the screen, but still appear in Notification Center. Real earthquake warnings are unaffected."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オフにすると、訓練・システム・テストの通知は音が鳴らず、画面も点灯しませんが、通知センターには表示されます。実際の地震警報には影響しません。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "關閉後，演練、系統與測試通知不會發出聲音，也不會亮起螢幕，但仍會顯示在通知中心。真實地震預警不受影響。"
-          }
-        }
-      }
-    },
-    "drill-pref-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drill Alerts"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "訓練通知"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "演練通知"
-          }
-        }
-      }
-    },
     "notify-pref-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2520,7 +3341,6 @@
       }
     },
     "notify-threshold-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2544,7 +3364,6 @@
     },
     "off-string" : {
       "comment" : "NotifyThreshold",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2562,6 +3381,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "關閉"
+          }
+        }
+      }
+    },
+    "onboarding-continue-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Started"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使ってみる"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始使用"
+          }
+        }
+      }
+    },
+    "onboarding-decline-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Without Auto Location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動位置情報を使わない"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不使用自動定位"
+          }
+        }
+      }
+    },
+    "onboarding-title-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Up"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を開始"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始設定"
           }
         }
       }
@@ -2635,8 +3520,30 @@
         }
       }
     },
+    "open-location-settings-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings to Allow Location"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定で位置情報を許可"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往設定開啟位置權限"
+          }
+        }
+      }
+    },
     "penghu-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2659,7 +3566,7 @@
       }
     },
     "pingtung-city-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2682,7 +3589,7 @@
       }
     },
     "pingtung-hengchun-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2705,7 +3612,6 @@
       }
     },
     "reminder-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2728,7 +3634,6 @@
       }
     },
     "reminder-title-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2746,6 +3651,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "請切記："
+          }
+        }
+      }
+    },
+    "report-prefix-string" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alert"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "速報"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預警"
           }
         }
       }
@@ -2774,7 +3701,6 @@
       }
     },
     "scroll-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2820,7 +3746,6 @@
       }
     },
     "seconds-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2843,7 +3768,7 @@
       }
     },
     "server-err-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2866,7 +3791,6 @@
       }
     },
     "sixmonth-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2889,7 +3813,6 @@
       }
     },
     "sources-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2912,7 +3835,6 @@
       }
     },
     "sources-title-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2981,7 +3903,7 @@
       }
     },
     "taichung-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3004,7 +3926,7 @@
       }
     },
     "tainan-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3027,7 +3949,7 @@
       }
     },
     "taipei-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3050,7 +3972,7 @@
       }
     },
     "taitung-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3073,7 +3995,7 @@
       }
     },
     "taoyuan-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3096,7 +4018,6 @@
       }
     },
     "term-read-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3120,7 +4041,6 @@
     },
     "term-title-string" : {
       "comment" : "Terms of Use",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3143,7 +4063,6 @@
       }
     },
     "term1-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3166,7 +4085,6 @@
       }
     },
     "term2-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3189,7 +4107,6 @@
       }
     },
     "term3-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3212,7 +4129,6 @@
       }
     },
     "term4-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3235,7 +4151,6 @@
       }
     },
     "terms-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3281,7 +4196,6 @@
       }
     },
     "time-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3304,7 +4218,6 @@
       }
     },
     "today-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3327,7 +4240,6 @@
       }
     },
     "twoweek-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3350,7 +4262,7 @@
       }
     },
     "version-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3373,7 +4285,7 @@
       }
     },
     "view-official-history-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3397,7 +4309,6 @@
     },
     "week-string" : {
       "comment" : "TimeRange",
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3420,7 +4331,6 @@
       }
     },
     "year-string" : {
-      "extractionState" : "migrated",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3443,7 +4353,7 @@
       }
     },
     "yilan-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3466,7 +4376,7 @@
       }
     },
     "yunlin-string" : {
-      "extractionState" : "migrated",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3488,6 +4398,12 @@
         }
       }
     },
+    "一次性捐贈（自填金額）" : {
+
+    },
+    "一次性贊助" : {
+
+    },
     "中央氣象署合作對象" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3504,6 +4420,9 @@
           }
         }
       }
+    },
+    "最大震度" : {
+
     },
     "最近震度參考點：%@" : {
       "extractionState" : "manual",
@@ -3527,6 +4446,9 @@
           }
         }
       }
+    },
+    "前往 ECPay 付款" : {
+
     },
     "南投縣" : {
       "extractionState" : "manual",
@@ -3766,6 +4688,15 @@
         }
       }
     },
+    "即時警報將改為讀取 EEW-test 測試資料，期間不會顯示真實地震。推播通知不受影響，仍會照常送達。測試結束後請記得關閉。" : {
+
+    },
+    "取消" : {
+
+    },
+    "只需 20 元就可以捐贈" : {
+
+    },
     "可點擊拷貝" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3867,6 +4798,9 @@
           }
         }
       }
+    },
+    "各地震度情報" : {
+
     },
     "嘉義市" : {
       "extractionState" : "manual",
@@ -4242,6 +5176,15 @@
         }
       }
     },
+    "在地圖上畫出取景範圍、目前位置與震央的連線，以及兩點的中心。中心點不會落在畫面正中央，差距即為邊界留白與下方卡片所佔的空間。" : {
+
+    },
+    "地圖取景" : {
+
+    },
+    "地震報告" : {
+
+    },
     "基隆市" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4598,6 +5541,15 @@
           }
         }
       }
+    },
+    "將自動每月扣款 %@ 直到取消" : {
+
+    },
+    "將自動每月扣款，直到取消" : {
+
+    },
+    "小區域地震報告" : {
+
     },
     "屏東縣" : {
       "extractionState" : "manual",
@@ -5177,6 +6129,18 @@
         }
       }
     },
+    "展開時若已取得你在台灣的位置，一律同時顯示你與震央。" : {
+
+    },
+    "已抵達" : {
+
+    },
+    "已複製" : {
+
+    },
+    "已訂閱主題 (%lld)" : {
+
+    },
     "彰化縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5635,6 +6599,33 @@
           }
         }
       }
+    },
+    "恢復購買" : {
+
+    },
+    "您的慷慨解囊將用於升級設備與維持伺服器營運。您可以選擇定期定額，或是一次性的贊助。" : {
+
+    },
+    "感謝您的支持！" : {
+
+    },
+    "抵達" : {
+
+    },
+    "拷貝全部" : {
+
+    },
+    "支持台灣地震速報" : {
+
+    },
+    "收到您的贊助了！您的支持讓這個 App 可以繼續運作，真的非常感謝 🙏" : {
+
+    },
+    "收合卡片時" : {
+
+    },
+    "啟用測試資料" : {
+
     },
     "新北市" : {
       "extractionState" : "manual",
@@ -6486,6 +7477,9 @@
         }
       }
     },
+    "查看更多地震報告" : {
+
+    },
     "桃園市" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6724,6 +7718,15 @@
         }
       }
     },
+    "此區塊僅在開發與 TestFlight 版本顯示。" : {
+
+    },
+    "此為一次性付款，不會自動扣款" : {
+
+    },
+    "每月定期定額" : {
+
+    },
     "澎湖縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6843,6 +7846,9 @@
         }
       }
     },
+    "無法定位或不在台灣時" : {
+
+    },
     "版本 %@ (%@)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6865,6 +7871,21 @@
           }
         }
       }
+    },
+    "目前沒有訂閱任何主題" : {
+
+    },
+    "目前顯示 EEW-test 測試資料，不會顯示真實地震" : {
+
+    },
+    "確定" : {
+
+    },
+    "確認付款" : {
+
+    },
+    "第 %lld 號地震報告" : {
+
     },
     "臺中市中區" : {
       "extractionState" : "manual",
@@ -9025,6 +10046,27 @@
         }
       }
     },
+    "規模" : {
+
+    },
+    "訂閱 test 主題" : {
+
+    },
+    "輸入代碼以開啟 test 主題" : {
+
+    },
+    "這支裝置會收到送往 test 主題的通知。測試結束後請關閉。" : {
+
+    },
+    "關閉" : {
+
+    },
+    "除錯 Debug" : {
+
+    },
+    "隱私權政策" : {
+
+    },
     "雲林縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9381,6 +10423,15 @@
           }
         }
       }
+    },
+    "顯示地圖取景範圍" : {
+
+    },
+    "顯示測試地震資料" : {
+
+    },
+    "顯示測試地震資料？" : {
+
     },
     "高雄市" : {
       "extractionState" : "manual",
@@ -10041,949 +11092,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "高雄市鼓山区"
-          }
-        }
-      }
-    },
-    "loading-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "loading..."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "読み込み中..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "載入中..."
-          }
-        }
-      }
-    },
-    "alert-safety-advice-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drop, Cover, Hold On"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "まず低く、頭を守り、動かない"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "趴 下 、 掩 護 、 穩 住"
-          }
-        }
-      }
-    },
-    "report-prefix-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alert"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "速報"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "預警"
-          }
-        }
-      }
-    },
-    "compact-intensity-prefix" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Level"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "推定"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "預估"
-          }
-        }
-      }
-    },
-    "compact-intensity-unit" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "級"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "級"
-          }
-        }
-      }
-    },
-    "countdown-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Countdown"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カウント"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "倒數"
-          }
-        }
-      }
-    },
-    "onboarding-title-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Set Up"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設定を開始"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開始設定"
-          }
-        }
-      }
-    },
-    "onboarding-continue-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Started"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "使ってみる"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開始使用"
-          }
-        }
-      }
-    },
-    "onboarding-decline-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue Without Auto Location"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報を使わない"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不使用自動定位"
-          }
-        }
-      }
-    },
-    "auto-location-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auto Location"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動定位"
-          }
-        }
-      }
-    },
-    "auto-location-desc-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Automatically picks the nearest alert region from your location and keeps it updated as you move. You can change this later in Settings."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在地から最寄りの通知地域を自動で選び、移動しても自動的に更新します。あとから「設定」で変更できます。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動依您的位置選擇最近的通知區域，移動時也會自動更新。之後可在「設定」中更改。"
-          }
-        }
-      }
-    },
-    "manual-region-title-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Alert Region"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知地域を選択"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "選擇通知區域"
-          }
-        }
-      }
-    },
-    "manual-region-desc-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location permission is unavailable, so please choose your region by hand. You can re-enable location permission in Settings later and switch to auto location."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報の許可が得られないため、お住まいの地域を手動で選択してください。あとから「設定」で位置情報を許可すると、自動位置情報に切り替えられます。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法取得位置權限，請手動選擇您所在的區域。可稍後至「設定」重新開啟位置權限，改用自動定位。"
-          }
-        }
-      }
-    },
-    "city-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "City"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "県・市"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "縣市"
-          }
-        }
-      }
-    },
-    "district-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "District"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "地区"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "地區"
-          }
-        }
-      }
-    },
-    "fix-critical-alert-settings-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fix Emergency Alert Settings"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重大な通知の設定を修正"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "修正強制警報設定"
-          }
-        }
-      }
-    },
-    "critical-alert-settings-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emergency Alert Settings"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重大な通知の設定"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "強制警報設定"
-          }
-        }
-      }
-    },
-    "nearest-reference-point-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nearest reference point: %@ (%@ km)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最寄りの震度参照地点：%@（%@ km）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最近震度參考點：%@ (%@ 公里)"
-          }
-        }
-      }
-    },
-    "locating-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Getting your location..."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報を取得中..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在取得位置..."
-          }
-        }
-      }
-    },
-    "open-location-settings-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings to Allow Location"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設定で位置情報を許可"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前往設定開啟位置權限"
-          }
-        }
-      }
-    },
-    "choose-always-allow-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings and Choose \"Always\""
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設定で「常に許可」を選択"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "前往設定選擇「一律允許」"
-          }
-        }
-      }
-    },
-    "allow-location-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Location Access"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報を許可"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "允許位置權限"
-          }
-        }
-      }
-    },
-    "notif-checking-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checking notification permission..."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知の許可を確認中..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在檢查通知權限..."
-          }
-        }
-      }
-    },
-    "notif-denied-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications Are Off"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知がオフです"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知權限已關閉"
-          }
-        }
-      }
-    },
-    "notif-notdetermined-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notification Permission Not Set"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知が未設定です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未取得通知權限"
-          }
-        }
-      }
-    },
-    "notif-allowed-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications Allowed"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知は許可されています"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已取得通知權限"
-          }
-        }
-      }
-    },
-    "notif-incomplete-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notification Permission Incomplete"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知の設定が不完全です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知權限不完整"
-          }
-        }
-      }
-    },
-    "notif-denied-issue-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifications are off, so earthquake warnings cannot reach you"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知がオフのため、地震速報を受け取れません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通知權限已關閉，將無法接收地震預警"
-          }
-        }
-      }
-    },
-    "notif-critical-off-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\"Critical Alerts\" is off: strong-quake warnings are subject to Silent and Focus modes and may not make a sound"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「重大な通知」がオフです：強い地震の通知がマナーモードや集中モードの影響を受け、音が鳴らないことがあります"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「重大通知」已關閉：強震通知將受靜音與專注模式限制，可能不會發出聲響"
-          }
-        }
-      }
-    },
-    "notif-timesensitive-off-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "\"Time Sensitive\" is off: notifications may not appear immediately"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「即時通知」がオフです：通知がすぐに表示されないことがあります"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「時效性通知」已關閉：通知可能不會即時顯示"
-          }
-        }
-      }
-    },
-    "loc-always-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auto Location Is Working"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報は動作中"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動定位運作中"
-          }
-        }
-      }
-    },
-    "loc-wheninuse-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auto Location Works Only in Foreground"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報はフォアグラウンドのみ"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動定位僅前景可用"
-          }
-        }
-      }
-    },
-    "loc-denied-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auto Location Cannot Work"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報は利用できません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動定位無法運作"
-          }
-        }
-      }
-    },
-    "loc-notdetermined-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location Permission Not Set"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報が未設定です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未取得位置權限"
-          }
-        }
-      }
-    },
-    "loc-unknown-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Auto Location Status Unknown"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動位置情報の状態は不明です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自動定位狀態不明"
-          }
-        }
-      }
-    },
-    "loc-always-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Background updates are enabled"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "バックグラウンド更新が有効です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "背景更新已啟用"
-          }
-        }
-      }
-    },
-    "loc-wheninuse-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updates only while the app is open. \"Always\" is required to switch regions in the background."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリを開いている間のみ更新します。バックグラウンドで地域を自動的に切り替えるには「常に許可」が必要です。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "僅在開啟App時更新，需要「一律允許」才能在背景自動切換區域"
-          }
-        }
-      }
-    },
-    "loc-denied-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location permission is off, so your location cannot be read"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報がオフのため、現在地を取得できません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置權限已關閉，無法取得您的位置"
-          }
-        }
-      }
-    },
-    "loc-restricted-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location permission is restricted, so your location cannot be read"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報が制限されているため、現在地を取得できません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置權限受到限制，無法取得您的位置"
-          }
-        }
-      }
-    },
-    "loc-notdetermined-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location permission has not been granted, so your location cannot be read"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報が許可されていないため、現在地を取得できません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未授予位置權限，無法取得您的位置"
-          }
-        }
-      }
-    },
-    "loc-unknown-detail-string" : {
-      "extractionState" : "migrated",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Location permission status cannot be determined"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "位置情報の状態を判定できません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法判斷位置權限狀態"
           }
         }
       }

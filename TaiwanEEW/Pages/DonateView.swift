@@ -71,121 +71,136 @@ struct DonateView: View {
     }
 
     private var baseContent: some View {
-        VStack(spacing: 0){
-            HStack {
-                if showsDismissControls {
-                    Button {
-                        dismiss.callAsFunction()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundStyle(.white)
-                            .font(.title2.bold())
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                    }
-                }
-                Spacer()
+        ZStack {
+            // The backdrop is a sibling of the content, not a .background() of it.
+            //
+            // .background() sizes its content to the frame of the view it decorates. Once
+            // the foreground VStack correctly stopped ignoring the safe area, that frame
+            // became the safe-area inset rectangle — so the gradient and the animated
+            // circles were being sized and clipped to it, leaving bars at the top and
+            // bottom and cutting the animation off mid-motion. As a ZStack layer the
+            // backdrop is sized by the ZStack instead, and reaches the screen edges.
+            ZStack {
+                GradientColors.backgroundColor
+                animatedBackground
             }
-            // No manual top padding needed anymore — this HStack lives inside
-            // a VStack that does NOT ignore the safe area, so SwiftUI keeps
-            // it clear of the status bar / notch on its own.
+            .ignoresSafeArea()
 
-            HStack(spacing: 0) {
-                Image("Icon")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: 30))
-                    .if(UIScreen.isZoomed) { view in
-                        view.frame(width: 75, height: 75)
-                    }
-                    .if(!UIScreen.isZoomed) { view in
-                        view.frame(width: 100, height: 100)
-                    }
-
-            }
-
-
-            title
-
-            if(smallDevice || UIScreen.isZoomed){
-                ScrollView{
-                    description
-                }
-            } else {
-                description
-            }
-
-            Spacer()
-
-            HStack(alignment: .firstTextBaseline, spacing: 0){
-
-                Image("coin")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipShape(RoundedRectangle(cornerRadius: 30))
-                    .frame(width: 75, height: 100)
-
-                Image("coin")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipShape(RoundedRectangle(cornerRadius: 30))
-                    .frame(width: 25, height: 100)
-
-                RoundedRectangle(cornerRadius: 5.0)
-                    .overlay {
-                        Image(systemName: "gift.fill")
-                            .font(.system(size: 23))
-                            .foregroundStyle(.black)
-                    }
-                    .frame(width: 35, height: 35)
-                    .foregroundStyle(.cyan)
-                    .offset(x:15)
-            }
-            .frame(width: 175)
-            Spacer()
-
-            HStack(alignment: .top, spacing: UIScreen.isZoomed ? 25 : 50){
-
-                if showsDismissControls {
-                    HStack {
+            // Content stays inside the safe area, which is what Albert's change set out to
+            // fix: before it, the close button and app icon sat under the status bar.
+            VStack(spacing: 0){
+                HStack {
+                    if showsDismissControls {
                         Button {
                             dismiss.callAsFunction()
                         } label: {
-                            ActionButtonLabel(
-                                title: "cancel-string".localized,
-                                fallbackFill: Color(uiColor: .darkGray),
-                                glassTint: nil,
-                                fallbackStroke: nil
-                            )
+                            Image(systemName: "xmark")
+                                .foregroundStyle(.white)
+                                .font(.title2.bold())
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                    Spacer()
+                }
+                // No manual top padding needed anymore — this HStack lives inside
+                // a VStack that does NOT ignore the safe area, so SwiftUI keeps
+                // it clear of the status bar / notch on its own.
+
+                HStack(spacing: 0) {
+                    Image("Icon")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 30))
+                        .if(UIScreen.isZoomed) { view in
+                            view.frame(width: 75, height: 75)
+                        }
+                        .if(!UIScreen.isZoomed) { view in
+                            view.frame(width: 100, height: 100)
+                        }
+
+                }
+
+
+                title
+
+                if(smallDevice || UIScreen.isZoomed){
+                    ScrollView{
+                        description
+                    }
+                } else {
+                    description
+                }
+
+                Spacer()
+
+                HStack(alignment: .firstTextBaseline, spacing: 0){
+
+                    Image("coin")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipShape(RoundedRectangle(cornerRadius: 30))
+                        .frame(width: 75, height: 100)
+
+                    Image("coin")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .clipShape(RoundedRectangle(cornerRadius: 30))
+                        .frame(width: 25, height: 100)
+
+                    RoundedRectangle(cornerRadius: 5.0)
+                        .overlay {
+                            Image(systemName: "gift.fill")
+                                .font(.system(size: 23))
+                                .foregroundStyle(.black)
+                        }
+                        .frame(width: 35, height: 35)
+                        .foregroundStyle(.cyan)
+                        .offset(x:15)
+                }
+                .frame(width: 175)
+                Spacer()
+
+                HStack(alignment: .top, spacing: UIScreen.isZoomed ? 25 : 50){
+
+                    if showsDismissControls {
+                        HStack {
+                            Button {
+                                dismiss.callAsFunction()
+                            } label: {
+                                ActionButtonLabel(
+                                    title: "cancel-string".localized,
+                                    fallbackFill: Color(uiColor: .darkGray),
+                                    glassTint: nil,
+                                    fallbackStroke: nil
+                                )
+                            }
+                        }
+                    }
+
+                    HStack {
+                        VStack {
+                            Button{
+                                showDonationSheet = true
+                            } label: {
+                                ActionButtonLabel(
+                                    title: "donate-view-cta-string".localized,
+                                    fallbackFill: Color(red: 36/255, green: 86/255, blue: 156/255),
+                                    glassTint: Color(red: 36/255, green: 86/255, blue: 156/255),
+                                    fallbackStroke: Color(red: 116/255, green: 140/255, blue: 173/255)
+                                )
+                            }
+                            Text("donate-view-cta-min")
+                                .font(.system(size: 14).bold())
+                                .foregroundStyle(.white)
                         }
                     }
                 }
 
-                HStack {
-                    VStack {
-                        Button{
-                            showDonationSheet = true
-                        } label: {
-                            ActionButtonLabel(
-                                title: "donate-view-cta-string".localized,
-                                fallbackFill: Color(red: 36/255, green: 86/255, blue: 156/255),
-                                glassTint: Color(red: 36/255, green: 86/255, blue: 156/255),
-                                fallbackStroke: Color(red: 116/255, green: 140/255, blue: 173/255)
-                            )
-                        }
-                        Text("donate-view-cta-min")
-                            .font(.system(size: 14).bold())
-                            .foregroundStyle(.white)
-                    }
-                }
+                Spacer()
+                Spacer()
             }
-
-            Spacer()
-            Spacer()
         }
-        // Background bleeds full-screen (ignoring safe area); content above does not.
-        .background(animatedBackground)
-        .background(GradientColors.backgroundColor.ignoresSafeArea())
         .onDisappear{
             timer.upstream.connect().cancel()
         }
@@ -269,6 +284,13 @@ private struct ActionButtonLabel: View {
         Text(title)
             .font(.system(size: 18).bold())
             .foregroundStyle(.white)
+            .lineLimit(1)
+            // The 140pt frame was sized for 支持贊助. "Give Support" and 支援・スポンサー do
+            // not fit at 18pt and were being truncated to an ellipsis, which on a button
+            // is worse than smaller type — "Give Supp…" does not say what it does.
+            // Scaling keeps both buttons the same width, which the side-by-side layout
+            // and the fallback RoundedRectangle below both depend on.
+            .minimumScaleFactor(0.6)
             .frame(width: 140, height: 50)
     }
 
