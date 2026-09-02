@@ -4,6 +4,9 @@
 //
 //  Created by Joe Lin on 2022/8/19.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for all places 新增所有地區的英文及日文翻譯
+///
 
 import Foundation
 import SwiftUI

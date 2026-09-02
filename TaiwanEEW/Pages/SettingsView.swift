@@ -4,6 +4,9 @@
 //
 //  Created by Joe Lin on 2022/7/8.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added most missing localizations for this tab, including the cities ones 新增大部分字串的英文及日文翻譯，包括縣市城鎮的翻譯
+///
 
 import SwiftUI
 import UserNotifications
@@ -310,11 +313,11 @@ struct SettingsView: View {
                     .font(.system(size: 32))
                 Spacer()
                 VStack(alignment: .leading) {
-                    Text("應援台灣地震速報")
+                    Text("donate-eew-string")
                         .font(.title3.bold())
                         .opacity(0.9)
 
-                    Text("您可以透過小額贊助減輕開發者花費負擔，\n讓應用程式永續經營！")
+                    Text("donate-eew-detail-string")
                         .font(.caption)
                         .opacity(0.9)
                 }
@@ -335,11 +338,11 @@ struct SettingsView: View {
             header:
                 HStack{
                     Image(systemName: "location.fill")
-                    Text("自動定位")
+                    Text("autoloc")
                 },
-            footer: Text("啟用後將自動根據您的位置選擇最近的地震通知區域(距離最近的震度參考點未必在您所在的區域界內)。需要「永遠」位置權限以啟用背景更新。"))
+            footer: Text("autoloc-footer"))
         {
-            Toggle("啟用自動定位", isOn: $locationManager.isAutoLocationEnabled)
+            Toggle("autoloc-enable-toggle", isOn: $locationManager.isAutoLocationEnabled)
                 .onChange(of: locationManager.isAutoLocationEnabled) { isEnabled in
                     if isEnabled {
                         locationManager.updateLocationManually()
@@ -368,7 +371,7 @@ struct SettingsView: View {
                     Image(systemName: "mappin.circle.fill")
                     Text("alerts-pref-string")
                 },
-            footer: isAutoLocationActive ? Text("自動定位運作中，無法手動選擇地區") : Text("notice1-string"))
+            footer: isAutoLocationActive ? Text("auto-cant-manual-footer") : Text("notice1-string"))
         {
             if isAutoLocationActive {
                 HStack {
@@ -385,35 +388,35 @@ struct SettingsView: View {
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("北部")
+                            Text("north-region")
                         }
                         Section {
                             ForEach(6..<11, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("中部")
+                            Text("central-region")
                         }
                         Section {
                             ForEach(11..<16, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("南部")
+                            Text("south-region")
                         }
                         Section {
                             ForEach(16..<19, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("東部")
+                            Text("east-region")
                         }
                         Section {
                             ForEach(19..<Location.cities.count, id: \.self){ cityIndex in
                                 Text(Location.cities[cityIndex].getDisplayName())
                             }
                         } header: {
-                            Text("離島")
+                            Text("island-regions")
                         }
                     }
                     .onChange(of: subscribedCityIndex) { value in
@@ -529,7 +532,7 @@ struct SettingsView: View {
             header:
                 HStack{
                     Image(systemName: "questionmark.bubble.fill")
-                    Text("產品公告／意見回饋")
+                    Text("feedback-header")
                 })
         {
             Link(destination: AppLinks.discord){
@@ -539,9 +542,9 @@ struct SettingsView: View {
                         .scaledToFit()
                         .frame(width: 20, height: 20)
                         
-                    Text("Discord 官方社群").frame(maxWidth: .infinity, alignment: .leading)
+                    Text("discord").frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(.blue)
-                    Text("意見回饋主要管道")
+                    Text("discord-detail")
                         .font(.caption)
                         .foregroundStyle(.gray)
                 }
@@ -553,7 +556,7 @@ struct SettingsView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                        Text("Threads 官方帳號").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("threads").frame(maxWidth: .infinity, alignment: .leading)
                             .foregroundStyle(.blue)
                     }
                 }
@@ -593,7 +596,7 @@ struct SettingsView: View {
                     .padding(.bottom, 5)
                 Text("版本 \(appVersion ?? "n/a") (\(buildNumber ?? "n/a"))")
                     .font(.system(size: 18).monospaced())
-                Text("林子祐製作、版權所有 ")
+                Text("林子祐製作、版權所有")
                     .font(.system(size: 18))
                 HStack{
                     Text("中央氣象署合作對象")
@@ -628,7 +631,7 @@ struct SettingsView: View {
                 HStack{
                     Image(systemName: "globe")
                         .foregroundStyle(.indigo)
-                    Text("語言、位置權限設定")
+                    Text("lang-loc-settings")
                         .foregroundStyle(.blue)
                 }
             }
@@ -682,7 +685,7 @@ struct SettingsView: View {
                     .foregroundStyle(.gray)
                     .multilineTextAlignment(.trailing)
                     .opacity(copiedItem == title ? 0 : 1)
-                Text("已複製")
+                Text("copied")
                     .foregroundStyle(.green)
                     .opacity(copiedItem == title ? 1 : 0)
             }
@@ -712,7 +715,7 @@ struct SettingsView: View {
                     Form {
                         formContent
                     }
-                    .navigationTitle("設定 Settings")
+                    .navigationTitle("tab-set-header".localized)
                     .toolbarBackground(Color(.clear), for: .navigationBar)
                     .modifier(NavigationModifier(selectedCityIndex: $subscribedCityIndex, selectedDistrictIndex: $subscribedDistrictIndex, locationManager: locationManager))
                 }
@@ -722,7 +725,7 @@ struct SettingsView: View {
                     Form {
                         formContent
                     }
-                    .navigationTitle("設定 Settings")
+                    .navigationTitle("tab-set-header".localized)
                     .modifier(NavigationModifier(selectedCityIndex: $subscribedCityIndex, selectedDistrictIndex: $subscribedDistrictIndex, locationManager: locationManager))
                 }
             }
@@ -756,8 +759,8 @@ struct NavigationModifier: ViewModifier {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView().environment(\.locale, Locale.init(identifier: "zh-Hant"))
-        //SettingsView().environment(\.locale, Locale.init(identifier: "en"))
+//        SettingsView().environment(\.locale, Locale.init(identifier: "zh-Hant"))
+        SettingsView().environment(\.locale, Locale.init(identifier: "en"))
         //SettingsView().environment(\.locale, Locale.init(identifier: "ja"))
     }
 }

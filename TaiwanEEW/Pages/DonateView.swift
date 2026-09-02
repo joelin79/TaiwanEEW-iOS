@@ -4,6 +4,10 @@
 //
 //  Created by 林子祐 on 2024/8/27.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this tab 新增字串的英文及日文翻譯
+///   - Fixed tab safe space which was covering the top parts of the view 修復分頁中上方空間擋到的一部分
+///
 
 import SwiftUI
 
@@ -25,7 +29,7 @@ struct DonateView: View {
     @StateObject private var animator = CircleAnimator(colors: GradientColors.all)
 
     var title: some View {
-        Text("🎁 支持台灣地震速報")
+        Text("donate-view-title")
             .foregroundStyle(.white)
             .font(.system(size: 28).weight(.bold))
             .padding(.top, 25)
@@ -33,17 +37,17 @@ struct DonateView: View {
 
     var description: some View {
         VStack(alignment: .leading){
-            Text("為了讓人人都可以取得即時地震預警，此應用程式下載不需付費。") // ，亦無置入廣告
+            Text("donate-1-string") // ，亦無置入廣告
                 .foregroundStyle(.white)
                 .font(.system(size: 18))
                 .padding(.top, 25)
                 .padding(.horizontal, 15)
-            Text("開發者為了此應用程式，購置逾十萬元伺服器等設備，並每月支出雲端服務租賃費用，在有限的課餘時間開發與維護。")
+            Text("donate-2-string")
                 .foregroundStyle(.white)
                 .font(.system(size: 19).weight(.bold))
                 .padding(.horizontal, 15)
                 .padding(.top, 1)
-            Text("如果您喜歡此應用程式，希望您考慮給予開發者一些贊助，不僅能減輕開發者每月的開銷，您的慷慨解囊將用於設備升級，有助於提高應用程式的品質，永續為您服務。")
+            Text("donate-3-string")
                 .foregroundStyle(.white)
                 .font(.system(size: 18))
                 .padding(.horizontal, 15)
@@ -51,134 +55,137 @@ struct DonateView: View {
         }
     }
 
-    private var baseContent: some View {
+    // Background layer only — this is the piece allowed to bleed under the
+    // status bar / notch. Kept separate from content so the safe area fix
+    // below doesn't accidentally clip the animated circles.
+    private var animatedBackground: some View {
         ZStack {
-            ZStack {
-                ForEach(animator.circles){circle in
-                    MovingCircle(originOffset: circle.position)
-                        .foregroundStyle(circle.color)
-                }
+            ForEach(animator.circles){circle in
+                MovingCircle(originOffset: circle.position)
+                    .foregroundStyle(circle.color)
             }
-            .blur(radius: animationProperties.blurRadius)
-            .ignoresSafeArea()
-            .clipped()
+        }
+        .blur(radius: animationProperties.blurRadius)
+        .ignoresSafeArea()
+        .clipped()
+    }
 
-            VStack(spacing: 0){
-                HStack {
-                    if showsDismissControls {
+    private var baseContent: some View {
+        VStack(spacing: 0){
+            HStack {
+                if showsDismissControls {
+                    Button {
+                        dismiss.callAsFunction()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundStyle(.white)
+                            .font(.title2.bold())
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                    }
+                }
+                Spacer()
+            }
+            // No manual top padding needed anymore — this HStack lives inside
+            // a VStack that does NOT ignore the safe area, so SwiftUI keeps
+            // it clear of the status bar / notch on its own.
+
+            HStack(spacing: 0) {
+                Image("Icon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 30))
+                    .if(UIScreen.isZoomed) { view in
+                        view.frame(width: 75, height: 75)
+                    }
+                    .if(!UIScreen.isZoomed) { view in
+                        view.frame(width: 100, height: 100)
+                    }
+
+            }
+
+
+            title
+
+            if(smallDevice || UIScreen.isZoomed){
+                ScrollView{
+                    description
+                }
+            } else {
+                description
+            }
+
+            Spacer()
+
+            HStack(alignment: .firstTextBaseline, spacing: 0){
+
+                Image("coin")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(RoundedRectangle(cornerRadius: 30))
+                    .frame(width: 75, height: 100)
+
+                Image("coin")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .clipShape(RoundedRectangle(cornerRadius: 30))
+                    .frame(width: 25, height: 100)
+
+                RoundedRectangle(cornerRadius: 5.0)
+                    .overlay {
+                        Image(systemName: "gift.fill")
+                            .font(.system(size: 23))
+                            .foregroundStyle(.black)
+                    }
+                    .frame(width: 35, height: 35)
+                    .foregroundStyle(.cyan)
+                    .offset(x:15)
+            }
+            .frame(width: 175)
+            Spacer()
+
+            HStack(alignment: .top, spacing: UIScreen.isZoomed ? 25 : 50){
+
+                if showsDismissControls {
+                    HStack {
                         Button {
                             dismiss.callAsFunction()
                         } label: {
-                            Image(systemName: "xmark")
-                                .foregroundStyle(.white)
-                                .font(.title2.bold())
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 10)
-                        }
-                    }
-                    Spacer()
-                }
-                // The whole view ignores safe area, so this inset is what keeps content
-                // clear of the status bar. It has to sit on the row rather than on the
-                // close button, or hiding the button pulls everything under the clock.
-                .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top)
-
-                HStack(spacing: 0) {
-                    Image("Icon")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
-                        .if(UIScreen.isZoomed) { view in
-                            view.frame(width: 75, height: 75)
-                        }
-                        .if(!UIScreen.isZoomed) { view in
-                            view.frame(width: 100, height: 100)
-                        }
-
-                }
-
-
-                title
-
-                if(smallDevice || UIScreen.isZoomed){
-                    ScrollView{
-                        description
-                    }
-                } else {
-                    description
-                }
-
-                Spacer()
-
-                HStack(alignment: .firstTextBaseline, spacing: 0){
-                        
-                    Image("coin")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
-                        .frame(width: 75, height: 100)
-
-                    Image("coin")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .clipShape(RoundedRectangle(cornerRadius: 30))
-                        .frame(width: 25, height: 100)
-
-                    RoundedRectangle(cornerRadius: 5.0)
-                        .overlay {
-                            Image(systemName: "gift.fill")
-                                .font(.system(size: 23))
-                                .foregroundStyle(.black)
-                        }
-                        .frame(width: 35, height: 35)
-                        .foregroundStyle(.cyan)
-                        .offset(x:15)
-                }
-                .frame(width: 175)
-                Spacer()
-
-                HStack(alignment: .top, spacing: UIScreen.isZoomed ? 25 : 50){
-
-                    if showsDismissControls {
-                        HStack {
-                            Button {
-                                dismiss.callAsFunction()
-                            } label: {
-                                ActionButtonLabel(
-                                    title: "取消",
-                                    fallbackFill: Color(uiColor: .darkGray),
-                                    glassTint: nil,
-                                    fallbackStroke: nil
-                                )
-                            }
-                        }
-                    }
-
-                    HStack {
-                        VStack {
-                            Button{
-                                showDonationSheet = true
-                            } label: {
-                                ActionButtonLabel(
-                                    title: "支持贊助",
-                                    fallbackFill: Color(red: 36/255, green: 86/255, blue: 156/255),
-                                    glassTint: Color(red: 36/255, green: 86/255, blue: 156/255),
-                                    fallbackStroke: Color(red: 116/255, green: 140/255, blue: 173/255)
-                                )
-                            }
-                            Text("最低只需 30 元")
-                                .font(.system(size: 14).bold())
-                                .foregroundStyle(.white)
+                            ActionButtonLabel(
+                                title: "cancel-string".localized,
+                                fallbackFill: Color(uiColor: .darkGray),
+                                glassTint: nil,
+                                fallbackStroke: nil
+                            )
                         }
                     }
                 }
 
-                Spacer()
-                Spacer()
+                HStack {
+                    VStack {
+                        Button{
+                            showDonationSheet = true
+                        } label: {
+                            ActionButtonLabel(
+                                title: "donate-view-cta-string".localized,
+                                fallbackFill: Color(red: 36/255, green: 86/255, blue: 156/255),
+                                glassTint: Color(red: 36/255, green: 86/255, blue: 156/255),
+                                fallbackStroke: Color(red: 116/255, green: 140/255, blue: 173/255)
+                            )
+                        }
+                        Text("donate-view-cta-min")
+                            .font(.system(size: 14).bold())
+                            .foregroundStyle(.white)
+                    }
+                }
             }
+
+            Spacer()
+            Spacer()
         }
-        .ignoresSafeArea()
-        .background(GradientColors.backgroundColor)
+        // Background bleeds full-screen (ignoring safe area); content above does not.
+        .background(animatedBackground)
+        .background(GradientColors.backgroundColor.ignoresSafeArea())
         .onDisappear{
             timer.upstream.connect().cancel()
         }
