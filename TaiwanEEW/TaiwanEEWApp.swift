@@ -216,7 +216,11 @@ private struct OnboardingFlowView: View {
 class AppDelegate: NSObject, UIApplicationDelegate {
     @AppStorage("notifyThreshold") var notifyThreshold: NotifyThreshold = .eg3          // (duplicate)
 //    @AppStorage("isFirstLaunch") var isFirstLaunch: Bool = true                         // (duplicate)
-    let SNSPlatformApplicationArn = AppConfig.platformApplicationArn(sandbox: TaiwanEEWApp.DEBUG)
+    // Derived from the signed aps-environment, not from TaiwanEEWApp.DEBUG. The device token's
+    // environment is decided by the provisioning profile at signing time, so a hand-set flag
+    // could disagree with it — and when it did, the endpoint was created against the wrong
+    // platform application, subscribing succeeded, and nothing was ever delivered.
+    let SNSPlatformApplicationArn = AppConfig.currentPlatformApplicationArn
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "AppDelegate")
     func seperate(){ logger.debug(""); logger.debug("  -------- incoming notification --------")}       // for debugging only
     

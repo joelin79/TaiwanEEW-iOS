@@ -20,6 +20,11 @@ struct SettingsView: View {
     @AppStorage("showMapFramingDebug") var showMapFramingDebug: Bool = false
     @AppStorage(AwayFramingPreference.storageKey) var awayFraming = AwayFramingPreference.taiwan
     @AppStorage(CollapsedFramingPreference.storageKey) var collapsedFraming = CollapsedFramingPreference.taiwanOnly
+    // Written to the shared App Group suite, not standard defaults: the notification service
+    // extension runs in its own container and this is the only way it can read the choice.
+    @AppStorage(DrillAlertPreference.storageKey,
+                store: UserDefaults(suiteName: DrillAlertPreference.suiteName))
+    var drillAlertsMuted: Bool = false
     @State private var confirmingTestEEWData = false
     @State private var selectedAlertOption = 0
     @State private var showSheet = false
@@ -27,6 +32,11 @@ struct SettingsView: View {
     @State private var subscribedTopics: [String] = []
     @State private var notificationSettings: UNNotificationSettings? = nil
     @State private var storefrontCountry: String = "…"
+    @State private var testTopicPasscodeEntry = ""
+    @State private var isTestTopicUnlocked = false
+    @State private var isSubscribedToTestTopic = false
+    @State private var isTestTopicBusy = false
+    @State private var testTopicError: String? = nil
     @StateObject private var locationManager = LocationManager.shared
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
     let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
@@ -53,6 +63,7 @@ struct SettingsView: View {
             autoLocationSection
             locationSelectionSection
             alertThresholdSection
+            drillAlertSection
             mapFramingSection
             linksSection
             aboutSection
@@ -139,6 +150,8 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
+                testTopicControl
+
                 DisclosureGroup("已訂閱主題 (\(subscribedTopics.count))") {
                     if subscribedTopics.isEmpty {
                         Text("目前沒有訂閱任何主題")
@@ -200,6 +213,75 @@ struct SettingsView: View {
     /// subscribed to - verify against AWS itself when a mismatch is suspected.
     private func refreshSubscribedTopics() {
         subscribedTopics = NotificationManager.AWSManager.currentSubscribedTopics.keys.sorted()
+        isSubscribedToTestTopic = NotificationManager.AWSManager.isSubscribed(to: Self.testTopicName)
+    }
+
+    // MARK: - Test topic
+
+    /// The server aims a single-handset send at this topic - `topicCondition` special-cases
+    /// the name - so a drill or custom message can be tried on one device instead of a
+    /// district full of real users.
+    private static let testTopicName = "test"
+
+    /// Not a secret, and it is in a public repo. It exists so the toggle cannot be hit by
+    /// accident while scrolling the debug section on a real device, which is one tap away
+    /// from putting that handset on a live topic. Diagnostics builds only either way.
+    private static let testTopicPasscode = "7777"
+
+    @ViewBuilder
+    private var testTopicControl: some View {
+        if isTestTopicUnlocked {
+            Toggle("訂閱 test 主題", isOn: Binding(
+                get: { isSubscribedToTestTopic },
+                set: { setTestTopicSubscription(to: $0) }
+            ))
+            .disabled(isTestTopicBusy)
+
+            if let testTopicError {
+                Label(testTopicError, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if isSubscribedToTestTopic {
+                Text("這支裝置會收到送往 test 主題的通知。測試結束後請關閉。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            SecureField("輸入代碼以開啟 test 主題", text: $testTopicPasscodeEntry)
+                .keyboardType(.numberPad)
+                .onChange(of: testTopicPasscodeEntry) { entry in
+                    guard entry == Self.testTopicPasscode else { return }
+                    isTestTopicUnlocked = true
+                    testTopicPasscodeEntry = ""
+                }
+        }
+    }
+
+    /// `test` is deliberately not a threshold-managed topic name, so a threshold or district
+    /// change will not quietly unsubscribe it - see `isThresholdManagedTopic`. It is also not
+    /// in `generateTopicKeys`, which means `recoverSubscriptionState` will not restore it
+    /// after an APNs token rotation: re-enable the toggle if the device is reinstalled.
+    private func setTestTopicSubscription(to wantsSubscription: Bool) {
+        isTestTopicBusy = true
+        testTopicError = nil
+        Task {
+            let succeeded = wantsSubscription
+                ? await NotificationManager.AWSManager.subscribe(to: Self.testTopicName)
+                : await NotificationManager.AWSManager.unsubscribe(from: Self.testTopicName)
+            await MainActor.run {
+                if !succeeded {
+                    // Most likely no endpoint ARN yet (notification permission never granted,
+                    // or registration has not come back), which `subscribe` reports as false.
+                    testTopicError = wantsSubscription
+                        ? "訂閱失敗。請確認已開啟通知權限,且已完成 APNs 註冊。"
+                        : "取消訂閱失敗。"
+                }
+                isTestTopicBusy = false
+                refreshSubscribedTopics()
+            }
+        }
     }
     
     private var donationSection: some View {
@@ -390,6 +472,32 @@ struct SettingsView: View {
         }
     }
     
+    /// CWA publishes drills, system messages and tests to the same topics as real warnings,
+    /// and at intensity >= 3 they arrive as critical alerts — bypassing the mute switch and
+    /// Focus exactly as a real earthquake does. That is how the annual drill wakes people
+    /// sleeping off a night shift. Its own section rather than a row in the threshold section
+    /// above, because the footer has to say plainly that the notification still arrives.
+    private var drillAlertSection: some View {
+        Section(
+            header:
+                HStack {
+                    Image(systemName: "bell.badge")
+                    Text("drill-pref-string")
+                },
+            footer: Text("drill-pref-footer-string"))
+        {
+            // Reads as "on = you get drills", which is the way round a user thinks about it.
+            // The stored key stays inverted (drillAlertsMuted, default false) on purpose:
+            // UserDefaults.bool returns false for a missing key, so storing "enabled" would
+            // make an unreadable App Group silence drills, and the whole design depends on
+            // every failure being loud rather than quiet.
+            Toggle("drill-enable-string", isOn: Binding(
+                get: { !drillAlertsMuted },
+                set: { drillAlertsMuted = !$0 }
+            ))
+        }
+    }
+
     /// The alert card's two positions frame the map differently — expanded is
     /// first-person, collapsed is an island overview — so each gets its own choice. The
     /// expanded one only applies when the user's position cannot anchor the view, since
@@ -541,6 +649,11 @@ struct SettingsView: View {
         Section{
             copyableRow(title: "APNs", value: UserDefaults.standard.string(forKey: "deviceTokenForSNS") ?? "nil")
             copyableRow(title: "ARN", value: UserDefaults.standard.string(forKey: "endpointArnSuffixForSNS") ?? "nil")
+            // Which APNs environment this build was signed for, and therefore which SNS
+            // platform application the endpoint was created against. Shown because a
+            // mismatch here delivers nothing and reports no error anywhere.
+            copyableRow(title: "APNs env",
+                        value: "\(AppConfig.apsEnvironment) → \(AppConfig.isAPNsSandbox ? "APNS_SANDBOX" : "APNS")")
             // App Store storefront the device is on. Explains IAP currency: a device on the
             // US storefront (or signed into a US sandbox account) shows USD even in Taiwan.
             copyableRow(title: "Storefront", value: storefrontCountry)

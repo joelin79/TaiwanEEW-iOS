@@ -18,11 +18,11 @@ Companion backend (separate private repo): `TaiwanEEW-Server-Java`, production r
 
 ## Current Status
 
-Last updated: 2026-08-29
+Last updated: 2026-08-31
 
 - **This is the public, source-available repo** (`joelin79/TaiwanEEW-iOS`). Development happens here. The old `joelin79/TaiwanEEW` is an archived private record of the pre-open-source history. See LICENSE.md — everything committed here is public; never commit secrets or exploit detail.
 - **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed.
-- **In progress:** 2.2.0 on `feature/v2.2.0/onboarding`, currently build 4, TestFlight only. `ver2_2_0` SNS topic already created.
+- **In progress:** 2.2.0 on `feature/v2.2.0/drill-silence`, currently build 4, TestFlight only. `ver2_2_0` SNS topic already created. The earlier `feature/v2.2.0/onboarding` branch — which had grown to carry the whole release — was merged to `main` and deleted on 2026-08-31; `main` now holds all 2.2.0 work to date.
 - **Branching:** trunk-based — see the Branching & Naming section below.
 - **Installed base is long-tailed** — users remain on 2.0.4 through 2.0.8. Never assume only the newest client is live; see Compatibility Rules below.
 
@@ -47,11 +47,21 @@ the alert card's blocks sized to the card rather than the screen; special-case r
 which puts both countdowns and every blink except the epicenter's on one clock derived
 from the arrival time.
 
+Plus a Settings toggle that delivers non-`Actual` reports silently (`DrillAlertPreference`).
+Drills share the real alert topics and arrive `critical` at intensity ≥3, so they bypass the
+mute switch and Focus — which is how the annual drill wakes night-shift workers. iOS cannot
+withhold an arrived push, so the extension downgrades it to no sound and `.passive` rather
+than dropping it. **Requires the backend's additive `status` payload key, and the
+`group.com.joedev.TaiwanEEW` App Group** — the extension has its own container and reads the
+preference from the shared suite. Opt-out, default off; old clients are untouched.
+
 ### Known gaps in 2.2.0
 
-- **Epicenter blink stops intermittently** — open, cause not identified. Phase-syncing and
-  self-healing attempts were tried and reverted; it is the original `CABasicAnimation` with
-  `calculationMode = .discrete` added. Identify *when* it drops out before changing it again.
+- **The epicenter blink settles after a while rather than blinking forever.** Previously
+  listed here as an open bug; it is an accepted UI choice, not a defect, and does not gate
+  the release. It is the original `CABasicAnimation` with `calculationMode = .discrete`
+  added. Phase-syncing and self-healing attempts were tried and reverted — leave it alone
+  unless the behaviour is being deliberately redesigned.
 - **Localization is half-done on the alert screen** and deliberately deferred as one pass:
   `第 N 報`, 弱/強, 已抵達 and `EpicenterName` are hardcoded Chinese, so English currently
   reads "Alert 第 3 報". SettingsView's own sections are inline Chinese too.

@@ -40,6 +40,22 @@ class NotificationService: UNNotificationServiceExtension {
     }
 
     private func processNotification(content: UNMutableNotificationContent) {
+        // Drills reach the same topics as real warnings and, at intensity >= 3, arrive as
+        // critical alerts that bypass the mute switch and Focus. Users who opted out get them
+        // silently instead — iOS will not let an arrived notification be withheld, so this is
+        // as quiet as it goes: no sound, and .passive so the screen stays dark.
+        //
+        // Deliberately first, before the "ins" work below. If this extension runs out of time
+        // the system delivers the *original* payload at full critical volume, which is exactly
+        // the harm being prevented, so the silencing path must not sit behind anything slower.
+        let status = content.userInfo["status"] as? String
+        if DrillAlertPreference.shouldSilence(status: status, isMuted: DrillAlertPreference.isMuted) {
+            content.sound = nil
+            content.interruptionLevel = .passive
+            logger.info("Drill alerts muted; delivering '\(status ?? "")' notification silently")
+            return
+        }
+
         // Extract "ins" field from the payload
         guard let insValue = content.userInfo["ins"] as? String else {
             logger.info("No 'ins' field found, using original sound")
