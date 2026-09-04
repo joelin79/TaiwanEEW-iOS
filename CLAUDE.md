@@ -18,11 +18,13 @@ Companion backend (separate private repo): `TaiwanEEW-Server-Java`, production r
 
 ## Current Status
 
-Last updated: 2026-08-31
+Last updated: 2026-09-05
 
 - **This is the public, source-available repo** (`joelin79/TaiwanEEW-iOS`). Development happens here. The old `joelin79/TaiwanEEW` is an archived private record of the pre-open-source history. See LICENSE.md — everything committed here is public; never commit secrets or exploit detail.
 - **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed.
-- **In progress:** 2.2.0 on `feature/v2.2.0/drill-silence`, currently build 4, TestFlight only. `ver2_2_0` SNS topic already created. The earlier `feature/v2.2.0/onboarding` branch — which had grown to carry the whole release — was merged to `main` and deleted on 2026-08-31; `main` now holds all 2.2.0 work to date.
+- **Submitted:** 2.2.0 (build 5), tagged `v2.2.0` at `2bb6fb6`, **in App Store review**. `ver2_2_0` SNS topic exists.
+- **In progress:** 2.2.1 on `feature/v2.2.1/drill-priority`, build 1. `main` already carries the 2.2.1 String Catalog migration and the alert-screen work that followed it.
+- **Deadline:** Taiwan's national drill is **21 September**, with a rehearsal on **14 September**. The backend half is done; the remaining client item is the ±5 minute real-earthquake priority. See `NOTES.private.md`.
 - **Branching:** trunk-based — see the Branching & Naming section below.
 - **Installed base is long-tailed** — users remain on 2.0.4 through 2.0.8. Never assume only the newest client is live; see Compatibility Rules below.
 
@@ -54,6 +56,20 @@ withhold an arrived push, so the extension downgrades it to no sound and `.passi
 than dropping it. **Requires the backend's additive `status` payload key, and the
 `group.com.joedev.TaiwanEEW` App Group** — the extension has its own container and reads the
 preference from the shared suite. Opt-out, default off; old clients are untouched.
+
+### 2.2.1 so far
+
+Albert Huang's String Catalog migration (`Localizable.xcstrings` replaces the three
+`.strings` files), and everything that surfaced once English and Japanese actually rendered:
+the donate page, the action buttons, the countdown title, the epicenter name and the origin
+time were all sized against Chinese copy and truncated. `MarqueeText` scrolls an overflowing
+place name instead of cutting it; the origin time follows iOS's own progression and can be
+tapped for the exact timestamp; the alert's active window scales with magnitude (2/3/5
+minutes) and is now shared by the status bar, the countdown flash and the map's epicenter,
+which had each been deciding it separately.
+
+**The pattern worth carrying forward:** a fixed width or height that fits 支持贊助 will not
+fit "Give Support", and the build stays green either way.
 
 ### Known gaps in 2.2.0
 
