@@ -73,7 +73,14 @@ struct EEWDetailBlock: View {
         // .named is what turns "1 day ago" into "yesterday".
         formatter.dateTimeStyle = .named
         formatter.unitsStyle = .full
-        return formatter.localizedString(for: originTime, relativeTo: now)
+        let relative = formatter.localizedString(for: originTime, relativeTo: now)
+        // The formatter returns "yesterday" and "2 days ago" in lower case, because it
+        // expects to sit inside a sentence. Here it is a label on its own, so it takes a
+        // capital. First character only - .capitalized would give "2 Days Ago" - and
+        // uppercasing a Chinese or Japanese character is a no-op, so this is safe for all
+        // three languages.
+        guard let first = relative.first else { return relative }
+        return String(first).uppercased(with: Locale.current) + relative.dropFirst()
     }
 
     var originTimeFormattedStr: String {
@@ -252,8 +259,11 @@ private struct EEWDetailHeaderMagnitude: View {
 //                Image(systemName: "water.waves.and.arrow.down")
 //                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
 //                    .foregroundStyle(Color("TimeText"))
+                // Not monospaced. The magnitude beside it is, because that number changes
+                // between reports and monospacing stops it jittering; "Depth" is a word
+                // now that it is localized, and a word set in mono reads as code.
                 Text(String(format: String(localized: "alert-depth-format"), depth))
-                    .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
+                    .font(.system(size: UIScreen.isZoomed ? 14 : 16))
                     .foregroundStyle(Color("TimeText"))
             }
         }

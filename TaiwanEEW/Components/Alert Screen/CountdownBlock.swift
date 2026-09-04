@@ -85,13 +85,14 @@ struct TimeBlock: View {
     var content: some View {
         VStack{
             Text("countdown-string")
-                .font(.system(size: UIScreen.isZoomed ? 30 : 34).weight(.medium))
+                .font(.system(size: UIScreen.isZoomed ? 26 : 30).weight(.medium))
                 .lineLimit(1)
-                // The block is 120-170pt wide (AlertBlockMetrics). 倒數 fits at 34pt with
-                // room to spare, カウント is tight, and "Countdown" needs about 175pt and
-                // was truncated. Scaling per-language rather than lowering the size for
-                // everyone, so Chinese keeps the weight this block was designed around.
+                // The block is 120-170pt wide (AlertBlockMetrics), and the title has to
+                // stop short of the edges rather than sit against them. Reduced a step
+                // from 34, with a scale factor underneath so "Countdown" - the longest of
+                // the three - shrinks the rest of the way instead of truncating.
                 .minimumScaleFactor(0.5)
+                .padding(.horizontal, 6)
             ZStack(alignment: Alignment(horizontal: .center, vertical: .countdownValueBaseline)) {
                 referenceValueRow
                     .hidden()
@@ -104,7 +105,12 @@ struct TimeBlock: View {
     private var valueContent: some View {
         if hasArrived {
             Text("alert-arrived")
-                .font(.system(size: UIScreen.isZoomed ? 42 : 46, weight: .bold))
+                .font(.system(size: UIScreen.isZoomed ? 36 : 40, weight: .bold))
+                .lineLimit(1)
+                // "Arrived" is three times the width of 已抵達 and was reaching the block
+                // edge. Same treatment as the title above it.
+                .minimumScaleFactor(0.5)
+                .padding(.horizontal, 6)
                 .alignmentGuide(.countdownValueBaseline) { dimensions in
                     dimensions[.lastTextBaseline] + (UIScreen.isZoomed ? 12 : 16)
                 }
