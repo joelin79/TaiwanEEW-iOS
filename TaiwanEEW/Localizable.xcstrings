@@ -3795,7 +3795,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld sec ago"
+            "value" : "%llds ago"
           }
         },
         "ja" : {
@@ -11990,19 +11990,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.1f km"
+            "value" : "%.0f km"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.1f km"
+            "value" : "%.0f km"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.1f km"
+            "value" : "%.0f km"
           }
         }
       }
@@ -12013,7 +12013,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld min ago"
+            "value" : "%lldm ago"
           }
         },
         "ja" : {
@@ -12072,6 +12072,75 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "昨天 %@"
+          }
+        }
+      }
+    },
+    "compact-countdown-string" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あと"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "倒數"
+          }
+        }
+      }
+    },
+    "intensity-suffix-weak" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "−"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "弱"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "弱"
+          }
+        }
+      }
+    },
+    "intensity-suffix-strong" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "強"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "強"
           }
         }
       }

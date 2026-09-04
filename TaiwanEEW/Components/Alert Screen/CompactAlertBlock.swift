@@ -52,14 +52,16 @@ struct CompactAlertBlock: View {
     /// gets looked up. This is presentation only: CWA writes them 弱 and 強, and the
     /// suffix is set smaller than the digit the way the agency renders it.
     ///
-    /// Hardcoded rather than localized because the surrounding copy in this view is too:
-    /// the epicenter name is geocoded zh-Hant for every locale. Worth revisiting together.
+    /// Localized: CWA and JMA both write these 弱 and 強, but English has no equivalent
+    /// word and uses the − and + the raw token already carries.
     private var intensityParts: (value: String, suffix: String?) {
+        let weak = String(localized: "intensity-suffix-weak")
+        let strong = String(localized: "intensity-suffix-strong")
         switch intensity {
-        case "5-": return ("5", "弱")
-        case "5+": return ("5", "強")
-        case "6-": return ("6", "弱")
-        case "6+": return ("6", "強")
+        case "5-": return ("5", weak)
+        case "5+": return ("5", strong)
+        case "6-": return ("6", weak)
+        case "6+": return ("6", strong)
         default: return (intensity.isEmpty ? "–" : intensity, nil)
         }
     }
@@ -233,8 +235,15 @@ private struct CountdownPill: View {
                 Text("抵達")
                     .font(.system(size: PillMetrics.value, weight: .bold))
             } else {
-                Text("countdown-string")
-                    .font(.system(size: PillMetrics.label).weight(.medium))
+                // Its own key, not the expanded card's. English is deliberately empty:
+                // "Countdown" does not fit this pill beside the number, and in a
+                // compressed card the label is the expendable half — the digits and the
+                // 秒 after them still say what it is. 倒數 and あと are short enough to keep.
+                let countdownLabel = String(localized: "compact-countdown-string")
+                if !countdownLabel.isEmpty {
+                    Text(countdownLabel)
+                        .font(.system(size: PillMetrics.label).weight(.medium))
+                }
                 // monospacedDigit rather than design: .monospaced. The monospaced *design*
                 // gives the decimal point a full digit-width advance, which left it
                 // floating in a gap on both sides; monospacedDigit fixes the width of
