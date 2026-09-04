@@ -27,6 +27,10 @@ struct EEWDetailBlock: View {
     
     @State private var locationName: String? = nil
     @State private var clockTick = Date()
+    /// Tapping the origin time swaps between "3 minutes ago" and the exact timestamp.
+    /// Persisted, because someone who wants exact times wants them every launch, and
+    /// re-tapping during an earthquake is not when to make them ask again.
+    @AppStorage("showsAbsoluteOriginTime") private var showsAbsoluteOriginTime = false
     var maxInt: String {eventManager.maxIntensity}
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
@@ -43,6 +47,35 @@ struct EEWDetailBlock: View {
         return formatter
     }()
     
+    /// What the header actually shows: relative by default, absolute once tapped.
+    var originTimeDisplayStr: String {
+        showsAbsoluteOriginTime ? originTimeFormattedStr : relativeOriginTimeStr
+    }
+
+    /// "3 分鐘前", "2 hours ago", "yesterday" — the shape iOS uses in Notification Centre.
+    ///
+    /// Under a minute is spelled out in seconds rather than handed to the formatter, which
+    /// renders that range as "0 minutes ago". Seconds also matter more there: this is the
+    /// window in which an earthquake is still arriving.
+    var relativeOriginTimeStr: String {
+        relativeOriginTimeStr(now: clockTick)
+    }
+
+    private func relativeOriginTimeStr(now: Date) -> String {
+        let elapsed = now.timeIntervalSince(originTime)
+        guard elapsed >= 0 else { return originTimeFormattedStr(now: now) }
+        if elapsed < 10 { return String(localized: "origin-time-just-now") }
+        if elapsed < 60 {
+            return String(format: String(localized: "origin-time-seconds-ago"),
+                          Int(elapsed.rounded(.down)))
+        }
+        let formatter = RelativeDateTimeFormatter()
+        // .named is what turns "1 day ago" into "yesterday".
+        formatter.dateTimeStyle = .named
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: originTime, relativeTo: now)
+    }
+
     var originTimeFormattedStr: String {
         originTimeFormattedStr(now: clockTick)
     }
@@ -145,9 +178,16 @@ struct EEWDetailBlock: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
+                // The place name takes whatever the time does not need, rather than the two
+                // splitting the row arbitrarily. An English placemark from CLGeocoder is
+                // several times longer than the Chinese one, and this is the more important
+                // of the two during an earthquake.
                 EEWDetailHeaderLocation(locationName: locationName ?? fetchOceanData(lat: latB, lon: lonB))
-                Spacer(minLength: 8)
-                EEWDetailHeaderOriginTime(originTimeText: "\(originTimeFormattedStr) 發生")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                EEWDetailHeaderOriginTime(originTimeText: originTimeDisplayStr) {
+                    showsAbsoluteOriginTime.toggle()
+                }
+                .layoutPriority(1)
             }
         }
     }
@@ -212,7 +252,7 @@ private struct EEWDetailHeaderMagnitude: View {
 //                Image(systemName: "water.waves.and.arrow.down")
 //                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
 //                    .foregroundStyle(Color("TimeText"))
-                Text("\(String(format: "深度%.1f", depth))km")
+                Text(String(format: String(localized: "alert-depth-format"), depth))
                     .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
                     .foregroundStyle(Color("TimeText"))
             }
@@ -268,14 +308,25 @@ struct EEWDetailHeaderReport: View {
     }
 }
 
+/// Tap to swap between the relative and the exact time.
+///
+/// The 發生 suffix is gone. It was appended in every language, so English read
+/// "2026/09/04 15:30:12 發生", and a relative time does not want a verb after it anyway.
 private struct EEWDetailHeaderOriginTime: View {
     let originTimeText: String
+    let onTap: () -> Void
 
     var body: some View {
         Text(originTimeText)
             .foregroundStyle(Color("TimeText"))
             .font(.system(size: UIScreen.isZoomed ? 12 : 18))
             .lineLimit(1)
+            // "5 minutes ago" is wider than 5分鐘前, and this yields before the place name.
+            .minimumScaleFactor(0.7)
+            // The text alone is a thin tap target; the rectangle makes the whole slot work.
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
+            .accessibilityAddTraits(.isButton)
     }
 }
 

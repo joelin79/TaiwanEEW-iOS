@@ -91,7 +91,7 @@ enum ReportPresentation {
             // what kind of message they are, and saying 預警 in front of 預警取消 would be
             // both redundant and contradictory.
             return ReportTitle(prefix: String(localized: "report-prefix-string"),
-                               text: "第 \(eqSeq) 報",
+                               text: String(format: String(localized: "alert-report-number"), eqSeq),
                                badge: nil)
         }
     }

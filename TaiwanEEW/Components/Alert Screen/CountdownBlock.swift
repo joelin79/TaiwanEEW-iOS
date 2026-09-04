@@ -86,6 +86,12 @@ struct TimeBlock: View {
         VStack{
             Text("countdown-string")
                 .font(.system(size: UIScreen.isZoomed ? 30 : 34).weight(.medium))
+                .lineLimit(1)
+                // The block is 120-170pt wide (AlertBlockMetrics). 倒數 fits at 34pt with
+                // room to spare, カウント is tight, and "Countdown" needs about 175pt and
+                // was truncated. Scaling per-language rather than lowering the size for
+                // everyone, so Chinese keeps the weight this block was designed around.
+                .minimumScaleFactor(0.5)
             ZStack(alignment: Alignment(horizontal: .center, vertical: .countdownValueBaseline)) {
                 referenceValueRow
                     .hidden()
@@ -97,7 +103,7 @@ struct TimeBlock: View {
     @ViewBuilder
     private var valueContent: some View {
         if hasArrived {
-            Text("已抵達")
+            Text("alert-arrived")
                 .font(.system(size: UIScreen.isZoomed ? 42 : 46, weight: .bold))
                 .alignmentGuide(.countdownValueBaseline) { dimensions in
                     dimensions[.lastTextBaseline] + (UIScreen.isZoomed ? 12 : 16)
