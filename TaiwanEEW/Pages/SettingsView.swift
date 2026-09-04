@@ -278,8 +278,8 @@ struct SettingsView: View {
                     // Most likely no endpoint ARN yet (notification permission never granted,
                     // or registration has not come back), which `subscribe` reports as false.
                     testTopicError = wantsSubscription
-                        ? "訂閱失敗。請確認已開啟通知權限,且已完成 APNs 註冊。"
-                        : "取消訂閱失敗。"
+                        ? String(localized: "debug-test-topic-subscribe-failed")
+                        : String(localized: "debug-test-topic-unsubscribe-failed")
                 }
                 isTestTopicBusy = false
                 refreshSubscribedTopics()

@@ -47,9 +47,7 @@
         }
       }
     },
-    "%@" : {
-
-    },
+    "%@" : {},
     "%@ %@" : {
       "localizations" : {
         "zh-Hant" : {
@@ -106,15 +104,9 @@
         }
       }
     },
-    "%@km" : {
-
-    },
-    "%lld" : {
-
-    },
-    "8" : {
-
-    },
+    "%@km" : {},
+    "%lld" : {},
+    "8" : {},
     "about-title-string" : {
       "localizations" : {
         "en" : {
@@ -1884,11 +1876,22 @@
       }
     },
     "GitHub 公開原始碼" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source code on GitHub"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub で公開中のソースコード"
+          }
+        }
+      }
     },
-    "Hello, World!" : {
-
-    },
+    "Hello, World!" : {},
     "history-pref-string" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2220,9 +2223,7 @@
         }
       }
     },
-    "Loading" : {
-
-    },
+    "Loading" : {},
     "loading-string" : {
       "localizations" : {
         "en" : {
@@ -2584,12 +2585,8 @@
         }
       }
     },
-    "M%@" : {
-
-    },
-    "Magnitude" : {
-
-    },
+    "M%@" : {},
+    "Magnitude" : {},
     "manual-region-desc-string" : {
       "localizations" : {
         "en" : {
@@ -2634,9 +2631,7 @@
         }
       }
     },
-    "Max Intensity" : {
-
-    },
+    "Max Intensity" : {},
     "mechanics-string" : {
       "localizations" : {
         "en" : {
@@ -4398,12 +4393,8 @@
         }
       }
     },
-    "一次性捐贈（自填金額）" : {
-
-    },
-    "一次性贊助" : {
-
-    },
+    "一次性捐贈（自填金額）" : {},
+    "一次性贊助" : {},
     "中央氣象署合作對象" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4421,9 +4412,7 @@
         }
       }
     },
-    "最大震度" : {
-
-    },
+    "最大震度" : {},
     "最近震度參考點：%@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4447,9 +4436,7 @@
         }
       }
     },
-    "前往 ECPay 付款" : {
-
-    },
+    "前往 ECPay 付款" : {},
     "南投縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4689,14 +4676,38 @@
       }
     },
     "即時警報將改為讀取 EEW-test 測試資料，期間不會顯示真實地震。推播通知不受影響，仍會照常送達。測試結束後請記得關閉。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live alerts will read from the EEW-test collection, and real earthquakes will not be shown while this is on. Push notifications are unaffected and still arrive as normal. Remember to turn this off when you are done."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リアルタイム警報は EEW-test コレクションを参照するようになり、有効な間は実際の地震は表示されません。プッシュ通知には影響せず、通常どおり配信されます。テスト終了後は必ずオフにしてください。"
+          }
+        }
+      }
     },
     "取消" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        }
+      }
     },
-    "只需 20 元就可以捐贈" : {
-
-    },
+    "只需 20 元就可以捐贈" : {},
     "可點擊拷貝" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4799,9 +4810,7 @@
         }
       }
     },
-    "各地震度情報" : {
-
-    },
+    "各地震度情報" : {},
     "嘉義市" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5177,14 +5186,38 @@
       }
     },
     "在地圖上畫出取景範圍、目前位置與震央的連線，以及兩點的中心。中心點不會落在畫面正中央，差距即為邊界留白與下方卡片所佔的空間。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draws the framing bounds, the line between your location and the epicentre, and the midpoint of the two. The midpoint does not sit at the centre of the screen; the offset is the margin plus the space taken by the card below."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示範囲、現在地と震央を結ぶ線、およびその中点を地図上に描画します。中点は画面の中央には配置されません。そのずれは、余白と下部のカードが占める領域の分です。"
+          }
+        }
+      }
     },
     "地圖取景" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Map Framing"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地図の表示範囲"
+          }
+        }
+      }
     },
-    "地震報告" : {
-
-    },
+    "地震報告" : {},
     "基隆市" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5542,15 +5575,9 @@
         }
       }
     },
-    "將自動每月扣款 %@ 直到取消" : {
-
-    },
-    "將自動每月扣款，直到取消" : {
-
-    },
-    "小區域地震報告" : {
-
-    },
+    "將自動每月扣款 %@ 直到取消" : {},
+    "將自動每月扣款，直到取消" : {},
+    "小區域地震報告" : {},
     "屏東縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6130,17 +6157,39 @@
       }
     },
     "展開時若已取得你在台灣的位置，一律同時顯示你與震央。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When expanded, if your location in Taiwan is known, you and the epicentre are always shown together."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開時に台湾国内の現在地が取得できている場合は、常に現在地と震央の両方を表示します。"
+          }
+        }
+      }
     },
-    "已抵達" : {
-
-    },
+    "已抵達" : {},
     "已複製" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コピーしました"
+          }
+        }
+      }
     },
-    "已訂閱主題 (%lld)" : {
-
-    },
+    "已訂閱主題 (%lld)" : {},
     "彰化縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6600,32 +6649,59 @@
         }
       }
     },
-    "恢復購買" : {
-
-    },
-    "您的慷慨解囊將用於升級設備與維持伺服器營運。您可以選擇定期定額，或是一次性的贊助。" : {
-
-    },
-    "感謝您的支持！" : {
-
-    },
-    "抵達" : {
-
-    },
+    "恢復購買" : {},
+    "您的慷慨解囊將用於升級設備與維持伺服器營運。您可以選擇定期定額，或是一次性的贊助。" : {},
+    "感謝您的支持！" : {},
+    "抵達" : {},
     "拷貝全部" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy all"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてコピー"
+          }
+        }
+      }
     },
-    "支持台灣地震速報" : {
-
-    },
-    "收到您的贊助了！您的支持讓這個 App 可以繼續運作，真的非常感謝 🙏" : {
-
-    },
+    "支持台灣地震速報" : {},
+    "收到您的贊助了！您的支持讓這個 App 可以繼續運作，真的非常感謝 🙏" : {},
     "收合卡片時" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the card is collapsed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カードを折りたたんだとき"
+          }
+        }
+      }
     },
     "啟用測試資料" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable test data"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テストデータを有効にする"
+          }
+        }
+      }
     },
     "新北市" : {
       "extractionState" : "manual",
@@ -7477,9 +7553,7 @@
         }
       }
     },
-    "查看更多地震報告" : {
-
-    },
+    "查看更多地震報告" : {},
     "桃園市" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7719,14 +7793,23 @@
       }
     },
     "此區塊僅在開發與 TestFlight 版本顯示。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This section appears only in development and TestFlight builds."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このセクションは開発版と TestFlight 版にのみ表示されます。"
+          }
+        }
+      }
     },
-    "此為一次性付款，不會自動扣款" : {
-
-    },
-    "每月定期定額" : {
-
-    },
+    "此為一次性付款，不會自動扣款" : {},
+    "每月定期定額" : {},
     "澎湖縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7847,7 +7930,20 @@
       }
     },
     "無法定位或不在台灣時" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When location is unavailable or outside Taiwan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置を取得できない、または台湾国外のとき"
+          }
+        }
+      }
     },
     "版本 %@ (%@)" : {
       "extractionState" : "manual",
@@ -7873,20 +7969,40 @@
       }
     },
     "目前沒有訂閱任何主題" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No topics subscribed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購読中のトピックはありません"
+          }
+        }
+      }
     },
     "目前顯示 EEW-test 測試資料，不會顯示真實地震" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing EEW-test data — real earthquakes will not appear"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EEW-test のテストデータを表示中です。実際の地震は表示されません"
+          }
+        }
+      }
     },
-    "確定" : {
-
-    },
-    "確認付款" : {
-
-    },
-    "第 %lld 號地震報告" : {
-
-    },
+    "確定" : {},
+    "確認付款" : {},
+    "第 %lld 號地震報告" : {},
     "臺中市中區" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10046,27 +10162,73 @@
         }
       }
     },
-    "規模" : {
-
-    },
+    "規模" : {},
     "訂閱 test 主題" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribe to the test topic"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "test トピックを購読"
+          }
+        }
+      }
     },
     "輸入代碼以開啟 test 主題" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter code to enable the test topic"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コードを入力して test トピックを有効化"
+          }
+        }
+      }
     },
     "這支裝置會收到送往 test 主題的通知。測試結束後請關閉。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device will receive notifications sent to the test topic. Turn it off when you are done."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末は test トピック宛の通知を受信します。テスト終了後はオフにしてください。"
+          }
+        }
+      }
     },
-    "關閉" : {
-
-    },
+    "關閉" : {},
     "除錯 Debug" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバッグ"
+          }
+        }
+      }
     },
-    "隱私權政策" : {
-
-    },
+    "隱私權政策" : {},
     "雲林縣" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10425,13 +10587,52 @@
       }
     },
     "顯示地圖取景範圍" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show map framing bounds"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地図の表示範囲を描画"
+          }
+        }
+      }
     },
     "顯示測試地震資料" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show test earthquake data"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テスト地震データを表示"
+          }
+        }
+      }
     },
     "顯示測試地震資料？" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show test earthquake data?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テスト地震データを表示しますか？"
+          }
+        }
+      }
     },
     "高雄市" : {
       "extractionState" : "manual",
@@ -11092,6 +11293,144 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "高雄市鼓山区"
+          }
+        }
+      }
+    },
+    "map-framing-epicenter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Around the epicentre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "震央周辺"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "震央周邊"
+          }
+        }
+      }
+    },
+    "map-framing-taiwan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All of Taiwan"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "台湾全体"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "台灣全島"
+          }
+        }
+      }
+    },
+    "map-framing-taiwan-only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taiwan only"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "台湾のみ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅台灣"
+          }
+        }
+      }
+    },
+    "map-framing-taiwan-epicenter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taiwan and epicentre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "台湾と震央"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "台灣與震央"
+          }
+        }
+      }
+    },
+    "debug-test-topic-subscribe-failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subscribe failed. Check that notification permission is granted and APNs registration has completed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購読に失敗しました。通知の許可と APNs 登録が完了しているか確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "訂閱失敗。請確認已開啟通知權限，且已完成 APNs 註冊。"
+          }
+        }
+      }
+    },
+    "debug-test-topic-unsubscribe-failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsubscribe failed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購読解除に失敗しました。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消訂閱失敗。"
           }
         }
       }
