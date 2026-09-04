@@ -85,14 +85,17 @@ struct TimeBlock: View {
     var content: some View {
         VStack{
             Text("countdown-string")
-                .font(.system(size: UIScreen.isZoomed ? 26 : 30).weight(.medium))
+                // Matches IntensityBlock's title beside it. Do not lower this to make a
+                // long translation fit: the two blocks sit side by side and are read as a
+                // pair, and shrinking this one for every language to solve an English
+                // problem makes 倒數 and あと smaller than the block they are paired with.
+                .font(.system(size: UIScreen.isZoomed ? 30 : 34).weight(.medium))
                 .lineLimit(1)
-                // The block is 120-170pt wide (AlertBlockMetrics), and the title has to
-                // stop short of the edges rather than sit against them. Reduced a step
-                // from 34, with a scale factor underneath so "Countdown" - the longest of
-                // the three - shrinks the rest of the way instead of truncating.
-                .minimumScaleFactor(0.5)
+                // Length is the actual problem, so it is handled by length. The padding
+                // keeps any title off the block edge; the scale factor then shrinks only
+                // the ones that still do not fit, which is "Countdown" and nothing else.
                 .padding(.horizontal, 6)
+                .minimumScaleFactor(0.5)
             ZStack(alignment: Alignment(horizontal: .center, vertical: .countdownValueBaseline)) {
                 referenceValueRow
                     .hidden()
@@ -105,12 +108,12 @@ struct TimeBlock: View {
     private var valueContent: some View {
         if hasArrived {
             Text("alert-arrived")
-                .font(.system(size: UIScreen.isZoomed ? 36 : 40, weight: .bold))
+                .font(.system(size: UIScreen.isZoomed ? 42 : 46, weight: .bold))
                 .lineLimit(1)
-                // "Arrived" is three times the width of 已抵達 and was reaching the block
-                // edge. Same treatment as the title above it.
-                .minimumScaleFactor(0.5)
+                // As above: 已抵達 and 到達 keep the size the block was designed around,
+                // and only "Arrived" scales.
                 .padding(.horizontal, 6)
+                .minimumScaleFactor(0.5)
                 .alignmentGuide(.countdownValueBaseline) { dimensions in
                     dimensions[.lastTextBaseline] + (UIScreen.isZoomed ? 12 : 16)
                 }

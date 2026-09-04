@@ -52,35 +52,76 @@ struct EEWDetailBlock: View {
         showsAbsoluteOriginTime ? originTimeFormattedStr : relativeOriginTimeStr
     }
 
-    /// "3 分鐘前", "2 hours ago", "yesterday" — the shape iOS uses in Notification Centre.
+    /// The progression iOS uses on a notification, which stops counting once counting stops
+    /// being the useful thing to say:
     ///
-    /// Under a minute is spelled out in seconds rather than handed to the formatter, which
-    /// renders that range as "0 minutes ago". Seconds also matter more there: this is the
-    /// window in which an earthquake is still arriving.
+    ///     under a minute   Just now, then 42 sec ago
+    ///     under an hour    38 min ago
+    ///     up to 3 hours    2h ago
+    ///     later today      15:32
+    ///     yesterday        Yesterday 15:32
+    ///     within a week    Tue 15:32
+    ///     older            the full timestamp
+    ///
+    /// Abbreviated deliberately — "min" and "h", not "minutes" and "hours". This sits in a
+    /// row that also has to hold a place name.
+    ///
+    /// RelativeDateTimeFormatter cannot express this: it counts all the way up ("5 hours
+    /// ago", "3 days ago") and has no notion of switching to a clock time, so the rules are
+    /// spelled out here.
     var relativeOriginTimeStr: String {
         relativeOriginTimeStr(now: clockTick)
     }
 
     private func relativeOriginTimeStr(now: Date) -> String {
         let elapsed = now.timeIntervalSince(originTime)
+        // A clock skewed behind CWA's would otherwise render the future as "0 sec ago".
         guard elapsed >= 0 else { return originTimeFormattedStr(now: now) }
+
         if elapsed < 10 { return String(localized: "origin-time-just-now") }
         if elapsed < 60 {
             return String(format: String(localized: "origin-time-seconds-ago"),
                           Int(elapsed.rounded(.down)))
         }
-        let formatter = RelativeDateTimeFormatter()
-        // .named is what turns "1 day ago" into "yesterday".
-        formatter.dateTimeStyle = .named
-        formatter.unitsStyle = .full
-        let relative = formatter.localizedString(for: originTime, relativeTo: now)
-        // The formatter returns "yesterday" and "2 days ago" in lower case, because it
-        // expects to sit inside a sentence. Here it is a label on its own, so it takes a
-        // capital. First character only - .capitalized would give "2 Days Ago" - and
-        // uppercasing a Chinese or Japanese character is a no-op, so this is safe for all
-        // three languages.
-        guard let first = relative.first else { return relative }
-        return String(first).uppercased(with: Locale.current) + relative.dropFirst()
+        if elapsed < 3600 {
+            return String(format: String(localized: "origin-time-minutes-ago"),
+                          Int(elapsed / 60))
+        }
+        if elapsed <= 3 * 3600 {
+            return String(format: String(localized: "origin-time-hours-ago"),
+                          Int(elapsed / 3600))
+        }
+
+        // Past three hours "5h ago" is arithmetic the reader has to undo, so switch to the
+        // clock. Dates are figured in Taiwan time, like the absolute formatter below —
+        // these are Taiwan earthquakes, and a traveller should not see the day shift.
+        let zone = TimeZone(secondsFromGMT: 8 * 3600)!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeZone = zone
+        timeFormatter.setLocalizedDateFormatFromTemplate("HHmm")
+        let time = timeFormatter.string(from: originTime)
+
+        if calendar.isDate(originTime, inSameDayAs: now) { return time }
+
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+           calendar.isDate(originTime, inSameDayAs: yesterday) {
+            return String(format: String(localized: "origin-time-yesterday"), time)
+        }
+
+        if let days = calendar.dateComponents([.day],
+                                              from: calendar.startOfDay(for: originTime),
+                                              to: calendar.startOfDay(for: now)).day,
+           days < 7 {
+            let weekdayFormatter = DateFormatter()
+            weekdayFormatter.timeZone = zone
+            weekdayFormatter.setLocalizedDateFormatFromTemplate("EEE")
+            return "\(weekdayFormatter.string(from: originTime)) \(time)"
+        }
+
+        return originTimeFormattedStr(now: now)
     }
 
     var originTimeFormattedStr: String {
@@ -259,12 +300,16 @@ private struct EEWDetailHeaderMagnitude: View {
 //                Image(systemName: "water.waves.and.arrow.down")
 //                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
 //                    .foregroundStyle(Color("TimeText"))
-                // Not monospaced. The magnitude beside it is, because that number changes
-                // between reports and monospacing stops it jittering; "Depth" is a word
-                // now that it is localized, and a word set in mono reads as code.
-                Text(String(format: String(localized: "alert-depth-format"), depth))
+                // The word and the number take different fonts, so they are different Texts.
+                // "Depth" is a word and reads as code in mono; the number stays monospaced
+                // because it changes between reports and mono is what stops it jittering.
+                Text("alert-depth-label")
                     .font(.system(size: UIScreen.isZoomed ? 14 : 16))
                     .foregroundStyle(Color("TimeText"))
+                Text(String(format: String(localized: "alert-depth-value"), depth))
+                    .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
+                    .foregroundStyle(Color("TimeText"))
+                    .padding(.leading, 3)
             }
         }
         .lineLimit(1)
