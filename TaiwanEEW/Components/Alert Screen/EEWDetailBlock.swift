@@ -4,6 +4,9 @@
 //
 //  Created by 林子祐 on 2024/7/5.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this part 新增字串的英文及日文翻譯
+///
 
 import SwiftUI
 import XMLCoder
@@ -24,6 +27,10 @@ struct EEWDetailBlock: View {
     
     @State private var locationName: String? = nil
     @State private var clockTick = Date()
+    /// Tapping the origin time swaps between "3 minutes ago" and the exact timestamp.
+    /// Persisted, because someone who wants exact times wants them every launch, and
+    /// re-tapping during an earthquake is not when to make them ask again.
+    @AppStorage("showsAbsoluteOriginTime") private var showsAbsoluteOriginTime = false
     var maxInt: String {eventManager.maxIntensity}
     var magnitude: Double {eventManager.magnitude}
     var depth: Double {eventManager.depth}
@@ -40,13 +47,90 @@ struct EEWDetailBlock: View {
         return formatter
     }()
     
+    /// What the header actually shows: relative by default, absolute once tapped.
+    var originTimeDisplayStr: String {
+        showsAbsoluteOriginTime ? originTimeFormattedStr : relativeOriginTimeStr
+    }
+
+    /// The progression iOS uses on a notification, which stops counting once counting stops
+    /// being the useful thing to say:
+    ///
+    ///     under a minute   Just now, then 42 sec ago
+    ///     under an hour    38 min ago
+    ///     up to 3 hours    2h ago
+    ///     later today      15:32
+    ///     yesterday        Yesterday 15:32
+    ///     within a week    Tue 15:32
+    ///     older            the full timestamp
+    ///
+    /// Abbreviated deliberately — "min" and "h", not "minutes" and "hours". This sits in a
+    /// row that also has to hold a place name.
+    ///
+    /// RelativeDateTimeFormatter cannot express this: it counts all the way up ("5 hours
+    /// ago", "3 days ago") and has no notion of switching to a clock time, so the rules are
+    /// spelled out here.
+    var relativeOriginTimeStr: String {
+        relativeOriginTimeStr(now: clockTick)
+    }
+
+    private func relativeOriginTimeStr(now: Date) -> String {
+        let elapsed = now.timeIntervalSince(originTime)
+        // A clock skewed behind CWA's would otherwise render the future as "0 sec ago".
+        guard elapsed >= 0 else { return originTimeFormattedStr(now: now) }
+
+        if elapsed < 10 { return String(localized: "origin-time-just-now") }
+        if elapsed < 60 {
+            return String(format: String(localized: "origin-time-seconds-ago"),
+                          Int(elapsed.rounded(.down)))
+        }
+        if elapsed < 3600 {
+            return String(format: String(localized: "origin-time-minutes-ago"),
+                          Int(elapsed / 60))
+        }
+        if elapsed <= 3 * 3600 {
+            return String(format: String(localized: "origin-time-hours-ago"),
+                          Int(elapsed / 3600))
+        }
+
+        // Past three hours "5h ago" is arithmetic the reader has to undo, so switch to the
+        // clock. Dates are figured in Taiwan time, like the absolute formatter below —
+        // these are Taiwan earthquakes, and a traveller should not see the day shift.
+        let zone = TimeZone(secondsFromGMT: 8 * 3600)!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeZone = zone
+        timeFormatter.setLocalizedDateFormatFromTemplate("HHmm")
+        let time = timeFormatter.string(from: originTime)
+
+        if calendar.isDate(originTime, inSameDayAs: now) { return time }
+
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+           calendar.isDate(originTime, inSameDayAs: yesterday) {
+            return String(format: String(localized: "origin-time-yesterday"), time)
+        }
+
+        if let days = calendar.dateComponents([.day],
+                                              from: calendar.startOfDay(for: originTime),
+                                              to: calendar.startOfDay(for: now)).day,
+           days < 7 {
+            let weekdayFormatter = DateFormatter()
+            weekdayFormatter.timeZone = zone
+            weekdayFormatter.setLocalizedDateFormatFromTemplate("EEE")
+            return "\(weekdayFormatter.string(from: originTime)) \(time)"
+        }
+
+        return originTimeFormattedStr(now: now)
+    }
+
     var originTimeFormattedStr: String {
         originTimeFormattedStr(now: clockTick)
     }
 
     private func originTimeFormattedStr(now: Date) -> String {
         let elapsed = now.timeIntervalSince(originTime)
-        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, now: now),
+        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, magnitude: magnitude, now: now),
            elapsed >= 0,
            elapsed < 120 {
             let totalSeconds = Int(elapsed.rounded(.down))
@@ -104,7 +188,7 @@ struct EEWDetailBlock: View {
             // Below the earthquake's own details and above the local prediction, where it
             // reads as the heading for the intensity and countdown rather than a banner
             // over the whole card.
-            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity, magnitude: magnitude)
                 .padding(.top, 10)
             alertInfo
                 .padding(.top, AlertBlockMetrics.blockGap)
@@ -142,9 +226,16 @@ struct EEWDetailBlock: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
+                // The place name takes whatever the time does not need, rather than the two
+                // splitting the row arbitrarily. An English placemark from CLGeocoder is
+                // several times longer than the Chinese one, and this is the more important
+                // of the two during an earthquake.
                 EEWDetailHeaderLocation(locationName: locationName ?? fetchOceanData(lat: latB, lon: lonB))
-                Spacer(minLength: 8)
-                EEWDetailHeaderOriginTime(originTimeText: "\(originTimeFormattedStr) 發生")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                EEWDetailHeaderOriginTime(originTimeText: originTimeDisplayStr) {
+                    showsAbsoluteOriginTime.toggle()
+                }
+                .layoutPriority(1)
             }
         }
     }
@@ -209,9 +300,16 @@ private struct EEWDetailHeaderMagnitude: View {
 //                Image(systemName: "water.waves.and.arrow.down")
 //                    .font(.system(size: UIScreen.isZoomed ? 22 : 12))
 //                    .foregroundStyle(Color("TimeText"))
-                Text("\(String(format: "深度%.1f", depth))km")
+                // The word and the number take different fonts, so they are different Texts.
+                // "Depth" is a word and reads as code in mono; the number stays monospaced
+                // because it changes between reports and mono is what stops it jittering.
+                Text("alert-depth-label")
+                    .font(.system(size: UIScreen.isZoomed ? 14 : 16))
+                    .foregroundStyle(Color("TimeText"))
+                Text(String(format: String(localized: "alert-depth-value"), depth))
                     .font(.system(size: UIScreen.isZoomed ? 14 : 16).monospaced())
                     .foregroundStyle(Color("TimeText"))
+                    .padding(.leading, 3)
             }
         }
         .lineLimit(1)
@@ -221,15 +319,17 @@ private struct EEWDetailHeaderMagnitude: View {
 private struct EEWDetailHeaderLocation: View {
     let locationName: String
 
+    private var font: Font { .system(size: UIScreen.isZoomed ? 14 : 20).bold() }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Image(systemName: "target")
                 .font(.system(size: UIScreen.isZoomed ? 10 : 18))
-            Text(locationName)
-                .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
+            // Scrolls instead of truncating. The tail of a place name is often what
+            // identifies it — "花蓮縣近海" and "花蓮縣" are different places — and an
+            // English placemark is long enough that the tail is what gets cut.
+            MarqueeText(text: locationName, font: font)
         }
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
     }
 }
 
@@ -265,14 +365,25 @@ struct EEWDetailHeaderReport: View {
     }
 }
 
+/// Tap to swap between the relative and the exact time.
+///
+/// The 發生 suffix is gone. It was appended in every language, so English read
+/// "2026/09/04 15:30:12 發生", and a relative time does not want a verb after it anyway.
 private struct EEWDetailHeaderOriginTime: View {
     let originTimeText: String
+    let onTap: () -> Void
 
     var body: some View {
         Text(originTimeText)
             .foregroundStyle(Color("TimeText"))
             .font(.system(size: UIScreen.isZoomed ? 12 : 18))
             .lineLimit(1)
+            // "5 minutes ago" is wider than 5分鐘前, and this yields before the place name.
+            .minimumScaleFactor(0.7)
+            // The text alone is a thin tap target; the rectangle makes the whole slot work.
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onTap)
+            .accessibilityAddTraits(.isButton)
     }
 }
 

@@ -43,17 +43,17 @@ struct ReportBadge {
 /// One half of a report's identity: either what kind of announcement it is, or what it
 /// does to the one before it. Both can be present at once — a drill can be cancelled.
 ///
-/// Three lengths from one definition, because the two places this appears have very
-/// different room: the banner stacks 中文 over English at full size, the header badge
-/// joins them on one line, and a badge showing both halves has to abbreviate or it will
-/// not fit beside the magnitude.
+/// Two lengths from one definition, because a badge showing both halves has to abbreviate
+/// or it will not fit beside the magnitude. For the status facets the two are the same
+/// string; only 預警取消 and 預警錯誤 have anything to shorten.
+///
+/// These used to be a `chinese` and an `english` field concatenated into "演練 Drill",
+/// shown to everyone regardless of locale. They are now localized properly, so a Japanese
+/// user sees 演習 rather than two languages neither of which is theirs.
 struct ReportFacet {
-    let chinese: String
-    let english: String
+    let label: String
     let short: String
     let badge: ReportBadge
-
-    var label: String { "\(chinese) \(english)" }
 }
 
 enum ReportPresentation {
@@ -91,7 +91,7 @@ enum ReportPresentation {
             // what kind of message they are, and saying 預警 in front of 預警取消 would be
             // both redundant and contradictory.
             return ReportTitle(prefix: String(localized: "report-prefix-string"),
-                               text: "第 \(eqSeq) 報",
+                               text: String(format: String(localized: "alert-report-number"), eqSeq),
                                badge: nil)
         }
     }
@@ -113,15 +113,18 @@ enum ReportPresentation {
             //
             // The system colour rather than an asset, because it already adapts to dark
             // mode and takes white text in both.
-            return ReportFacet(chinese: "演練", english: "Drill", short: "演練",
+            return ReportFacet(label: String(localized: "alert-drill"),
+                               short: String(localized: "alert-drill"),
                                badge: ReportBadge(background: .indigo, foreground: .white))
         case "test" where !isDebugBuild:
             // Amber, so dark text rather than white.
-            return ReportFacet(chinese: "測試", english: "Test", short: "測試",
+            return ReportFacet(label: String(localized: "alert-test"),
+                               short: String(localized: "alert-test"),
                                badge: ReportBadge(background: Color("Caution"), foreground: .black))
         case "system":
             // The one paired set in the asset catalog that inverts correctly in dark mode.
-            return ReportFacet(chinese: "系統", english: "System", short: "系統",
+            return ReportFacet(label: String(localized: "alert-sys"),
+                               short: String(localized: "alert-sys"),
                                badge: ReportBadge(background: Color("SecondaryField"),
                                                   foreground: Color("SecondaryFieldText")))
         default:
@@ -134,10 +137,12 @@ enum ReportPresentation {
     private static func messageFacet(_ msgType: String?) -> ReportFacet? {
         switch msgType {
         case "cancel":
-            return ReportFacet(chinese: "預警取消", english: "Canceled", short: "取消",
+            return ReportFacet(label: String(localized: "alert-canceled"),
+                               short: String(localized: "alert-canceled-short"),
                                badge: ReportBadge(background: .brown, foreground: .white))
         case "error":
-            return ReportFacet(chinese: "預警錯誤", english: "Error", short: "錯誤",
+            return ReportFacet(label: String(localized: "alert-false"),
+                               short: String(localized: "alert-false-short"),
                                badge: ReportBadge(background: .brown, foreground: .white))
         default:
             return nil

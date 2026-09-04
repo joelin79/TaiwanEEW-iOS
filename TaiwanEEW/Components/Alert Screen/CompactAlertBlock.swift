@@ -52,14 +52,16 @@ struct CompactAlertBlock: View {
     /// gets looked up. This is presentation only: CWA writes them 弱 and 強, and the
     /// suffix is set smaller than the digit the way the agency renders it.
     ///
-    /// Hardcoded rather than localized because the surrounding copy in this view is too:
-    /// the epicenter name is geocoded zh-Hant for every locale. Worth revisiting together.
+    /// Localized: CWA and JMA both write these 弱 and 強, but English has no equivalent
+    /// word and uses the − and + the raw token already carries.
     private var intensityParts: (value: String, suffix: String?) {
+        let weak = String(localized: "intensity-suffix-weak")
+        let strong = String(localized: "intensity-suffix-strong")
         switch intensity {
-        case "5-": return ("5", "弱")
-        case "5+": return ("5", "強")
-        case "6-": return ("6", "弱")
-        case "6+": return ("6", "強")
+        case "5-": return ("5", weak)
+        case "5+": return ("5", strong)
+        case "6-": return ("6", weak)
+        case "6+": return ("6", strong)
         default: return (intensity.isEmpty ? "–" : intensity, nil)
         }
     }
@@ -73,7 +75,7 @@ struct CompactAlertBlock: View {
             // sits above the blocks there. Collapsing should not cost the one line that
             // says whether anything is happening at all — and while an alert is live this
             // is what carries 趴下、掩護、穩住, which is the last thing to drop.
-            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity, magnitude: magnitude)
 
             HStack(spacing: 8) {
                 intensityPill
@@ -107,7 +109,7 @@ struct CompactAlertBlock: View {
     }
 
     private var countdownPill: some View {
-        CountdownPill(arrivalTime: arrivalTime)
+        CountdownPill(arrivalTime: arrivalTime, magnitude: magnitude)
     }
 
     /// Magnitude keeps the severity colouring it has in the full block, so the one piece
@@ -126,7 +128,10 @@ struct CompactAlertBlock: View {
                 Image(systemName: "water.waves.and.arrow.down")
                     .font(.system(size: 12))
                     .foregroundStyle(Color("TimeText"))
-                Text("\(String(format: "%.1f", depth))km")
+                // No decimal here, unlike the expanded card. This pill sits beside the
+                // magnitude and the epicenter name in a single compressed row, and a
+                // tenth of a kilometre of depth is not what anyone reads it for.
+                Text("\(String(format: "%.0f", depth))km")
                     .font(.system(size: 16, design: .monospaced))
                     .foregroundStyle(Color("TimeText"))
             }
@@ -193,10 +198,9 @@ private struct CountdownPill: View {
     /// precisely the blink can land — a toggle can be up to one interval late.
     private static let interval: TimeInterval = 0.1
 
-    /// How long 已抵達 keeps flashing after the wave lands. Shorter than
-    /// EarthquakeActivity.gracePeriod on purpose: the grace period governs how long the
-    /// alert stays live, this governs how long it demands attention.
-    private static let flashWindow: TimeInterval = 15
+    /// Magnitude, so this pill can use the same active window as everything else. Zero
+    /// falls into the 2-minute floor, which is the safe direction.
+    var magnitude: Double = 0
 
     /// Phase comes from AlertBlink so this, the status bar, the banner and the epicenter
     /// are lit and dim together. Only the depth of the dim is local — a small marker and a
@@ -233,8 +237,15 @@ private struct CountdownPill: View {
                 Text("抵達")
                     .font(.system(size: PillMetrics.value, weight: .bold))
             } else {
-                Text("countdown-string")
-                    .font(.system(size: PillMetrics.label).weight(.medium))
+                // Its own key, not the expanded card's. English is deliberately empty:
+                // "Countdown" does not fit this pill beside the number, and in a
+                // compressed card the label is the expendable half — the digits and the
+                // 秒 after them still say what it is. 倒數 and あと are short enough to keep.
+                let countdownLabel = String(localized: "compact-countdown-string")
+                if !countdownLabel.isEmpty {
+                    Text(countdownLabel)
+                        .font(.system(size: PillMetrics.label).weight(.medium))
+                }
                 // monospacedDigit rather than design: .monospaced. The monospaced *design*
                 // gives the decimal point a full digit-width advance, which left it
                 // floating in a gap on both sides; monospacedDigit fixes the width of
@@ -255,8 +266,13 @@ private struct CountdownPill: View {
         .onReceive(Timer.publish(every: Self.interval, on: .main, in: .common).autoconnect()) { _ in
             tick = remaining
 
-            let sinceArrival = Date().timeIntervalSince(arrivalTime)
-            guard hasArrived, sinceArrival < Self.flashWindow else {
+            // The same window the status bar and the map's epicenter use, rather than a
+            // separate 15 seconds. That split produced a card whose countdown had gone
+            // quiet while the bar directly above it was still in alert — which reads as
+            // the alert being over, on the one screen where that must not be ambiguous.
+            guard hasArrived,
+                  EarthquakeActivity.isFlashing(arrivalTime: arrivalTime, magnitude: magnitude)
+            else {
                 isLit = true
                 return
             }

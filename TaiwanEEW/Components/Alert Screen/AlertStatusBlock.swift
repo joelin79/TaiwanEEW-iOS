@@ -16,6 +16,8 @@ struct AlertStatusBar : View {
     let blinkTimer = Timer.publish(every: AlertBlink.tick, on: .main, in: .common).autoconnect()
     var arrivalTime: Date
     var intensity: String
+    /// Sets how long the bar stays in its alert state — see EarthquakeActivity.gracePeriod.
+    var magnitude: Double = 0
     let cornerRad: CGFloat = 10
     @State private var opacity: Double = 1
     @State private var fillColor: Color = .green
@@ -88,7 +90,7 @@ struct AlertStatusBar : View {
         // updates isInAlert (true until the grace period after wave arrival). Shared with
         // the map's blinking epicenter so the two cannot disagree about whether an
         // earthquake is in progress.
-        let isInAlert = EarthquakeActivity.isActive(arrivalTime: arrivalTime)
+        let isInAlert = EarthquakeActivity.isActive(arrivalTime: arrivalTime, magnitude: magnitude)
         if isInAlert != isAlert {
             isAlert = isInAlert
             if !isAlert {
@@ -160,7 +162,7 @@ struct StrokeText: View {
 
 struct AlertStatusBar_Preview : PreviewProvider {
     static var previews: some View {
-        AlertStatusBar(arrivalTime: Date(), intensity: "3").environment(\.locale, Locale.init(identifier: "zh-Hant"))
+        AlertStatusBar(arrivalTime: Date(), intensity: "3", magnitude: 5.0).environment(\.locale, Locale.init(identifier: "zh-Hant"))
     }
     
 }
