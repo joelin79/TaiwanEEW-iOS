@@ -7141,7 +7141,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Arrival"
+            "value" : "Arrived"
           }
         },
         "ja" : {
@@ -11990,19 +11990,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.0f km"
+            "value" : "%.1fkm"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.0f km"
+            "value" : "%.1fkm"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%.0f km"
+            "value" : "%.1fkm"
           }
         }
       }

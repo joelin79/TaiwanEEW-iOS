@@ -130,7 +130,7 @@ struct EEWDetailBlock: View {
 
     private func originTimeFormattedStr(now: Date) -> String {
         let elapsed = now.timeIntervalSince(originTime)
-        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, now: now),
+        if EarthquakeActivity.isActive(arrivalTime: arrivalTime, magnitude: magnitude, now: now),
            elapsed >= 0,
            elapsed < 120 {
             let totalSeconds = Int(elapsed.rounded(.down))
@@ -188,7 +188,7 @@ struct EEWDetailBlock: View {
             // Below the earthquake's own details and above the local prediction, where it
             // reads as the heading for the intensity and countdown rather than a banner
             // over the whole card.
-            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity, magnitude: magnitude)
                 .padding(.top, 10)
             alertInfo
                 .padding(.top, AlertBlockMetrics.blockGap)

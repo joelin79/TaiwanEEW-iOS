@@ -900,7 +900,8 @@ private struct CustomMapView: UIViewRepresentable {
         /// blinking, rather than a separate flag, so the two cannot fall out of step when
         /// the annotation is torn down and rebuilt on each new message.
         func refreshEpicenterBlink() {
-            let shouldBlink = EarthquakeActivity.isActive(arrivalTime: eventManager.arrivalTime)
+            let shouldBlink = EarthquakeActivity.isActive(arrivalTime: eventManager.arrivalTime,
+                                                            magnitude: eventManager.magnitude)
 
             if let view = epicenterView {
                 let isBlinking = view.layer.animation(forKey: Self.blinkKey) != nil

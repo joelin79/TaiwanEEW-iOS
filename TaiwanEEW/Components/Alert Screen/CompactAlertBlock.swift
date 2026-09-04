@@ -75,7 +75,7 @@ struct CompactAlertBlock: View {
             // sits above the blocks there. Collapsing should not cost the one line that
             // says whether anything is happening at all — and while an alert is live this
             // is what carries 趴下、掩護、穩住, which is the last thing to drop.
-            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity)
+            AlertStatusBar(arrivalTime: arrivalTime, intensity: intensity, magnitude: magnitude)
 
             HStack(spacing: 8) {
                 intensityPill
@@ -109,7 +109,7 @@ struct CompactAlertBlock: View {
     }
 
     private var countdownPill: some View {
-        CountdownPill(arrivalTime: arrivalTime)
+        CountdownPill(arrivalTime: arrivalTime, magnitude: magnitude)
     }
 
     /// Magnitude keeps the severity colouring it has in the full block, so the one piece
@@ -128,7 +128,10 @@ struct CompactAlertBlock: View {
                 Image(systemName: "water.waves.and.arrow.down")
                     .font(.system(size: 12))
                     .foregroundStyle(Color("TimeText"))
-                Text("\(String(format: "%.1f", depth))km")
+                // No decimal here, unlike the expanded card. This pill sits beside the
+                // magnitude and the epicenter name in a single compressed row, and a
+                // tenth of a kilometre of depth is not what anyone reads it for.
+                Text("\(String(format: "%.0f", depth))km")
                     .font(.system(size: 16, design: .monospaced))
                     .foregroundStyle(Color("TimeText"))
             }
@@ -195,10 +198,9 @@ private struct CountdownPill: View {
     /// precisely the blink can land — a toggle can be up to one interval late.
     private static let interval: TimeInterval = 0.1
 
-    /// How long 已抵達 keeps flashing after the wave lands. Shorter than
-    /// EarthquakeActivity.gracePeriod on purpose: the grace period governs how long the
-    /// alert stays live, this governs how long it demands attention.
-    private static let flashWindow: TimeInterval = 15
+    /// Magnitude, so this pill can use the same active window as everything else. Zero
+    /// falls into the 2-minute floor, which is the safe direction.
+    var magnitude: Double = 0
 
     /// Phase comes from AlertBlink so this, the status bar, the banner and the epicenter
     /// are lit and dim together. Only the depth of the dim is local — a small marker and a
@@ -264,8 +266,13 @@ private struct CountdownPill: View {
         .onReceive(Timer.publish(every: Self.interval, on: .main, in: .common).autoconnect()) { _ in
             tick = remaining
 
-            let sinceArrival = Date().timeIntervalSince(arrivalTime)
-            guard hasArrived, sinceArrival < Self.flashWindow else {
+            // The same window the status bar and the map's epicenter use, rather than a
+            // separate 15 seconds. That split produced a card whose countdown had gone
+            // quiet while the bar directly above it was still in alert — which reads as
+            // the alert being over, on the one screen where that must not be ambiguous.
+            guard hasArrived,
+                  EarthquakeActivity.isFlashing(arrivalTime: arrivalTime, magnitude: magnitude)
+            else {
                 isLit = true
                 return
             }

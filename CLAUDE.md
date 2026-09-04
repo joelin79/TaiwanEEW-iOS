@@ -282,9 +282,15 @@ release is pinned by a tag `vX.Y.Z` on the exact archived commit.
 **Workflow:**
 
 1. Branch off `main` (hotfixes off the release tag).
-2. Keep branches small and short-lived; open a PR back to `main`; delete after merge.
-3. Tag `vX.Y.Z` at archive time, on the exact submitted commit.
-4. Create the `verX_Y_Z` SNS topic before releasing (see Compatibility Rules).
+2. **Bump the version in the same commit that cuts the branch.** A branch named
+   `<type>/v2.2.1/...` whose `MARKETING_VERSION` still says 2.2.0 is a build that lies about
+   itself — TestFlight, Crashlytics and the `verX_Y_Z` topic all key off that field, so the
+   mislabelling outlives the branch. Set `MARKETING_VERSION` on **both** the app and the
+   extension, and reset `CURRENT_PROJECT_VERSION` to 1 (build numbers restart per marketing
+   version — see Project Configuration).
+3. Keep branches small and short-lived; open a PR back to `main`; delete after merge.
+4. Tag `vX.Y.Z` at archive time, on the exact submitted commit.
+5. Create the `verX_Y_Z` SNS topic before releasing (see Compatibility Rules).
 
 **Commit messages:** conventional prefixes — `feat:` `fix:` `chore:` `docs:` `test:` `build:`
 `refactor:`.
