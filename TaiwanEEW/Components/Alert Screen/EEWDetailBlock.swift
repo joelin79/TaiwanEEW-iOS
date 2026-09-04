@@ -264,15 +264,17 @@ private struct EEWDetailHeaderMagnitude: View {
 private struct EEWDetailHeaderLocation: View {
     let locationName: String
 
+    private var font: Font { .system(size: UIScreen.isZoomed ? 14 : 20).bold() }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 2) {
             Image(systemName: "target")
                 .font(.system(size: UIScreen.isZoomed ? 10 : 18))
-            Text(locationName)
-                .font(.system(size: UIScreen.isZoomed ? 14 : 20).bold())
+            // Scrolls instead of truncating. The tail of a place name is often what
+            // identifies it — "花蓮縣近海" and "花蓮縣" are different places — and an
+            // English placemark is long enough that the tail is what gets cut.
+            MarqueeText(text: locationName, font: font)
         }
-        .lineLimit(1)
-        .minimumScaleFactor(0.75)
     }
 }
 
