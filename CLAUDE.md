@@ -18,13 +18,13 @@ Companion backend (separate private repo): `TaiwanEEW-Server-Java`, production r
 
 ## Current Status
 
-Last updated: 2026-09-05
+Last updated: 2026-09-08
 
 - **This is the public, source-available repo** (`joelin79/TaiwanEEW-iOS`). Development happens here. The old `joelin79/TaiwanEEW` is an archived private record of the pre-open-source history. See LICENSE.md — everything committed here is public; never commit secrets or exploit detail.
 - **Released:** 2.1.0 (build 12), tagged `v2.1.0`, App Store review passed.
-- **Submitted:** 2.2.0 (build 5), tagged `v2.2.0` at `2bb6fb6`, **in App Store review**. `ver2_2_0` SNS topic exists.
-- **In progress:** 2.2.1 on `feature/v2.2.1/drill-priority`, build 1. `main` already carries the 2.2.1 String Catalog migration and the alert-screen work that followed it.
-- **Deadline:** Taiwan's national drill is **21 September**, with a rehearsal on **14 September**. The backend half is done; the remaining client item is the ±5 minute real-earthquake priority. See `NOTES.private.md`.
+- **Released:** 2.2.0 (build 5), tagged `v2.2.0` at `2bb6fb6`, **in production**. `ver2_2_0` SNS topic exists.
+- **In progress:** 2.3.0, build 1. `main` already carries the String Catalog migration and the alert-screen work that followed it. **Retargeted from 2.2.1 on 2026-09-08** — the release took on feature work (auto-disable beyond 100 km, Background App Refresh status) that a patch version would misdescribe. 2.2.1 was never released, so nothing in the field carries that number.
+- **921 drill:** Taiwan's national drill is **21 September**, with a rehearsal on **14 September**. Preparation is complete. It is handled entirely by the backend plus one operational step; the client-side drill-priority feature was designed and then dropped. See `NOTES.private.md`.
 - **Branching:** trunk-based — see the Branching & Naming section below.
 - **Installed base is long-tailed** — users remain on 2.0.4 through 2.0.8. Never assume only the newest client is live; see Compatibility Rules below.
 
@@ -57,7 +57,7 @@ than dropping it. **Requires the backend's additive `status` payload key, and th
 `group.com.joedev.TaiwanEEW` App Group** — the extension has its own container and reads the
 preference from the shared suite. Opt-out, default off; old clients are untouched.
 
-### 2.2.1 so far
+### 2.3.0 so far
 
 Albert Huang's String Catalog migration (`Localizable.xcstrings` replaces the three
 `.strings` files), and everything that surfaced once English and Japanese actually rendered:
@@ -78,7 +78,7 @@ fit "Give Support", and the build stays green either way.
   the release. It is the original `CABasicAnimation` with `calculationMode = .discrete`
   added. Phase-syncing and self-healing attempts were tried and reverted — leave it alone
   unless the behaviour is being deliberately redesigned.
-- ~~Localization is half-done on the alert screen~~ — **closed in 2.2.1.** `第 N 報`, 弱/強,
+- ~~Localization is half-done on the alert screen~~ — **closed in 2.3.0.** `第 N 報`, 弱/強,
   已抵達, `EpicenterName`'s sea areas and SettingsView's own sections are all in the String
   Catalog now. Per-language differences live there rather than in a branch on `Locale`: the
   compact countdown label is empty in English because "Countdown" does not fit that pill, and
