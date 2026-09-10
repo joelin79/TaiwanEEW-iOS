@@ -205,8 +205,15 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
         // opaque fill. The card had shadow code and no shadow.
         //
         // Here it derives from the finished, already-rounded silhouette, which is what
-        // SlideOverCard has always done for iOS 15-16 — the two cards now match.
-        .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10)
+        // SlideOverCard has always done for iOS 15-16.
+        //
+        // Stronger than SlideOverCard's 0.13/10, deliberately. That value was never seen on
+        // this card — it was clipped from the day it was written — so it had never been
+        // judged against what actually sits behind this one, which is a full-bleed intensity
+        // map rather than a plain background. 0.13 disappeared into the darker district
+        // fills. The two cards differ now; SlideOverCard is the frozen 15-16 path and is left
+        // alone rather than kept in step.
+        .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.18), radius: 14)
         // No implicit .animation here on purpose. position only ever changes inside the
         // withAnimation in onEnded, so an implicit modifier adds nothing — and one whose
         // animation argument is recomputed every frame of the drag is pure churn.
