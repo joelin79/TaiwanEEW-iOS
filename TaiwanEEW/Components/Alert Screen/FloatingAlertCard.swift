@@ -196,11 +196,17 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
         .background(
             RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
                 .fill(Color(.systemBackground))
-                // On the shape, not on the finished card: applied after the clip it is
-                // derived from the card's rounded outline, not from its clipped content.
-                .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10)
         )
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        // After the clip, never inside it. A shadow is by definition the part that falls
+        // outside the shape, and clipShape applies to the view together with its background —
+        // so a shadow attached to that background is cut off by the very same rounded
+        // rectangle that produced it, and what little lands inside is painted over by the
+        // opaque fill. The card had shadow code and no shadow.
+        //
+        // Here it derives from the finished, already-rounded silhouette, which is what
+        // SlideOverCard has always done for iOS 15-16 — the two cards now match.
+        .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10)
         // No implicit .animation here on purpose. position only ever changes inside the
         // withAnimation in onEnded, so an implicit modifier adds nothing — and one whose
         // animation argument is recomputed every frame of the drag is pure churn.
