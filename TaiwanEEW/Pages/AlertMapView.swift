@@ -26,13 +26,17 @@ struct AlertMapView: View {
     /// cardObscuredHeight, which is a measurement — keying behaviour off "the card is
     /// currently under N points" would break when the compact layout changed height.
     var isCollapsed: Bool = false
+    /// Whether the card is a floating panel rather than a sheet. The map moves clear of a
+    /// panel sideways, where a sheet only ever costs it height.
+    var isCardFloating: Bool = false
     @StateObject private var headingProvider = HeadingProvider()
 
     var body: some View {
         CustomMapView(eventManager: eventManager,
                       headingProvider: headingProvider,
                       cardObscuredHeight: cardObscuredHeight,
-                      isCollapsed: isCollapsed)
+                      isCollapsed: isCollapsed,
+                      isCardFloating: isCardFloating)
             // The magnetometer runs only while the map is on screen — switching tabs or
             // backgrounding stops it rather than leaving it spinning for a cone nobody
             // is looking at.
@@ -50,6 +54,7 @@ private struct CustomMapView: UIViewRepresentable {
     @ObservedObject var headingProvider: HeadingProvider
     let cardObscuredHeight: CGFloat
     let isCollapsed: Bool
+    let isCardFloating: Bool
     @AppStorage(AwayFramingPreference.storageKey) private var awayFraming = AwayFramingPreference.taiwan
     @AppStorage(CollapsedFramingPreference.storageKey) private var collapsedFraming = CollapsedFramingPreference.taiwanOnly
     /// Draws the framing geometry over the map. Debug and TestFlight only — the toggle
@@ -137,15 +142,19 @@ private struct CustomMapView: UIViewRepresentable {
         context.coordinator.apply(reading: canShowUserLocation ? headingProvider.reading : nil)
         context.coordinator.refreshEpicenterBlink()
         // Redrawn every pass so it stays correct after a rotation or relayout.
-        drawTargetArea(on: uiView, insets: Self.mapInsets(for: uiView, obscuredByCard: cardObscuredHeight))
+        drawTargetArea(on: uiView, insets: Self.mapInsets(for: uiView,
+                                                          obscuredByCard: cardObscuredHeight,
+                                                          floating: isCardFloating))
 
         // Dragging the card changes how much map is left, so both the area being framed
         // into and what fits inside it have to be worked out again. Keyed on the settled
         // position rather than the drag, so this runs once when the card lands.
         if context.coordinator.lastCardObscuredHeight != cardObscuredHeight
-            || context.coordinator.lastIsCollapsed != isCollapsed {
+            || context.coordinator.lastIsCollapsed != isCollapsed
+            || context.coordinator.lastIsCardFloating != isCardFloating {
             context.coordinator.lastCardObscuredHeight = cardObscuredHeight
             context.coordinator.lastIsCollapsed = isCollapsed
+            context.coordinator.lastIsCardFloating = isCardFloating
             setupRegionForMap(uiView)
         }
 
@@ -280,7 +289,9 @@ private struct CustomMapView: UIViewRepresentable {
 
     private func setupRegionForMap(_ mapView: MKMapView) {
         let rect = preferredMapRect()
-        let insets = Self.mapInsets(for: mapView, obscuredByCard: cardObscuredHeight)
+        let insets = Self.mapInsets(for: mapView,
+                                    obscuredByCard: cardObscuredHeight,
+                                    floating: isCardFloating)
         mapView.setVisibleMapRect(rect, edgePadding: insets, animated: true)
         drawTargetArea(on: mapView, insets: insets)
         drawFramingDebug(on: mapView, fitted: rect)
@@ -389,17 +400,31 @@ private struct CustomMapView: UIViewRepresentable {
     /// out its own coverage, so that class of bug lives with the card that causes it.
     ///
     /// iPad lays the card out beside the map instead of over it, so nothing is covered.
-    private static func mapInsets(for mapView: MKMapView, obscuredByCard: CGFloat) -> UIEdgeInsets {
+    ///
+    /// A floating panel covers a corner rather than a band, so it is cleared sideways. Since
+    /// the island's fit is height-limited, the extra trailing padding does not shrink the map
+    /// — it slides the fitted box, and with it the island, off the panel. MapKit centres the
+    /// box inside the padded area, so the movement is half the inset; the constant is the
+    /// distance wanted, doubled.
+    private static func mapInsets(for mapView: MKMapView,
+                                  obscuredByCard: CGFloat,
+                                  floating: Bool) -> UIEdgeInsets {
         let safeTop = mapView.safeAreaInsets.top
         let obscured = Device.deviceType == .iphone
             ? min(max(obscuredByCard, 0), mapView.bounds.height)
             : 0
+        let clearOfPanel = floating ? floatingCardShift * 2 : 0
 
         return UIEdgeInsets(top: safeTop + statusPillHeight + verticalMargin,
                             left: legendWidth + horizontalMargin,
                             bottom: obscured + verticalMargin,
-                            right: horizontalMargin)
+                            right: horizontalMargin + clearOfPanel)
     }
+
+    /// How far left the map moves to sit beside the floating card instead of under it.
+    /// Deliberately a nudge: enough that the island is not the thing the panel overlaps,
+    /// little enough that the result still reads as centred.
+    private static let floatingCardShift: CGFloat = 36
 
     /// Enough room around an offshore epicenter that its marker and wave circles are not
     /// clipped by the edge of the fitted box.
@@ -719,6 +744,8 @@ private struct CustomMapView: UIViewRepresentable {
         var lastCardObscuredHeight: CGFloat?
         /// Which mode the last framing was for.
         var lastIsCollapsed: Bool?
+        /// Whether the card was a floating panel the last time the map was framed.
+        var lastIsCardFloating: Bool?
         var updateTimer: Timer?
         weak var mapView: MKMapView?
         

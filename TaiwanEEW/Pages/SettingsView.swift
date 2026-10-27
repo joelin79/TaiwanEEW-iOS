@@ -377,7 +377,7 @@ struct SettingsView: View {
                 HStack {
                     Text("location-pref-string")
                     Spacer()
-                    Text("\(Location.cities[subscribedCityIndex].getDisplayName().toString()) \(String(Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName.dropFirst(3)))")
+                    Text(Location.cities[subscribedCityIndex].district[subscribedDistrictIndex].districtName.localized)
                         .foregroundStyle(.secondary)
                 }
             } else {
@@ -428,7 +428,7 @@ struct SettingsView: View {
                     
                     Picker("district-pref-string", selection: $subscribedDistrictIndex){
                         ForEach(0..<Location.cities[subscribedCityIndex].district.count, id: \.self){ districtIndex in
-                            Text(String(Location.cities[subscribedCityIndex].district[districtIndex].districtName.dropFirst(3)))
+                            Text(Location.cities[subscribedCityIndex].district[districtIndex].districtName.localized)
                         }
                     }
                     .onChange(of: subscribedDistrictIndex) { value in

@@ -7,6 +7,9 @@
 ///  2026/08/24 Changelog - Albert
 ///   - Added missing localizations for this tab 新增字串的英文及日文翻譯
 ///   - Fixed tab safe space which was covering the top parts of the view 修復分頁中上方空間擋到的一部分
+///  2026/10/27 Changelog - Albert
+///   - Added the missing gap above the app icon in the tab, where the safe area is zero
+///     （分頁中安全區域為零時，補上 App 圖示上方的間距）
 ///
 
 import SwiftUI
@@ -21,6 +24,10 @@ struct DonateView: View {
     // that may want it back.
     let smallDevice = UIScreen.screenHeight <= 667
     @State private var showDonationSheet = false
+    /// The container's top safe area. Measured instead of assumed because the Duo's outer
+    /// screen reports zero while every phone with a status bar reports 47pt or more, and
+    /// the tab's top spacing is the difference between those two cases.
+    @State private var topSafeArea: CGFloat = 0
 
     private enum animationProperties {
         static let animationSpeed : Double = 3
@@ -221,6 +228,15 @@ struct DonateView: View {
                 Spacer()
                 Spacer()
             }
+            // As a tab there is no dismiss-controls row above the icon, so nothing separates
+            // it from the top edge — and on a display whose top safe area is zero, such as
+            // the Duo's outer screen, it starts flush against the glass.
+            //
+            // The padding tops the container's own inset up to 20pt rather than adding 20pt
+            // on top of it. Every phone with a status bar already clears the icon by far
+            // more than that, and stacking another 20pt there would push the copy down for
+            // no reason. The modal keeps its close button and needs no help at all.
+            .padding(.top, showsDismissControls ? 0 : max(0, 20 - topSafeArea))
         }
         .onDisappear{
             timer.upstream.connect().cancel()
@@ -232,6 +248,15 @@ struct DonateView: View {
         }
         .onReceive(timer) { _ in
             animateCircles()
+        }
+        .background {
+            GeometryReader { proxy in
+                Color.clear
+                    .onAppear { topSafeArea = proxy.safeAreaInsets.top }
+                    .onChange(of: proxy.safeAreaInsets.top) { newInset in
+                        topSafeArea = newInset
+                    }
+            }
         }
     }
 

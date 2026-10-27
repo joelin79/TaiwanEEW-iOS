@@ -865,7 +865,7 @@ struct District {
     let lon: Double
     let lat: Double
     let si: Double
-    let districtName: String          // TODO: localized string
+    let districtName: String
     
     init(_ id: String, _ lon: Double, _ lat: Double, _ si: Double, _ districtName: String) {
         self.id = id
@@ -878,13 +878,17 @@ struct District {
     public func getTopicCode() -> String {
         return id
     }
+    
+    public func getDisplayName() -> LocalizedStringKey {
+        return LocalizedStringKey(districtName)
+    }
 }
 
 struct City: Identifiable {
     let id: String
     let district: [District]
     
-    public func getDisplayName() -> LocalizedStringKey {
+    public func getChineseName() -> String {
         let cityMap: [String: String] = [
             "test": "test", /* MARK: Debug */             "NantouCounty": "南投縣",
             "KeelungCity": "基隆市",                       "YunlinCounty": "雲林縣",
@@ -898,7 +902,10 @@ struct City: Identifiable {
             "ChanghuaCounty": "彰化縣",                    "TaitungCounty": "台東縣",
                                                           "PenghuCounty": "澎湖縣"
         ]
-        
-        return LocalizedStringKey(cityMap[id] ?? "location-error")
+        return cityMap[id] ?? ""
+    }
+    
+    public func getDisplayName() -> LocalizedStringKey {
+        return LocalizedStringKey(getChineseName())
     }
 }

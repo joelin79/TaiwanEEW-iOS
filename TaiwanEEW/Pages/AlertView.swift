@@ -6,6 +6,11 @@
 //
 ///  2026/08/24 Changelog - Albert
 ///   - Added missing localizations for this part 新增字串的英文及日文翻譯
+///  2026/10/27 Changelog - Albert
+///   - Adapted the alert card to iPhone Duo: compact when the phone is closed, a floating
+///     panel instead of a full-width sheet when it is open, expanded by default and with the
+///     map nudged aside to make room for it
+///     （支援 iPhone Duo：折疊時預設收起，展開時改為浮動面板並預設展開，地圖同時向左讓出空間）
 ///
 
 
@@ -31,6 +36,17 @@ struct AlertView: View {
     
     @State private var locationName: String? = nil
     @State private var didRunStartupTasks = false
+    /// The live window size and, on iPhone Duo, which way the phone is folded. The
+    /// screen size cannot stand in for this: the window changes size while the app runs.
+    @State private var adaptiveLayout = AdaptiveLayout()
+    /// Which posture the card's open state has already been set for.
+    ///
+    /// Tracked as the posture rather than a one-shot flag, because the two poses want
+    /// opposite defaults. Folded opens collapsed so the map, not a sheet, is the first thing
+    /// on a small outer display; unfolded opens expanded, because there is room beside the
+    /// floating panel for both. Folding or unfolding is a deliberate act, so following it is
+    /// not the card moving unprompted under the user's finger mid-drag.
+    @State private var appliedPosture: AdaptiveLayout.Posture?
     /// Held here rather than inside the card so the map can frame around it.
     @State private var cardPosition: CardPosition = .middle
     /// Reported by whichever card is running. The map only ever sees this number, not
@@ -67,18 +83,53 @@ struct AlertView: View {
     }
     
     var body: some View {
-        Group {
-            if (Device.deviceType == .iphone) {
-                iPhoneView
-            } else {
-                iPadView
+        AdaptiveLayoutReader(layout: $adaptiveLayout) {
+            Group {
+                if (Device.deviceType == .iphone) {
+                    iPhoneView
+                } else {
+                    iPadView
+                }
             }
         }
         .onAppear {
             runStartupTasksIfNeeded()
+            applyPostureDefault(adaptiveLayout.posture)
         }
         .onChange(of: startupEnabled) { _ in
             runStartupTasksIfNeeded()
+        }
+        .onChange(of: adaptiveLayout.posture) { posture in
+            applyPostureDefault(posture)
+        }
+    }
+
+    /// The card's open state follows the pose, once per pose change.
+    ///
+    /// Closed, it opens collapsed so the first thing on screen is the map rather than a
+    /// sheet covering most of a small outer display. Open, it opens expanded — the phone is
+    /// now wide enough for the panel and the map side by side, and the details are why the
+    /// alert screen exists.
+    ///
+    /// Only the default moves. Once the user drags the card in a given pose, the next call
+    /// for that posture is a no-op, so their choice stands.
+    ///
+    /// The first application is not animated: it is the state the screen opens in, so sliding
+    /// the card down into place would be a launch animation nobody asked for. Folding and
+    /// unfolding afterwards are real transitions and move it over 0.3s, in step with the
+    /// window resizing around it.
+    private func applyPostureDefault(_ posture: AdaptiveLayout.Posture) {
+        guard posture != .standard, posture != appliedPosture else { return }
+        let isPoseChange = appliedPosture != nil
+        appliedPosture = posture
+        let defaultPosition: CardPosition = posture == .folded ? .bottom : .middle
+        guard cardPosition != defaultPosition else { return }
+        if isPoseChange {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                cardPosition = defaultPosition
+            }
+        } else {
+            cardPosition = defaultPosition
         }
     }
 }
@@ -88,18 +139,19 @@ private extension AlertView {
         ZStack(alignment: Alignment(horizontal: .center, vertical: .top)){
             AlertMapView(eventManager: eventManager,
                          cardObscuredHeight: cardObscuredHeight,
-                         isCollapsed: cardPosition == .bottom)
+                         isCollapsed: cardPosition == .bottom,
+                         isCardFloating: isCardFloating)
                 .ignoresSafeArea()
             ErrorBanner(msgType: msgType, status: status, arrivalTime: arrivalTime)
             
             HStack(alignment: .top){
                 Legend(maxIntensityValue: maxIntesityValue)
 //                    .padding(.top)
-                    .offset(x:-UIScreen.baseLine/2)
+                    .offset(x:-horizontalBaseline/2)
                 Spacer()
                 ConnectionStatusButton(lastPingTime: lastPingTime)
-                    .offset(x:UIScreen.baseLine/2)
-            }.padding(.horizontal, UIScreen.baseLine)
+                    .offset(x:horizontalBaseline/2)
+            }.padding(.horizontal, horizontalBaseline)
             
             alertCard
         }
@@ -117,6 +169,7 @@ private extension AlertView {
     var alertCard: some View {
         if #available(iOS 17.0, *) {
             FloatingAlertCard(position: $cardPosition,
+                              placement: cardPlacement,
                               onSettle: { cardObscuredHeight = $0 }) {
                 EEWDetailBlock(eventManager: eventManager)
             } compact: {
@@ -134,6 +187,41 @@ private extension AlertView {
                 EEWDetailBlock(eventManager: eventManager)
             }
         }
+    }
+
+    /// The inner Duo display is wide enough that a full-width sheet reads as a wall across
+    /// the map, so the card becomes a panel on the trailing side. Every other layout keeps
+    /// the sheet it has always had — including the Duo's outer display, which is an
+    /// ordinary narrow phone.
+    var cardPlacement: AlertCardPlacement {
+        adaptiveLayout.isUnfolded ? .floating(edge: .trailing) : .fullWidth
+    }
+
+    /// Whether the card is drawn as a panel or as a sheet, which is what the map cares about
+    /// — it moves out from under a panel and merely up from under a sheet.
+    ///
+    /// Resolved from the live width for the same reason the card resolves its own: the window
+    /// takes its new size a beat before the hinge reports the phone open, and in that beat the
+    /// pose alone still says "sheet" while a sheet would already be too wide to be one. Both
+    /// sides read the width, so they never disagree about which shape is on screen.
+    var isCardFloating: Bool {
+        cardPlacement.resolved(forWidth: adaptiveLayout.size.width).isFloating
+    }
+
+    /// Kept as a container width rather than `UIScreen.baseLine`, which on Duo would go on
+    /// describing the display the app opened on after the phone was opened or closed.
+    ///
+    /// The phone formula grows with the width it is handed and was only ever calibrated
+    /// against phone widths; fed the Duo's inner display it would push the legend and the
+    /// connection button a quarter of the way across the map. The clamp is set above the
+    /// widest phone, so it changes nothing there and asks for a 20pt corner on a wide
+    /// window instead.
+    var horizontalBaseline: CGFloat {
+        let width = adaptiveLayout.size.width > 0 ? adaptiveLayout.size.width
+                                                  : UIScreen.screenWidth
+        guard Device.deviceType == .iphone else { return 20 }
+        let baseline = UIScreen.isZoomed ? (width - 280) / 3 : (width - 340) / 3
+        return min(baseline, 40)
     }
 
     var iPadView: some View {

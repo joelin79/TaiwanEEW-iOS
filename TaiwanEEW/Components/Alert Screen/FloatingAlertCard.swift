@@ -19,9 +19,60 @@
 
 import SwiftUI
 
+/// How much of the width the alert card claims.
+///
+/// On a phone the card is a sheet across the bottom of the display, and that is what the
+/// detents and the gesture were designed around. The Duo's inner display is roughly the
+/// shape of an iPad's, though, and a sheet spanning all of it becomes a wall across the
+/// map with a long, hard-to-read line of text. There the card is a bounded panel pinned
+/// to one bottom corner instead, so the map stays visible beside it.
+enum AlertCardPlacement: Equatable {
+    /// Edge to edge, less the card's own margins. The phone card.
+    case fullWidth
+    /// A bounded panel at the bottom of one side of the display.
+    case floating(edge: HorizontalEdge)
+
+    /// Above this width a card across the screen stops reading as a sheet and starts reading
+    /// as a wall over the map. iPhone is portrait-only, so no phone reaches it in either pose
+    /// — including the Duo folded — while the Duo's inner display always does.
+    static let floatingWidthLimit: CGFloat = 500
+
+    /// What a container of this width actually draws.
+    ///
+    /// Called with the card's own geometry rather than with a decision taken higher up,
+    /// because the window takes its new size a beat before the hinge reports the phone open.
+    /// In that beat a sheet chosen from the pose alone spans the whole inner display before
+    /// snapping to its proportion — the flash seen when unfolding. Resolving against the
+    /// width that is already in hand draws the panel once, at the right size.
+    func resolved(forWidth width: CGFloat) -> AlertCardPlacement {
+        guard case .fullWidth = self, width > Self.floatingWidthLimit else { return self }
+        return .floating(edge: .trailing)
+    }
+
+    var isFloating: Bool {
+        if case .floating = self { return true }
+        return false
+    }
+
+    var alignment: Alignment {
+        switch self {
+        case .fullWidth:
+            return .bottom
+        case .floating(.leading):
+            return .bottomLeading
+        case .floating(.trailing):
+            return .bottomTrailing
+        }
+    }
+}
+
 @available(iOS 17.0, *)
 struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     @Binding var position: CardPosition
+
+    /// Where the card sits horizontally. Defaults to the phone sheet so existing call
+    /// sites do not have to name it.
+    var placement: AlertCardPlacement = .fullWidth
 
     /// Points of the screen's bottom edge the card covers, reported once it settles.
     ///
@@ -62,6 +113,14 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     private static var bottomMargin: CGFloat { 10 }
     private static var cornerRadius: CGFloat { 44 }
 
+    /// A floating card is deliberately smaller than the space it could take. About two
+    /// thirds of the display leaves the map readable beside it; the ceiling keeps it from
+    /// turning back into a wall on a large inner display, and the floor keeps it usable if
+    /// a narrower window ever reaches this path.
+    private static var floatingWidthFraction: CGFloat { 0.62 }
+    private static var floatingMinWidth: CGFloat { 320 }
+    private static var floatingMaxWidth: CGFloat { 420 }
+
     /// The visual gap from the handle to the first row of content.
     private static var handleContentGap: CGFloat { 8 }
     /// Handle, its own top margin, and the gap below it.
@@ -87,6 +146,22 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
     private static var settle: Animation { .snappy(duration: 0.32, extraBounce: 0.02) }
 
     // MARK: - Geometry
+
+    /// The card's width, before the horizontal margin is taken off it.
+    ///
+    /// The floating width is a fraction of the container rather than of the usable width
+    /// so the panel keeps the proportion it was designed at even as the margin changes.
+    private func cardWidth(usableWidth: CGFloat, containerWidth: CGFloat) -> CGFloat {
+        switch placement.resolved(forWidth: containerWidth) {
+        case .fullWidth:
+            return usableWidth
+        case .floating:
+            let preferred = min(max(containerWidth * Self.floatingWidthFraction,
+                                    Self.floatingMinWidth),
+                                Self.floatingMaxWidth)
+            return min(usableWidth, preferred)
+        }
+    }
 
     private func contentHeight(_ position: CardPosition) -> CGFloat {
         contentHeights[position] ?? Self.fallbackContentHeight(position)
@@ -153,8 +228,15 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
 
     var body: some View {
         GeometryReader { proxy in
-            card(width: max(proxy.size.width - Self.horizontalMargin * 2, 0))
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            let usableWidth = max(proxy.size.width - Self.horizontalMargin * 2, 0)
+            // Resolved for the alignment as well as the width, and from the same value, so
+            // the two cannot disagree about which corner the panel belongs in.
+            let resolved = placement.resolved(forWidth: proxy.size.width)
+            card(width: cardWidth(usableWidth: usableWidth,
+                                  containerWidth: proxy.size.width))
+                .frame(maxWidth: .infinity, maxHeight: .infinity,
+                       alignment: resolved.alignment)
+                .padding(.horizontal, Self.horizontalMargin)
                 .padding(.bottom, Self.bottomMargin)
                 .ignoresSafeArea(edges: .bottom)
                 .onAppear { bottomOverhang = proxy.safeAreaInsets.bottom }
