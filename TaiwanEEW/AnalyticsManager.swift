@@ -7,7 +7,6 @@
 
 import SwiftUI
 import FirebaseAnalytics
-import FirebaseAnalyticsSwift
 import os.log
 
 final class AnalysicsManager {
