@@ -794,7 +794,7 @@
 			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
 			requirement = {
 				kind = exactVersion;
-				version = 5.61.0;
+				version = 5.102.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
