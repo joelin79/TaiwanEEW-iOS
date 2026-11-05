@@ -46,8 +46,12 @@ own build, or use it commercially. See [LICENSE.md](LICENSE.md).
 CI 使用 `.example` 佔位設定做未簽章的模擬器編譯，因此 PR 不需真實憑證即可通過。
 
 ## 如何貢獻 Contributing
-歡迎向**本專案**提交貢獻。開啟 Pull Request 即代表你同意 [LICENSE.md](LICENSE.md) 中的貢獻條款
-（包含將你的變更授權予本專案）。較大的修改請先開 Issue 討論。
+歡迎向**本專案**提交貢獻。首次提交 Pull Request 前，須先簽署
+[個人貢獻者授權協議（CLA）](CLA.md)，CLA bot 會在 PR 上提示你簽署。你保有貢獻內容的著作權，
+並授權本專案使用。較大的修改請先開 Issue 討論。
+
+Before your first pull request can be merged you must sign the
+[Contributor License Agreement](CLA.md); the CLA bot will prompt you on the PR.
 
 ## 安全性回報 Security
 請私下回報安全性問題，見 [SECURITY.md](SECURITY.md)，**請勿**以公開 Issue 回報漏洞。

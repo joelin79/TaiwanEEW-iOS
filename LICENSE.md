@@ -28,12 +28,11 @@ The application is additionally protected by a Taiwanese utility model patent
 
 ## Contributions
 
-By submitting a contribution (for example, a pull request) you agree that:
-
-- You have the right to submit it.
-- You assign to the copyright holder all rights, title and interest in your
-  contribution, so it can be licensed under these same terms, and you waive any moral
-  rights to the extent permitted by law.
+Contributions are accepted only under the
+[Individual Contributor License Agreement](CLA.md). You must sign it before your first
+pull request can be merged; the CLA bot will ask you to on the pull request. You keep the
+copyright in your contribution and grant the copyright holder a perpetual, irrevocable
+license to it, as set out in the CLA.
 
 ## No warranty
 
