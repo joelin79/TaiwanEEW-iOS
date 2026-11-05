@@ -41,12 +41,15 @@ enum EpicenterName {
 
     /// CWA's sea area names, which the geocoder cannot produce because there is no
     /// placemark out there.
+    ///
+    /// The bounds are CWA's and are deliberately left as literals — they are a published
+    /// definition, not a tuning knob. Only the names are localized.
     static func oceanArea(lat: Double, lon: Double) -> String {
-        if lat >= 24.31343 && lon >= 121.76857 { return "東北部海域" }
-        if lat >= 23.43494 && lat <= 24.31343 && lon >= 121 { return "東部海域" }
-        if lat >= 22.24595 && lat <= 23.43494 && lon >= 120.79958 { return "東南部海域" }
-        if lat >= 24.73429 && lon <= 121.76857 { return "北部海域" }
-        if lat >= 23.53352 && lat <= 24.73429 && lon <= 121 { return "中部海域" }
-        return "南部海域"
+        if lat >= 24.31343 && lon >= 121.76857 { return String(localized: "NE-sea") }
+        if lat >= 23.43494 && lat <= 24.31343 && lon >= 121 { return String(localized: "E-sea") }
+        if lat >= 22.24595 && lat <= 23.43494 && lon >= 120.79958 { return String(localized: "SE-sea") }
+        if lat >= 24.73429 && lon <= 121.76857 { return String(localized: "N-sea") }
+        if lat >= 23.53352 && lat <= 24.73429 && lon <= 121 { return String(localized: "C-sea") }
+        return String(localized: "S-sea")
     }
 }

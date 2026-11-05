@@ -4,6 +4,10 @@
 //
 //  Created by 林子祐 on 2024/8/27.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this tab 新增字串的英文及日文翻譯
+///   - Fixed tab safe space which was covering the top parts of the view 修復分頁中上方空間擋到的一部分
+///
 
 import SwiftUI
 
@@ -12,6 +16,9 @@ struct DonateView: View {
     /// Presented modally from Settings the view needs its own close and cancel controls;
     /// as a tab there is nothing to dismiss, so they are hidden.
     var showsDismissControls: Bool = true
+    // Only the description used this, and it now decides by measuring rather than by
+    // guessing from screen height. Kept because the layout still has fixed-size pieces
+    // that may want it back.
     let smallDevice = UIScreen.screenHeight <= 667
     @State private var showDonationSheet = false
 
@@ -25,7 +32,7 @@ struct DonateView: View {
     @StateObject private var animator = CircleAnimator(colors: GradientColors.all)
 
     var title: some View {
-        Text("🎁 支持台灣地震速報")
+        Text("donate-view-title")
             .foregroundStyle(.white)
             .font(.system(size: 28).weight(.bold))
             .padding(.top, 25)
@@ -33,17 +40,17 @@ struct DonateView: View {
 
     var description: some View {
         VStack(alignment: .leading){
-            Text("為了讓人人都可以取得即時地震預警，此應用程式下載不需付費。") // ，亦無置入廣告
+            Text("donate-1-string") // ，亦無置入廣告
                 .foregroundStyle(.white)
                 .font(.system(size: 18))
                 .padding(.top, 25)
                 .padding(.horizontal, 15)
-            Text("開發者為了此應用程式，購置逾十萬元伺服器等設備，並每月支出雲端服務租賃費用，在有限的課餘時間開發與維護。")
+            Text("donate-2-string")
                 .foregroundStyle(.white)
                 .font(.system(size: 19).weight(.bold))
                 .padding(.horizontal, 15)
                 .padding(.top, 1)
-            Text("如果您喜歡此應用程式，希望您考慮給予開發者一些贊助，不僅能減輕開發者每月的開銷，您的慷慨解囊將用於設備升級，有助於提高應用程式的品質，永續為您服務。")
+            Text("donate-3-string")
                 .foregroundStyle(.white)
                 .font(.system(size: 18))
                 .padding(.horizontal, 15)
@@ -51,18 +58,39 @@ struct DonateView: View {
         }
     }
 
+    // Background layer only — this is the piece allowed to bleed under the
+    // status bar / notch. Kept separate from content so the safe area fix
+    // below doesn't accidentally clip the animated circles.
+    private var animatedBackground: some View {
+        ZStack {
+            ForEach(animator.circles){circle in
+                MovingCircle(originOffset: circle.position)
+                    .foregroundStyle(circle.color)
+            }
+        }
+        .blur(radius: animationProperties.blurRadius)
+        .ignoresSafeArea()
+        .clipped()
+    }
+
     private var baseContent: some View {
         ZStack {
+            // The backdrop is a sibling of the content, not a .background() of it.
+            //
+            // .background() sizes its content to the frame of the view it decorates. Once
+            // the foreground VStack correctly stopped ignoring the safe area, that frame
+            // became the safe-area inset rectangle — so the gradient and the animated
+            // circles were being sized and clipped to it, leaving bars at the top and
+            // bottom and cutting the animation off mid-motion. As a ZStack layer the
+            // backdrop is sized by the ZStack instead, and reaches the screen edges.
             ZStack {
-                ForEach(animator.circles){circle in
-                    MovingCircle(originOffset: circle.position)
-                        .foregroundStyle(circle.color)
-                }
+                GradientColors.backgroundColor
+                animatedBackground
             }
-            .blur(radius: animationProperties.blurRadius)
             .ignoresSafeArea()
-            .clipped()
 
+            // Content stays inside the safe area, which is what Albert's change set out to
+            // fix: before it, the close button and app icon sat under the status bar.
             VStack(spacing: 0){
                 HStack {
                     if showsDismissControls {
@@ -78,10 +106,9 @@ struct DonateView: View {
                     }
                     Spacer()
                 }
-                // The whole view ignores safe area, so this inset is what keeps content
-                // clear of the status bar. It has to sit on the row rather than on the
-                // close button, or hiding the button pulls everything under the clock.
-                .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top)
+                // No manual top padding needed anymore — this HStack lives inside
+                // a VStack that does NOT ignore the safe area, so SwiftUI keeps
+                // it clear of the status bar / notch on its own.
 
                 HStack(spacing: 0) {
                     Image("Icon")
@@ -100,18 +127,36 @@ struct DonateView: View {
 
                 title
 
-                if(smallDevice || UIScreen.isZoomed){
-                    ScrollView{
+                // Scrolls only when the text does not fit, which is the actual condition.
+                //
+                // This was originally gated on smallDevice || UIScreen.isZoomed, a proxy
+                // calibrated when the copy existed only in Chinese. The English translation
+                // is about four times longer — 608 characters against 155 — so on a
+                // full-size phone it was truncated mid-sentence.
+                //
+                // An unconditional ScrollView fixes that but breaks the other direction: a
+                // ScrollView is greedy, taking all the height it is offered, so with the
+                // short Chinese copy it swallowed the space the Spacers below use to
+                // distribute the coins and buttons, leaving a gap under the text.
+                //
+                // ViewThatFits picks the first child that fits, so Chinese gets the plain
+                // self-sizing VStack and the Spacers behave as before, while English and
+                // Japanese fall through to the scrolling version.
+                if #available(iOS 16.0, *) {
+                    ViewThatFits(in: .vertical) {
                         description
+                        ScrollView { description }
                     }
                 } else {
-                    description
+                    // ViewThatFits is iOS 16+. Below that, prefer scrolling: a slightly
+                    // loose layout beats a sentence cut in half.
+                    ScrollView { description }
                 }
 
                 Spacer()
 
                 HStack(alignment: .firstTextBaseline, spacing: 0){
-                        
+
                     Image("coin")
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -145,7 +190,7 @@ struct DonateView: View {
                                 dismiss.callAsFunction()
                             } label: {
                                 ActionButtonLabel(
-                                    title: "取消",
+                                    title: "cancel-string".localized,
                                     fallbackFill: Color(uiColor: .darkGray),
                                     glassTint: nil,
                                     fallbackStroke: nil
@@ -160,13 +205,13 @@ struct DonateView: View {
                                 showDonationSheet = true
                             } label: {
                                 ActionButtonLabel(
-                                    title: "支持贊助",
+                                    title: "donate-view-cta-string".localized,
                                     fallbackFill: Color(red: 36/255, green: 86/255, blue: 156/255),
                                     glassTint: Color(red: 36/255, green: 86/255, blue: 156/255),
                                     fallbackStroke: Color(red: 116/255, green: 140/255, blue: 173/255)
                                 )
                             }
-                            Text("最低只需 30 元")
+                            Text("donate-view-cta-min")
                                 .font(.system(size: 14).bold())
                                 .foregroundStyle(.white)
                         }
@@ -177,8 +222,6 @@ struct DonateView: View {
                 Spacer()
             }
         }
-        .ignoresSafeArea()
-        .background(GradientColors.backgroundColor)
         .onDisappear{
             timer.upstream.connect().cancel()
         }
@@ -262,6 +305,13 @@ private struct ActionButtonLabel: View {
         Text(title)
             .font(.system(size: 18).bold())
             .foregroundStyle(.white)
+            .lineLimit(1)
+            // The 140pt frame was sized for 支持贊助. "Give Support" and 支援・スポンサー do
+            // not fit at 18pt and were being truncated to an ellipsis, which on a button
+            // is worse than smaller type — "Give Supp…" does not say what it does.
+            // Scaling keeps both buttons the same width, which the side-by-side layout
+            // and the fallback RoundedRectangle below both depend on.
+            .minimumScaleFactor(0.6)
             .frame(width: 140, height: 50)
     }
 

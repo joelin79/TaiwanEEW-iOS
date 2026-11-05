@@ -13,17 +13,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>YOUR_FIREBASE_API_KEY</string>
+	<string>AIzaSyDummyKeyForLocalBuildTesting00</string>
 	<key>GCM_SENDER_ID</key>
-	<string>YOUR_SENDER_ID</string>
+	<string>123456789012</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.YourApp</string>
+	<string>com.example.dummyapp</string>
 	<key>PROJECT_ID</key>
-	<string>your-firebase-project-id</string>
+	<string>dummy-project-id</string>
 	<key>STORAGE_BUCKET</key>
-	<string>your-firebase-project-id.appspot.com</string>
+	<string>dummy-project-id.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -35,7 +35,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:000000000000:ios:0000000000000000000000</string>
+	<string>1:123456789012:ios:0000000000000000000000</string>
 	<key>CLIENT_ID</key>
 	<string>000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>

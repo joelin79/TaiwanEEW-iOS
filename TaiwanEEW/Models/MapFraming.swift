@@ -30,8 +30,8 @@ enum AwayFramingPreference: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .epicenter: return "震央周邊"
-        case .taiwan: return "台灣全島"
+        case .epicenter: return String(localized: "map-framing-epicenter")
+        case .taiwan: return String(localized: "map-framing-taiwan")
         }
     }
 
@@ -51,8 +51,8 @@ enum CollapsedFramingPreference: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .taiwanOnly: return "僅台灣"
-        case .taiwanAndEpicenter: return "台灣與震央"
+        case .taiwanOnly: return String(localized: "map-framing-taiwan-only")
+        case .taiwanAndEpicenter: return String(localized: "map-framing-taiwan-epicenter")
         }
     }
 

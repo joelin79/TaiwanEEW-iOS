@@ -431,8 +431,18 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
     logger.debug("Notification payload: \(String(describing: userInfo))")
 
     // Permission-problem notifications deep link to this app's Settings page.
+    //
+    // Exclusive with the payload's optional web link, and this side wins: a notification
+    // carrying both is a server-side mistake, and keeping the older behaviour is the safer
+    // way to resolve it than picking whichever branch happens to be written first.
     if userInfo[NotificationManager.deepLinkKey] as? String == NotificationManager.deepLinkAppSettings {
         openAppSettings()
+    } else if let destination = NotificationLink.destination(from: userInfo) {
+        // Anything that is not a plain https URL comes back nil, so a malformed or hostile
+        // value is indistinguishable here from a notification that carried no link at all.
+        DispatchQueue.main.async {
+            UIApplication.shared.open(destination)
+        }
     }
 
     completionHandler()

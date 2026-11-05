@@ -4,6 +4,10 @@
 //
 //  Created by Joe Lin on 2022/7/5.
 //
+///  2026/08/24 Changelog - Albert
+///   - Added missing localizations for this part 新增字串的英文及日文翻譯
+///
+
 
 import SwiftUI
 import XMLCoder

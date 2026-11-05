@@ -196,11 +196,24 @@ struct FloatingAlertCard<Expanded: View, Compact: View>: View {
         .background(
             RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
                 .fill(Color(.systemBackground))
-                // On the shape, not on the finished card: applied after the clip it is
-                // derived from the card's rounded outline, not from its clipped content.
-                .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.13), radius: 10)
         )
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        // After the clip, never inside it. A shadow is by definition the part that falls
+        // outside the shape, and clipShape applies to the view together with its background —
+        // so a shadow attached to that background is cut off by the very same rounded
+        // rectangle that produced it, and what little lands inside is painted over by the
+        // opaque fill. The card had shadow code and no shadow.
+        //
+        // Here it derives from the finished, already-rounded silhouette, which is what
+        // SlideOverCard has always done for iOS 15-16.
+        //
+        // Stronger than SlideOverCard's 0.13/10, deliberately. That value was never seen on
+        // this card — it was clipped from the day it was written — so it had never been
+        // judged against what actually sits behind this one, which is a full-bleed intensity
+        // map rather than a plain background. 0.13 disappeared into the darker district
+        // fills. The two cards differ now; SlideOverCard is the frozen 15-16 path and is left
+        // alone rather than kept in step.
+        .shadow(color: Color(.sRGBLinear, white: 0, opacity: 0.18), radius: 14)
         // No implicit .animation here on purpose. position only ever changes inside the
         // withAnimation in onEnded, so an implicit modifier adds nothing — and one whose
         // animation argument is recomputed every frame of the drag is pure churn.
